@@ -82,7 +82,11 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:3000",
   "http://localhost:9000",
+  "https://raphaaa.com",
+  "https://www.raphaaa.com",
+  "https://raphaaa.vercel.app",
   process.env.FRONTEND_URL,
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()) : []),
 ].filter(Boolean);
 
 const corsConfig = {
@@ -90,6 +94,16 @@ const corsConfig = {
     // allow requests with no origin (mobile apps, curl, Postman, same-origin)
     if (!origin) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
+
+    try {
+      const hostname = new URL(origin).hostname;
+      if (hostname === "raphaaa.com" || hostname === "www.raphaaa.com" || hostname.endsWith(".vercel.app")) {
+        return cb(null, true);
+      }
+    } catch (_) {
+      // ignore invalid origin values
+    }
+
     cb(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
