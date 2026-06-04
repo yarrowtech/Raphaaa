@@ -5,7 +5,6 @@ const path = require("path");
 dotenv.config({ path: path.join(__dirname, ".env") });
 const mongoose = require("mongoose");
 const connectDB = require("./config/db");
-const axios = require("axios");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
@@ -183,14 +182,6 @@ startJobWorker({
   intervalMs: Number(process.env.JOB_WORKER_INTERVAL_MS || 500),
   concurrency: Number(process.env.JOB_WORKER_CONCURRENCY || 1),
 });
-
-// Self-ping every 30 seconds to prevent sleeping (Render free tier)
-setInterval(() => {
-  axios
-    .get("https://raphaaa-backend.onrender.com/healthz" || "http://localhost:9000/healthz" || "https://raphaaa-backend-glnl.onrender.com/healthz")
-    .then(() => console.log("[SELF-PING] Success. Server responding OK."))
-    .catch((err) => console.error("[SELF-PING ERROR]:", err.message));
-}, 30 * 1000); // every 30 seconds
 
 // Sync shipped orders with Shiprocket tracking updates every 15 minutes
 setInterval(async () => {
