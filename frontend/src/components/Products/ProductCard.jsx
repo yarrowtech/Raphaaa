@@ -1,18 +1,42 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { IoFlash } from "react-icons/io5";
-import demoImg from "../../assets/login.jpg";
+import { BsImageAlt } from "react-icons/bs";
 
 const ProductCard = ({ product, badge }) => {
+  const [imgError, setImgError] = useState(false);
+
+  // The best-seller aggregation returns `image` as a string, an array of
+  // strings (nested $arrayElemAt on colorVariants), or undefined.
+  const resolveImage = (img) => {
+    if (!img) return null;
+    if (typeof img === "string") return img;
+    if (Array.isArray(img)) return img[0] ?? null;
+    return null;
+  };
+
   const imageUrl =
     product?.colorVariants?.[0]?.images?.[0]?.url ||
     product?.images?.[0]?.url ||
-    (typeof product?.image === "string" ? product.image : null) ||
-    demoImg;
+    resolveImage(product?.image) ||
+    null;
+
   const imageAlt =
     product?.colorVariants?.[0]?.images?.[0]?.altText ||
     product?.images?.[0]?.altText ||
     product?.name ||
     "Product";
+
+  const hasDiscount =
+    product?.discountPrice &&
+    product.discountPrice > 0 &&
+    product.discountPrice < product.price;
+
+  const displayPrice = hasDiscount ? product.discountPrice : product.price;
+
+  const isNew =
+    product?.createdAt &&
+    new Date() - new Date(product.createdAt) < 2 * 24 * 60 * 60 * 1000;
 
   return (
     <Link
@@ -21,80 +45,92 @@ const ProductCard = ({ product, badge }) => {
         .replace(/\s+/g, "-")}/p/${encodeURIComponent(
         product?.skuCode || product?.sku || product?._id
       )}`}
-      className="block group transition-transform transform hover:-translate-y-1"
+      className="block group"
     >
-      <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-sky-200">
-        <div className="w-full h-[220px] md:h-[300px] lg:h-[300px] mb-3 relative overflow-hidden rounded-lg">
-          <img
-            src={imageUrl}
-            alt={imageAlt}
-            className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+      <div className="w-full bg-white rounded-2xl border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 transition-all duration-300 overflow-hidden flex flex-col">
 
-          {new Date() - new Date(product.createdAt) <
-            2 * 24 * 60 * 60 * 1000 && (
-              <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white text-[10px] font-bold px-2 py-[2px] rounded-full shadow-md animate-bounce tracking-wide uppercase">
-                New
-              </div>
-            )}
+        {/* ── Image ── */}
+        <div className="relative aspect-3/4 overflow-hidden bg-sky-50 rounded-t-2xl">
+          {imageUrl && !imgError ? (
+            <img
+              src={imageUrl}
+              alt={imageAlt}
+              loading="lazy"
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            /* Placeholder when image is missing or broken */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-sky-50 text-sky-200">
+              <BsImageAlt className="text-4xl mb-1" />
+              <span className="text-[10px] text-sky-300 font-medium">No image</span>
+            </div>
+          )}
 
-          <div className="absolute top-2 left-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-[10px] font-bold px-2 py-[2px] rounded-full shadow-md tracking-wide flex items-center gap-1">
-            <IoFlash className="text-yellow-300 text-xs" />
-            Raphaaa Assured
-          </div>
+          {/* "New" badge */}
+          {isNew && (
+            <span className="absolute top-2 left-2 bg-sky-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              New
+            </span>
+          )}
 
-          <div className="absolute bottom-2 right-2 bg-white text-blue-900 text-xs font-semibold px-2 py-1 rounded shadow-sm backdrop-blur-sm">
+          {/* Discount % badge */}
+          {hasDiscount && product.offerPercentage > 0 && (
+            <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+              {product.offerPercentage}% OFF
+            </span>
+          )}
+
+          {/* Raphaaa Assured strip at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2.5 py-1.5 bg-linear-to-t from-sky-900/60 to-transparent">
+            <span className="flex items-center gap-1 text-white text-[9px] font-bold tracking-wide">
+              <IoFlash className="text-yellow-300 text-xs shrink-0" />
+              Raphaaa Assured
+            </span>
+            {/* Stock status */}
             {product.countInStock === 0 ? (
-              <span className="text-red-600">Out of Stock</span>
-            ) : product.countInStock < 10 ? (
-              <span className="text-red-600">
-                Hurry! Only {product.countInStock} left
-              </span>
-            ) : (
-              <span className="text-green-600">In Stock</span>
-            )}
+              <span className="text-[9px] font-bold text-red-300">Out of Stock</span>
+            ) : product.countInStock > 0 && product.countInStock < 10 ? (
+              <span className="text-[9px] font-bold text-orange-200">Only {product.countInStock} left</span>
+            ) : null}
           </div>
         </div>
 
-        <div className="p-3">
-          <h3 className="text-base font-semibold text-blue-900 mb-1 truncate">
+        {/* ── Info ── */}
+        <div className="p-3 flex flex-col gap-1 flex-1">
+          <h3 className="text-sm font-semibold text-gray-800 group-hover:text-sky-600 transition-colors truncate leading-snug">
             {product.name}
           </h3>
 
-          {product.discountPrice && product.discountPrice > 0 ? (
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <p className="text-blue-700 font-bold text-2xl md:text-3xl tracking-wide">
-                ₹ {Math.floor(product.discountPrice)}
-              </p>
-              <p className="text-sm text-gray-500 line-through">
-                ₹ {Math.floor(product.price)}
-              </p>
-              <p className="text-green-600 text-md font-semibold">
-                {product.offerPercentage ? `${product.offerPercentage}% OFF` : ""}
-              </p>
-            </div>
-          ) : (
-            <p className="text-blue-700 font-bold text-2xl tracking-wide">
-              ₹ {Math.floor(product.price)}
-            </p>
-          )}
+          {/* Price row */}
+          <div className="flex items-baseline gap-2 flex-wrap mt-0.5">
+            <span className="text-sky-700 font-bold text-lg leading-none">
+              ₹{Math.floor(displayPrice)}
+            </span>
+            {hasDiscount && (
+              <span className="text-gray-400 line-through text-xs">
+                ₹{Math.floor(product.price)}
+              </span>
+            )}
+          </div>
 
-
+          {/* Rating */}
           {product.rating > 0 && product.numReviews > 0 && (
-            <div className="flex items-center space-x-1 mt-1">
-              <span className="text-sm bg-green-600 p-[0.2px] rounded-xl text-white px-2">
-                {product.rating} ★
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="inline-flex items-center gap-0.5 bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                {product.rating.toFixed(1)} ★
               </span>
-              <span className="text-xs text-gray-500 ml-1">
-                {product.numReviews} Reviews
+              <span className="text-[10px] text-gray-400">
+                {product.numReviews} reviews
               </span>
             </div>
           )}
 
-          {/* 🔥 Badge for sold count */}
+          {/* Sold count badge */}
           {badge && (
-            <p className="text-xs mt-1 font-medium text-orange-600">{badge}</p>
+            <p className="text-[10px] mt-0.5 font-semibold text-orange-500 line-clamp-1">
+              🔥 {product.totalSold ? `${product.totalSold} sold` : "Top Pick"}
+            </p>
           )}
         </div>
       </div>

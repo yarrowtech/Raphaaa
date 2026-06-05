@@ -26,7 +26,8 @@ const BestSellersSection = () => {
           const { data } = await axios.get(
             `${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`
           );
-          setBestSellers(data || []);
+          // API may return a single product object or an array
+          setBestSellers(Array.isArray(data) ? data : data?._id ? [data] : []);
         } catch (err) {
           setError("Failed to load best sellers");
         } finally {

@@ -708,7 +708,14 @@ router.get("/best-seller", async (req, res) => {
           gender: "$product.gender",
           image: {
             $ifNull: [
-              { $arrayElemAt: ["$product.colorVariants.images.url", 0] },
+              // colorVariants[0].images[0].url — safely navigate two levels of arrays
+              {
+                $let: {
+                  vars: { cv: { $arrayElemAt: ["$product.colorVariants", 0] } },
+                  in: { $arrayElemAt: ["$$cv.images.url", 0] },
+                },
+              },
+              // Legacy flat images array — images[0].url
               { $arrayElemAt: ["$product.images.url", 0] },
             ],
           },
