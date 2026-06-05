@@ -312,7 +312,7 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
     }
     if (error?.code === 11000) {
       return res.status(400).json({
-        message: "SKU already exists. Please use a unique SKU.",
+        message: "Duplicate product data. Please check the entered values.",
       });
     }
     res.status(500).send("Internal Server Error");

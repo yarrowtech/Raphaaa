@@ -11,9 +11,10 @@ const NewArrivals = () => {
 
 
 
-  // ✅ Auto-scroll with infinite loop (left to right) + pause on hover
+  // Auto-scroll left to right, pause on hover, stop at end
   useEffect(() => {
     let isHovered = false;
+    let animationId;
     const container = scrollRef.current;
 
     const handleMouseEnter = () => (isHovered = true);
@@ -23,17 +24,16 @@ const NewArrivals = () => {
     container?.addEventListener("mouseleave", handleMouseLeave);
 
     const scrollLoop = () => {
-      if (!container) return;
-      if (!isHovered) {
-        container.scrollLeft += 1;
-        if (container.scrollLeft >= container.scrollWidth / 2) {
-          container.scrollLeft = 0;
+      if (container && !isHovered) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft < maxScroll) {
+          container.scrollLeft += 1;
         }
       }
-      requestAnimationFrame(scrollLoop);
+      animationId = requestAnimationFrame(scrollLoop);
     };
 
-    const animationId = requestAnimationFrame(scrollLoop);
+    animationId = requestAnimationFrame(scrollLoop);
 
     return () => {
       cancelAnimationFrame(animationId);
@@ -110,7 +110,7 @@ const NewArrivals = () => {
       >
         {(loading
           ? Array.from({ length: 4 })
-          : [...newArrivals, ...newArrivals]
+          : newArrivals
         ).map((product, index) =>
           loading ? (
             <div
@@ -124,55 +124,52 @@ const NewArrivals = () => {
               </div>
             </div>
           ) : (
-            <div
+            <Link
               key={`${product._id}_${index}`}
-              className="min-w-[250px] bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-md border border-sky-200 hover:shadow-lg transition-shadow duration-300 group"
+              to={`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
+                product.skuCode || product.sku || product._id
+              )}`}
+              className="min-w-55 max-w-55 bg-white rounded-2xl border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 transition-all duration-300 group overflow-hidden flex flex-col shrink-0"
             >
-              <div className="w-full h-80 relative overflow-hidden rounded-t-xl">
+              {/* Image */}
+              <div className="relative aspect-3/4 overflow-hidden bg-sky-50 rounded-t-2xl">
                 <img
                   src={product.images?.[0]?.url.replace(/\.(jpeg|jpg|png)$/i, ".webp")}
                   alt={product.images?.[0]?.altText || product.name}
                   loading="lazy"
-                  width={300}
-                  height={320}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                {new Date() - new Date(product.createdAt) <
-                  2 * 24 * 60 * 60 * 1000 && (
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white text-[10px] font-bold px-2 py-[2px] rounded-full shadow-md animate-bounce uppercase tracking-wider">
-                      New
-                    </div>
-                  )}
+                {/* New badge */}
+                {new Date() - new Date(product.createdAt) < 2 * 24 * 60 * 60 * 1000 && (
+                  <span className="absolute top-2 left-2 bg-sky-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                    New
+                  </span>
+                )}
+                {/* Discount badge */}
+                {product.offerPercentage > 0 && (
+                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                    {product.offerPercentage}% OFF
+                  </span>
+                )}
               </div>
-              <div className="p-4 text-left">
-                <Link to={`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-                  product.skuCode || product.sku || product._id
-                )}`} className="block">
-                  <h4 className="font-semibold text-blue-900 group-hover:text-sky-600 transition-colors truncate">
-                    {product.name}
-                  </h4>
-                  {product.discountPrice && product.discountPrice > 0 ? (
-                    <div className="flex flex-col gap-1 mt-2">
-                      <div className="flex items-center gap-2">
-                        <p className="text-blue-700 font-bold text-lg">
-                          ₹{product.discountPrice}
-                        </p>
-                        <p className="line-through text-gray-500 text-sm">
-                          ₹{product.price}
-                        </p>
-                      </div>
-                      <p className="text-green-600 text-sm font-semibold">
-                        {product.offerPercentage}% OFF
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-blue-700 font-bold text-lg mt-2">
-                      ₹{product.price}
-                    </p>
+
+              {/* Info */}
+              <div className="p-3 flex flex-col gap-1 flex-1">
+                <h4 className="text-sm font-semibold text-gray-800 group-hover:text-sky-600 transition-colors truncate leading-snug">
+                  {product.name}
+                </h4>
+                <div className="flex items-baseline gap-2 mt-auto pt-1 flex-wrap">
+                  <span className="text-sky-700 font-bold text-base">
+                    ₹{Math.floor(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
+                  </span>
+                  {product.discountPrice && product.discountPrice < product.price && (
+                    <span className="text-gray-400 line-through text-xs">
+                      ₹{Math.floor(product.price)}
+                    </span>
                   )}
-                </Link>
+                </div>
               </div>
-            </div>
+            </Link>
           )
         )}
       </div>

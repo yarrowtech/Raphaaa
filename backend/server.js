@@ -5,6 +5,7 @@ const path = require("path");
 dotenv.config({ path: path.join(__dirname, ".env") });
 const mongoose = require("mongoose");
 const connectDB = require("./config/db");
+const Product = require("./models/Product");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
@@ -126,8 +127,26 @@ if (process.env.NODE_ENV === 'development') {
   mongoose.modelSchemas = {};
 }
 
-// Connect to the MongoDB database
-connectDB();
+async function dropLegacyProductSkuUniqueIndex() {
+  try {
+    const indexes = await Product.collection.indexes();
+    const skuIndex = indexes.find((index) => index?.key?.sku === 1 && index?.unique);
+    if (skuIndex?.name) {
+      await Product.collection.dropIndex(skuIndex.name);
+      console.log(`[MIGRATION] Dropped legacy unique product SKU index: ${skuIndex.name}`);
+    }
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (
+      error?.codeName === "NamespaceNotFound" ||
+      message.includes("index not found") ||
+      message.includes("ns not found")
+    ) {
+      return;
+    }
+    console.error("Failed to drop legacy product SKU index:", error.message);
+  }
+}
 
 app.get("/", (req, res) => {
     res.send("Welcome to Raphaaa API!!");
@@ -187,9 +206,20 @@ app.get('/healthz', (req, res) => {
 });
 
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is running on https://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    await dropLegacyProductSkuUniqueIndex();
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server is running on https://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Background worker for queued jobs (emails/webhooks/retries)
 startJobWorker({
