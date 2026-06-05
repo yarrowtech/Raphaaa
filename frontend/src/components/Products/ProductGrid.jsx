@@ -87,16 +87,63 @@ const ProductGrid = ({ products = [], loading, error }) => {
   const pUrl = (p) =>
     `/product/${p.name.toLowerCase().replace(/\s+/g, "-")}/p/${p._id}`;
 
-  const getColorVariantCount = (product) => {
+  // Named-color → hex map (matches FilterSidebar COLOR_MAP)
+  const COLOR_HEX = {
+    red: "#ef4444", blue: "#3b82f6", black: "#111827", green: "#22c55e",
+    yellow: "#eab308", gray: "#9ca3af", grey: "#9ca3af", white: "#f9fafb",
+    pink: "#ec4899", beige: "#e5d5b7", navy: "#1e3a5f", orange: "#f97316",
+    purple: "#a855f7", brown: "#92400e", teal: "#14b8a6", olive: "#7c8c3b",
+    maroon: "#7f1d1d", cream: "#fffdd0", khaki: "#c3b091", indigo: "#6366f1",
+    coral: "#f97316", magenta: "#d946ef", cyan: "#06b6d4", silver: "#d1d5db",
+    gold: "#f59e0b", lavender: "#a78bfa",
+  };
+
+  const resolveColor = (c) => {
+    if (!c) return "#9ca3af";
+    const s = String(c).trim();
+    // already a hex / rgb value
+    if (/^#|^rgb/.test(s)) return s;
+    const key = s.toLowerCase().replace(/\s+/g, "");
+    // try the map with some normalization ("whitetee" → "white", etc.)
+    for (const [k, v] of Object.entries(COLOR_HEX)) {
+      if (key === k || key.startsWith(k)) return v;
+    }
+    // fallback: use the raw string as a CSS color (handles "tomato", "steelblue", etc.)
+    return s;
+  };
+
+  const isLight = (cssColor) => {
+    // simple lightness check for white/beige/cream/silver/yellow shades
+    const light = ["#f9fafb","#f3f4f6","#e5d5b7","#fffdd0","#c3b091","#d1d5db","#eab308","#f59e0b","#a78bfa"];
+    return light.includes(cssColor.toLowerCase()) || cssColor.toLowerCase() === "white";
+  };
+
+  const getProductColors = (product) => {
+    // colorVariants: [{color, colorName, images, sizes}]
     if (Array.isArray(product?.colorVariants) && product.colorVariants.length > 0) {
-      return new Set(product.colorVariants.map((variant) => String(variant?.color || "").trim()).filter(Boolean)).size;
+      return [
+        ...new Map(
+          product.colorVariants
+            .filter((cv) => cv?.color)
+            .map((cv) => [String(cv.color).toLowerCase(), { raw: cv.color, name: cv.colorName || cv.color }])
+        ).values(),
+      ];
     }
-
+    // legacy variants: [{color, size, ...}]
     if (Array.isArray(product?.variants) && product.variants.length > 0) {
-      return new Set(product.variants.map((variant) => String(variant?.color || "").trim()).filter(Boolean)).size;
+      return [
+        ...new Map(
+          product.variants
+            .filter((v) => v?.color)
+            .map((v) => [String(v.color).toLowerCase(), { raw: v.color, name: v.color }])
+        ).values(),
+      ];
     }
-
-    return 0;
+    // flat colors array: ["White", "Black", ...]
+    if (Array.isArray(product?.colors) && product.colors.length > 0) {
+      return product.colors.filter(Boolean).map((c) => ({ raw: c, name: c }));
+    }
+    return [];
   };
 
   const resolveOfferForProduct = (product) => {
@@ -157,7 +204,7 @@ const ProductGrid = ({ products = [], loading, error }) => {
         {list.map((product) => {
           const img        = product.colorVariants?.[0]?.images?.[0]?.url || product.images?.[0]?.url || demoImg;
           const isNew      = Date.now() - new Date(product.createdAt).getTime() < 2 * 24 * 60 * 60 * 1000;
-          const colorVariantCount = getColorVariantCount(product);
+          const productColors     = getProductColors(product);
           const timedOffer = resolveOfferForProduct(product);
           const saleLive   = isSaleLive(timedOffer);
           const saleSoon   = isSaleUpcoming(timedOffer);
@@ -237,13 +284,25 @@ const ProductGrid = ({ products = [], loading, error }) => {
                     )}
                   </div>
 
-                  {colorVariantCount > 0 && (
-                    <div className="absolute bottom-3 right-3 z-10 rounded-full bg-black/75 backdrop-blur-sm px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white border border-white/10 shadow-lg">
-                      {colorVariantCount === 2
-                        ? "2 variants"
-                        : colorVariantCount > 2
-                        ? "2+ variants available"
-                        : "1 variant"}
+                  {/* Color swatches — tight white pill in bottom-right corner */}
+                  {productColors.length > 0 && (
+                    <div className="absolute -bottom-2 -right-3 pb-3 pr-6 flex items-center gap-1 bg-white rounded-xl px-2 py-1 shadow-sm">
+                      {productColors.slice(0, 2).map(({ raw, name }, i) => {
+                        const bg = resolveColor(raw);
+                        return (
+                          <span
+                            key={i}
+                            title={name}
+                            className={`w-5 h-5 rounded-full shrink-0 transition-transform group-hover:scale-110 ${isLight(bg) ? "border border-gray-300" : "border border-gray-200"}`}
+                            style={{ backgroundColor: bg }}
+                          />
+                        );
+                      })}
+                      {productColors.length > 2 && (
+                        <span className="text-[8px] font-bold text-gray-600 leading-none">
+                          +{productColors.length - 2}
+                        </span>
+                      )}
                     </div>
                   )}
 
