@@ -3,10 +3,6 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "https://raphaaa-backend.onrender.com/sitemap.xml"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
