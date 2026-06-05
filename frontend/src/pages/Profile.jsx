@@ -119,12 +119,12 @@ function MenuRow({ icon: Icon, label, onClick, iconBg = "bg-gray-100", iconColor
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
+      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
     >
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
-        <Icon className={`text-sm ${iconColor}`} />
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
+        <Icon className={`text-xs ${iconColor}`} />
       </div>
-      <span className="flex-1 text-[15px] text-gray-800 font-normal">{label}</span>
+      <span className="flex-1 text-[13px] text-gray-800 font-normal">{label}</span>
       {right || <FaChevronRight className="text-gray-300 text-xs shrink-0" />}
     </button>
   );
@@ -136,7 +136,7 @@ function MenuSection({ title, children }) {
     <div className="p-4">
       <div className="bg-white rounded-2xl">
       {title && (
-        <p className="text-[15px] font-bold text-gray-900 px-4 pt-5 pb-0.5">{title}</p>
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 pt-4 pb-0.5">{title}</p>
       )}
       <div className="divide-y divide-gray-100">{children}</div>
     </div>
@@ -895,15 +895,15 @@ export default function Profile() {
                     ? <img src={user.photo} alt="" className="w-full h-full object-cover" />
                     : <span>{initials}</span>}
                 </div>
-                <h2 className="text-slate-800 text-[19px] font-bold leading-tight">{user?.name}</h2>
-                <div className="flex items-center gap-3 mt-1.5 flex-wrap justify-center">
+                <h2 className="text-slate-800 text-[15px] font-bold leading-tight">{user?.name}</h2>
+                <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
                   {user?.mobile && (
-                    <span className="flex items-center gap-1 text-sky-200 text-sm">
-                      <FaPhone className="text-xs text-slate-800" />{user.mobile}
+                    <span className="flex items-center gap-1 text-sky-200 text-xs">
+                      <FaPhone className="text-[10px] text-slate-800" />{user.mobile}
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-slate-800 text-sm">
-                    <FaEnvelope className="text-xs text-slate-800" />{user?.email}
+                  <span className="flex items-center gap-1 text-slate-800 text-xs">
+                    <FaEnvelope className="text-[10px] text-slate-800" />{user?.email}
                   </span>
                 </div>
               </div>
@@ -926,7 +926,7 @@ export default function Profile() {
                     <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center`}>
                       <Icon className={`text-lg ${iconColor}`} />
                     </div>
-                    <span className="text-[12px] font-semibold text-gray-700 text-center leading-tight px-1">{label}</span>
+                    <span className="text-[11px] font-semibold text-gray-700 text-center leading-tight px-1">{label}</span>
                   </button>
                 ))}
               </div>
@@ -978,7 +978,7 @@ export default function Profile() {
                   <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
                     <AiOutlineLogout className="text-base text-red-500" />
                   </div>
-                  <span className="flex-1 text-[15px] text-red-500 font-medium">Log out</span>
+                  <span className="flex-1 text-[13px] text-red-500 font-medium">Log out</span>
                 </button>
               </div>
               </div>
@@ -1011,7 +1011,7 @@ export default function Profile() {
                 >
                   <FaArrowLeft size={14} />
                 </button>
-                <h1 className="text-base font-semibold text-gray-800">
+                <h1 className="text-sm font-semibold text-gray-800">
                   {activeTab === "address" && showAddressForm
                     ? "Add new address"
                     : TAB_TITLES[activeTab] || "Account"}
@@ -1048,7 +1048,7 @@ export default function Profile() {
                         <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                           <FaPlus className="text-sky-600 text-sm" />
                         </div>
-                        <span className="flex-1 text-[15px] text-sky-600 font-medium text-left">Add new address</span>
+                        <span className="flex-1 text-[13px] text-sky-600 font-medium text-left">Add new address</span>
                         <FaChevronRight className="text-gray-300 text-xs shrink-0" />
                       </button>
                     </div>
@@ -1067,7 +1067,7 @@ export default function Profile() {
                       </div>
                     ) : (
                       <div className="mt-2">
-                        <p className="text-[13px] text-gray-400 px-4 pt-4 pb-1 font-medium">Your saved addresses</p>
+                        <p className="text-[11px] text-gray-400 px-4 pt-4 pb-1 font-medium uppercase tracking-wider">Your saved addresses</p>
                         <div className="divide-y divide-gray-100">
                           {profileAddresses.map((addr, idx) => {
                             const isDefault    = addr.isDefault || idx === 0;
@@ -1091,13 +1091,13 @@ export default function Profile() {
                                   {/* Content */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2 mb-0.5">
-                                      <p className="text-[15px] font-bold text-gray-900">{addr.addressType || "Home"}</p>
+                                      <p className="text-[13px] font-bold text-gray-900">{addr.addressType || "Home"}</p>
                                       {/* Bookmark/pin icon */}
                                       {/* <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                       </svg> */}
                                     </div>
-                                    <p className="text-[13px] text-gray-500 leading-snug">
+                                    <p className="text-[11px] text-gray-500 leading-snug">
                                       {[addr.firstName, addr.lastName].filter(Boolean).join(" ")}
                                       {(addr.firstName || addr.lastName) ? ", " : ""}
                                       {addr.address}
@@ -1107,7 +1107,7 @@ export default function Profile() {
                                       {addr.postalCode ? ` ${addr.postalCode}` : ""}
                                     </p>
                                     {addr.phone && (
-                                      <p className="text-[13px] text-gray-500 mt-1">Phone number: {addr.phone}</p>
+                                      <p className="text-[11px] text-gray-500 mt-1">Phone number: {addr.phone}</p>
                                     )}
                                     {/* Action row */}
                                     <div className="flex items-center gap-4 mt-2.5">
