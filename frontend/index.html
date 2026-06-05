@@ -47,15 +47,110 @@
 
   <!-- ✅ Robots -->
   <meta name="robots" content="index, follow" />
+  <!-- Organization schema -->
   <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Raphaaa",
+    "alternateName": "Raphaaa by Citimart",
+    "url": "https://www.raphaaa.com",
+    "logo": "https://www.raphaaa.com/favicon-512x512.png",
+    "sameAs": [
+      "https://www.instagram.com/raphaaaofficial",
+      "https://www.facebook.com/RaphaaaStore"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "url": "https://www.raphaaa.com/contact-us"
+    }
+  }
+  </script>
+
+  <!-- WebSite schema — enables Google Search sitelinks search box -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Raphaaa",
+    "url": "https://www.raphaaa.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.raphaaa.com/collections/all?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- SiteNavigationElement — signals key links to Google for sitelinks -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Raphaaa Navigation",
+    "itemListElement": [
       {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Raphaaa",
-        "url": "https://www.raphaaa.com",
-        "logo": "https://www.raphaaa.com/favicon-512x512.png"
+        "@type": "SiteLinksSearchBox",
+        "url": "https://www.raphaaa.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Collections",
+        "description": "Browse all premium streetwear, shirts, t-shirts and exclusive drops",
+        "url": "https://www.raphaaa.com/collections/all"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About Us",
+        "description": "Learn about Raphaaa — premium streetwear by Citimart Group",
+        "url": "https://www.raphaaa.com/about"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Contact Us",
+        "description": "Get in touch with the Raphaaa support team",
+        "url": "https://www.raphaaa.com/contact-us"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Privacy & Policy",
+        "description": "Read our privacy policy and data protection terms",
+        "url": "https://www.raphaaa.com/privacy-policy"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "name": "Offers",
+        "description": "Limited time deals and flash sales on premium clothing",
+        "url": "https://www.raphaaa.com/offers"
       }
-    </script>
+    ]
+  }
+  </script>
+
+  <!-- BreadcrumbList for homepage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home",             "item": "https://www.raphaaa.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Collections",     "item": "https://www.raphaaa.com/collections/all" },
+      { "@type": "ListItem", "position": 3, "name": "About Us",        "item": "https://www.raphaaa.com/about" },
+      { "@type": "ListItem", "position": 4, "name": "Contact Us",      "item": "https://www.raphaaa.com/contact-us" },
+      { "@type": "ListItem", "position": 5, "name": "Privacy & Policy","item": "https://www.raphaaa.com/privacy-policy" },
+      { "@type": "ListItem", "position": 6, "name": "Offers",          "item": "https://www.raphaaa.com/offers" }
+    ]
+  }
+  </script>
   <title>Raphaaa by Citimart Group | Premium Streetwear & Lifestyle</title>
 </head>
 
