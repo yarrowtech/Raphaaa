@@ -126,9 +126,7 @@ const NewArrivals = () => {
           ) : (
             <Link
               key={`${product._id}_${index}`}
-              to={`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-                product.skuCode || product.sku || product._id
-              )}`}
+              to={`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${product._id}`}
               className="min-w-55 max-w-55 bg-white rounded-2xl border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 transition-all duration-300 group overflow-hidden flex flex-col shrink-0"
             >
               {/* Image */}

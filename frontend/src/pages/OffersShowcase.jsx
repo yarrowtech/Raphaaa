@@ -292,7 +292,7 @@ const OffersShowcase = () => {
                         key={product._id}
                         to={`/product/${product.name
                           ?.toLowerCase()
-                          .replace(/\s+/g, "-")}/p/${product.skuCode || product.sku || product._id}`}
+                          .replace(/\s+/g, "-")}/p/${product._id}`}
                         className="group relative bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/70 transition-all duration-300"
                       >
                         {/* % badge */}

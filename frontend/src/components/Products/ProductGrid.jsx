@@ -85,11 +85,7 @@ const ProductGrid = ({ products = [], loading, error }) => {
   };
 
   const pUrl = (p) =>
-    `/product/${p.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-      p.skuCode || p.sku ||
-      p.colorVariants?.[0]?.sizes?.[0]?.sku ||
-      p.variants?.[0]?.sku || p._id
-    )}`;
+    `/product/${p.name.toLowerCase().replace(/\s+/g, "-")}/p/${p._id}`;
 
   const getColorVariantCount = (product) => {
     if (Array.isArray(product?.colorVariants) && product.colorVariants.length > 0) {

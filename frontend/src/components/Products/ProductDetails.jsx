@@ -2153,8 +2153,22 @@ const ProductDetails = ({ productId }) => {
   };
 
   useEffect(() => {
+    const isMongoId = (s) => /^[a-f\d]{24}$/i.test(String(s || ""));
+
     const fetchByParams = async () => {
       try {
+        // Fast path: URL param is a MongoDB _id → fetch directly, no full-catalog scan
+        if (isMongoId(sku)) {
+          dispatch(fetchProductDetails(sku));
+          dispatch(fetchSimilarProducts(sku));
+          // Still load catalog for similar-products fallback (non-blocking)
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products`)
+            .then(({ data }) => setCatalogProducts(Array.isArray(data) ? data : []))
+            .catch(() => {});
+          return;
+        }
+
+        // Slow path: legacy SKU or name-slug — scan full catalog
         const { data } = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/products`
         );
@@ -2166,16 +2180,13 @@ const ProductDetails = ({ productId }) => {
         let matchedProduct = null;
         if (sku) {
           matchedProduct = data.find((p) => {
-            // match product-level sku
             if (String(p.skuCode || p.sku || p._id) === String(sku)) return true;
-            // match colorVariants sizes sku
             if (Array.isArray(p.colorVariants)) {
               for (const cv of p.colorVariants) {
                 if (Array.isArray(cv.sizes) && cv.sizes.some((s) => String(s?.sku || "") === String(sku)))
                   return true;
               }
             }
-            // match legacy variants sku
             if (Array.isArray(p.variants) && p.variants.some((v) => String(v?.sku || "") === String(sku)))
               return true;
             return false;
@@ -3821,7 +3832,7 @@ const ProductDetails = ({ productId }) => {
                       onClick={() =>
                         navigate(
                           `/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-                            product.skuCode || product.sku || product._id
+                            product._id
                           )}`
                         )
                       }
@@ -3918,7 +3929,7 @@ const ProductDetails = ({ productId }) => {
                       onClick={() =>
                         navigate(
                           `/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-                            product.skuCode || product.sku || product._id
+                            product._id
                           )}`
                         )
                       }
@@ -4026,7 +4037,7 @@ const ProductDetails = ({ productId }) => {
                       onClick={() =>
                         navigate(
                           `/product/${product.name.toLowerCase().replace(/\s+/g, "-")}/p/${encodeURIComponent(
-                            product.skuCode || product.sku || product._id
+                            product._id
                           )}`
                         )
                       }

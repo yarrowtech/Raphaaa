@@ -43,7 +43,7 @@ const ProductCard = ({ product, badge }) => {
       to={`/product/${String(product?.name || "")
         .toLowerCase()
         .replace(/\s+/g, "-")}/p/${encodeURIComponent(
-        product?.skuCode || product?.sku || product?._id
+        product?._id
       )}`}
       className="block group"
     >
