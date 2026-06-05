@@ -170,7 +170,7 @@ const CollectionPage = () => {
           </aside>
 
           {/* ── MAIN CONTENT ── */}
-          <main className="flex-1 min-w-0 px-4 md:px-5 py-5 lg:h-full lg:overflow-y-auto">
+          <main data-scroll-container className="flex-1 min-w-0 px-4 md:px-5 py-5 lg:h-full lg:overflow-y-auto">
 
             {/* ── Toolbar row ── */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

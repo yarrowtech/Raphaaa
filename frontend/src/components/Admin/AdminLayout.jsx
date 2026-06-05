@@ -53,6 +53,7 @@ const AdminLayout = () => {
 
         {/* scrollable content only */}
         <div
+          data-scroll-container
           className="h-full overflow-y-auto"
           style={{
             paddingTop: `${HEADER_HEIGHT + 24}px`,
