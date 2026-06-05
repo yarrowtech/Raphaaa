@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Block admin routes from indexing
+# Block private / auth / admin routes
 Disallow: /admin
 Disallow: /admin/
 Disallow: /checkout
@@ -10,6 +10,13 @@ Disallow: /profile
 Disallow: /order/
 Disallow: /login
 Disallow: /register
+Disallow: /register-delivery
+Disallow: /refer
+Disallow: /wishlist
+Disallow: /review/
+Disallow: /previously-viewed
 
-# Sitemap
-Sitemap: https://raphaaa.onrender.com/sitemap.xml
+# Block API and backend paths
+Disallow: /api/
+
+Sitemap: https://www.raphaaa.com/sitemap.xml

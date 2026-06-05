@@ -87,7 +87,7 @@ const CollectionPage = () => {
 
   const pageTitle   = `${displayName} Collection | Raphaaa`;
   const pageDesc    = `Shop the ${displayName} collection at Raphaaa — premium quality clothing.`;
-  const canonicalUrl = `http://localhost:5173/collections/${collection || "all"}`;
+  const canonicalUrl = `https://www.raphaaa.com/collections/${collection || "all"}`;
 
   return (
     <>
