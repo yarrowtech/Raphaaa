@@ -685,10 +685,12 @@ const Checkout = () => {
 
   if (!orderProcessing && (!cart || !cart.products || cart.products.length === 0)) return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-6">
-      <div className="text-5xl mb-4">🛒</div>
+      <div className="text-5xl mb-4">
+        <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-cart-illustration-svg-download-png-1800917.png" alt="empty cart" />
+      </div>
       <h2 className="text-xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
       <p className="text-gray-500 text-sm mb-6">Add some products before checking out.</p>
-      <button onClick={() => navigate("/")}
+      <button onClick={() => navigate("/collections/all")}
         className="px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white font-semibold rounded-xl hover:opacity-90 transition shadow-sm">
         Continue Shopping
       </button>

@@ -137,7 +137,8 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center text-gray-600 space-y-4">
         <img
-          src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
+          // src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
+          src="/trolley.gif"
           alt="Empty Cart"
           className="w-28 h-28 opacity-75"
         />

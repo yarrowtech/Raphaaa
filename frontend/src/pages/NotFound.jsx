@@ -5,11 +5,11 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 via-sky-200 to-blue-300 text-gray-800 px-6">
       {/* Content Card */}
-      <div className="bg-white/70 backdrop-blur-sm shadow-xl rounded-2xl p-10 text-center border border-white/40 max-w-lg w-full">
+      <div className="text-center">
         <img
           src="/404.png"
           alt="Page Not Found"   
-          className="w-64 mx-auto mb-6 drop-shadow-md"
+          className="w-[600px] mx-auto mb-6 drop-shadow-md"
         />
 
         <h1 className="text-5xl font-bold text-sky-700 mb-3">Oops!</h1>
