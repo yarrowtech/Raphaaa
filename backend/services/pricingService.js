@@ -22,6 +22,13 @@ const itemMatchesOffer = (offer, item, state = {}) => {
   const isSaleProtected = state.saleProtectedProductIds instanceof Set
     && state.saleProtectedProductIds.has(pid);
 
+  // ── Legacy productIds field (used by the admin UI) ────────────────────────
+  // If the offer lists specific products, it must ONLY apply to those products.
+  if (Array.isArray(offer.productIds) && offer.productIds.length > 0) {
+    if (!offer.productIds.some((x) => String(x) === pid)) return false;
+  }
+
+  // ── Rule-engine conditions ─────────────────────────────────────────────────
   if (Array.isArray(c.excludeProductIds) && c.excludeProductIds.some((x) => String(x) === pid)) return false;
   if (Array.isArray(c.includeProductIds) && c.includeProductIds.length > 0) {
     if (!c.includeProductIds.some((x) => String(x) === pid)) return false;
@@ -128,7 +135,23 @@ function applyOfferToContext({ offer, context, state }) {
   }
 
   if (scope === "cart") {
-    const base = state.subtotal - state.itemDiscountTotal;
+    // If the offer targets specific products (legacy productIds), restrict
+    // the discount base to only those matching lines, not the whole cart.
+    const hasProductRestriction =
+      (Array.isArray(offer.productIds) && offer.productIds.length > 0) ||
+      (Array.isArray((offer.conditions || {}).includeProductIds) &&
+        (offer.conditions.includeProductIds || []).length > 0);
+
+    let base;
+    if (hasProductRestriction) {
+      base = state.items.reduce((sum, it, idx) => {
+        if (!itemMatchesOffer(offer, it, state)) return sum;
+        return sum + clampMoney(it.lineSubtotal - (state.itemDiscounts[idx] || 0));
+      }, 0);
+    } else {
+      base = state.subtotal - state.itemDiscountTotal;
+    }
+
     if (base <= 0) return {};
     if (type === "flat") {
       return { cartDiscount: Math.min(base, Number(benefit.amount || 0)) };

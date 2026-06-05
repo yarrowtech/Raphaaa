@@ -2518,16 +2518,15 @@ const ProductDetails = ({ productId }) => {
     }
   }, [selectedProduct, isOutOfStock]);
 
+  // Reset UI selections when the displayed product changes
+  // (dispatching is handled by the slug/sku useEffect — no re-fetch here)
   useEffect(() => {
     if (productFetchId) {
-      dispatch(fetchProductDetails(productFetchId));
-      dispatch(fetchSimilarProducts(productFetchId));
-
       setSelectedColor("");
       setSelectedSize("");
-      setMainImage("");  // reset so the initialization effect can set the correct initial image
+      setMainImage("");
     }
-  }, [dispatch, productFetchId]);
+  }, [productFetchId]);
 
   // Set initial main image from product (or first colorVariant) — only when no image is displayed yet
   useEffect(() => {
@@ -2843,8 +2842,8 @@ const ProductDetails = ({ productId }) => {
   }, []);
 
   if (loading) return <ProductDetailsSkeleton />;
-
-  if (error) return <p>Error: {error}</p>;
+  if (error && !selectedProduct) return <p className="text-center text-red-500 py-10">{error}</p>;
+  if (!selectedProduct) return <ProductDetailsSkeleton />;
 
   const formatReviewDate = (isoDate) => {
     const options = { day: "2-digit", month: "long", year: "numeric" };

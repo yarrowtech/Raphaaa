@@ -172,6 +172,9 @@ const productSlice = createSlice({
         .addCase(fetchProductDetails.pending, (state) => {
             state.loading = true;
             state.error = null;
+            // Clear stale data immediately so the old product never flickers
+            state.selectedProduct = null;
+            state.similarProducts = [];
         })
         .addCase(fetchProductDetails.fulfilled, (state, action) => {
             state.loading = false;
