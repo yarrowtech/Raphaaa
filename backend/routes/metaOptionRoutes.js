@@ -3,7 +3,17 @@ const router = express.Router();
 const MetaOption = require("../models/MetaOption");
 const { protect, adminOrMerchantise } = require("../middleware/authMiddleware");
 
-// Get all
+// Public — returns only type + value, no auth needed (used by storefront filters)
+router.get("/public", async (req, res) => {
+  try {
+    const options = await MetaOption.find({}, "type value").sort({ type: 1, value: 1 });
+    res.json(options);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch options" });
+  }
+});
+
+// Get all (admin)
 router.get("/", protect, adminOrMerchantise, async (req, res) => {
   const options = await MetaOption.find()
     .populate("createdBy", "name email role")

@@ -20,13 +20,14 @@ const FilterSidebar = ({ onClose }) => {
   const [materials,  setMaterials]      = useState([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/meta-options`)
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/meta-options/public`)
       .then((r) => r.json())
       .then((data) => {
         setCategories(data.filter((o) => o.type === "category").map((o) => o.value));
         setGenders(   data.filter((o) => o.type === "gender"  ).map((o) => o.value));
         setMaterials( data.filter((o) => o.type === "material").map((o) => o.value));
-      }).catch(console.error);
+      })
+      .catch(console.error);
   }, []);
 
   const [filters, setFilters]     = useState({

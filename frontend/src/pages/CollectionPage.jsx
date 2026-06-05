@@ -39,7 +39,20 @@ const CollectionPage = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProductsByFilters({ collection, ...queryParams }));
+    // When the URL slug is a specific category (e.g. /collections/shirt),
+    // pass it as the `category` filter so the backend uses query.category.
+    // If the sidebar also has a category param, that takes priority (user override).
+    const categoryFromSlug =
+      collection && collection !== "all" ? collection : undefined;
+
+    dispatch(
+      fetchProductsByFilters({
+        ...(categoryFromSlug && !queryParams.category
+          ? { category: categoryFromSlug }
+          : {}),
+        ...queryParams,
+      })
+    );
   }, [dispatch, collection, searchParams]);
 
   useEffect(() => {
@@ -110,7 +123,7 @@ const CollectionPage = () => {
           {/* ── Mobile filter FAB ── */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[60]
+            className="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-60
                        flex items-center gap-2 px-5 py-2.5
                        bg-gray-900 text-white text-sm font-semibold rounded-full
                        shadow-xl active:scale-95 transition-all"
