@@ -337,11 +337,20 @@ router.post("/cod", protect, async (req, res) => {
     try {
       const userEmail = req.user.email;
       const orderDate = new Date(order.createdAt).toLocaleDateString("en-GB");
-      // Build the PDF buffer
-      const invoiceBuffer = await buildInvoicePDF({
-        ...createdOrder.toObject(),
-        user: { name: req.user.name, email: req.user.email }, // ensure name/email available
-      });
+      // Build the PDF buffer — pass the quote so shipping/discounts show correctly
+      const invoiceBuffer = await buildInvoicePDF(
+        {
+          ...createdOrder.toObject(),
+          user: { name: req.user.name, email: req.user.email },
+        },
+        {
+          shipping:         Number(quote.shipping         || 0),
+          shippingDiscount: Number(quote.shippingDiscount || 0),
+          totalDiscount:    Number(quote.totalDiscount    || 0),
+          walletApplied:    walletApplied,
+          appliedOffers:    (quote.appliedOffers || []).map((o) => o.title || o).filter(Boolean),
+        }
+      );
 
       const message = orderItems
         .map((item) => {
