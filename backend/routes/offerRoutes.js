@@ -7,6 +7,7 @@ const Subscriber = require("../models/Subscriber");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const { enqueueJob } = require("../services/jobQueue");
+const { syncTimedOfferPricing } = require("../utils/timedOfferSync");
 
 // Create offer
 router.post("/", protect, admin, async (req, res) => {
@@ -42,6 +43,7 @@ const sendInitialOfferEmails = async (offer) => {
   }
 };
 await sendInitialOfferEmails(offer);
+  await syncTimedOfferPricing({ productIds: offer.productIds });
 
 
   res.status(201).json(offer);
@@ -94,7 +96,13 @@ router.get("/:id", protect, admin, async (req, res) => {
 
 // Update offer
 router.put("/:id", protect, admin, async (req, res) => {
+  const previousOffer = await Offer.findById(req.params.id).select("productIds");
   const updatedOffer = await Offer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const affectedProductIds = [
+    ...(previousOffer?.productIds || []),
+    ...(updatedOffer?.productIds || []),
+  ];
+  await syncTimedOfferPricing({ productIds: affectedProductIds });
 
   res.json(updatedOffer);
 });
@@ -106,6 +114,7 @@ router.delete("/:id", protect, admin, async (req, res) => {
     return res.status(404).json({ message: "Offer not found" });
   }
 
+  await syncTimedOfferPricing({ productIds: offer.productIds });
   res.json({ message: "Offer deleted" });
 });
 

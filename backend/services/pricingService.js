@@ -14,11 +14,13 @@ const isOfferInWindow = (offer, now) => {
   return now >= s && now <= e && offer.isActive !== false;
 };
 
-const itemMatchesOffer = (offer, item) => {
+const itemMatchesOffer = (offer, item, state = {}) => {
   const c = offer.conditions || {};
   const pid = String(item.productId || item._id || "");
   const category = String(item.category || "");
   const brand = String(item.brand || "");
+  const isSaleProtected = state.saleProtectedProductIds instanceof Set
+    && state.saleProtectedProductIds.has(pid);
 
   if (Array.isArray(c.excludeProductIds) && c.excludeProductIds.some((x) => String(x) === pid)) return false;
   if (Array.isArray(c.includeProductIds) && c.includeProductIds.length > 0) {
@@ -30,6 +32,7 @@ const itemMatchesOffer = (offer, item) => {
   if (Array.isArray(c.includeBrands) && c.includeBrands.length > 0) {
     if (!c.includeBrands.some((x) => String(x).toLowerCase() === brand.toLowerCase())) return false;
   }
+  if (isSaleProtected && (offer.benefit?.scope || "product") === "product") return false;
 
   return true;
 };
@@ -139,7 +142,7 @@ function applyOfferToContext({ offer, context, state }) {
   // product scope
   const eligibleIdx = state.items
     .map((it, idx) => ({ it, idx }))
-    .filter(({ it }) => itemMatchesOffer(offer, it));
+    .filter(({ it }) => itemMatchesOffer(offer, it, state));
 
   if (eligibleIdx.length === 0) return {};
 
@@ -196,10 +199,33 @@ async function priceQuote({
   const productIds = normItems.map((it) => it.productId).filter(Boolean);
   const productDocs = productIds.length
     ? await Product.find({ _id: { $in: productIds } })
-        .select("freeShipping extraShippingCharge")
+        .select("price mrp discountPrice offerPercentage activeSaleOfferId activeSalePrice freeShipping extraShippingCharge")
         .lean()
     : [];
   const productMap = Object.fromEntries(productDocs.map((p) => [String(p._id), p]));
+  const saleProtectedProductIds = new Set(
+    productDocs.filter((p) => {
+      const mrp = Number(p?.mrp || 0);
+      const price = Number(p?.price || 0);
+      const discountPrice = Number(p?.discountPrice || 0);
+      const activeSalePrice = Number(p?.activeSalePrice || 0);
+      const cartLine = normItems.find((it) => String(it.productId) === String(p?._id));
+      const linePrice = Number(cartLine?.unitPrice || 0);
+
+      const livePrice =
+        (activeSalePrice > 0 && activeSalePrice < price ? activeSalePrice : 0) ||
+        (discountPrice > 0 && discountPrice < price ? discountPrice : 0) ||
+        (mrp > 0 && price > 0 && price < mrp ? price : 0) ||
+        (mrp > 0 && linePrice > 0 && linePrice < mrp ? linePrice : 0);
+
+      return livePrice > 0 && (
+        (mrp > 0 && livePrice < mrp) ||
+        (price > 0 && livePrice < price) ||
+        (discountPrice > 0 && livePrice <= discountPrice) ||
+        (activeSalePrice > 0 && livePrice <= activeSalePrice)
+      );
+    }).map((p) => String(p._id))
+  );
 
   const productExtraShipping = normItems.reduce((sum, it) => {
     const p = productMap[String(it.productId)];
@@ -243,11 +269,14 @@ async function priceQuote({
     appliedOffers: [],
     usedExclusiveGroups: new Set(),
     blocked: false,
+    saleProtectedProductIds,
   };
 
   const context = { userId, newUser, paymentMethod: pm, couponSet };
+  const blockPromosForSaleCart = saleProtectedProductIds.size > 0;
 
   for (const offer of offers) {
+    if (blockPromosForSaleCart) break;
     if (state.blocked) break;
 
     const c = offer.conditions || {};
@@ -319,7 +348,7 @@ async function priceQuote({
   let personalCouponCode = "";
 
   // Personal first-order coupon support (user-specific 10% style coupon from register flow)
-  if (userId && couponSet.size > 0) {
+  if (!blockPromosForSaleCart && userId && couponSet.size > 0) {
     const user = await User.findById(userId).select("coupon").lean();
     const userCouponCode = String(user?.coupon?.code || "").trim().toUpperCase();
     const userCouponDiscount = Number(user?.coupon?.discount || 0);

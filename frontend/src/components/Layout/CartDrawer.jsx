@@ -1,13 +1,29 @@
 import { IoIosClose } from "react-icons/io";
 import CartContents from "../Cart/CartContents";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCart } from "../../redux/slices/cartSlice";
+import { useEffect } from "react";
 
 const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user, guestId } = useSelector((state) => state.auth);
   const { cart } = useSelector((state) => state.cart);
   const userId = user ? user._id : null;
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    if (userId) {
+      dispatch(fetchCart({ userId }));
+      return;
+    }
+
+    if (guestId) {
+      dispatch(fetchCart({ guestId }));
+    }
+  }, [dispatch, drawerOpen, guestId, userId]);
 
   const handleCheckout = () => {
     toggleCartDrawer();

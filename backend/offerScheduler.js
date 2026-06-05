@@ -5,6 +5,7 @@ const Order = require("./models/Order");
 const User = require("./models/User");
 const Subscriber = require("./models/Subscriber");
 const { sendMail } = require("./utils/sendMail");
+const { syncTimedOfferPricing } = require("./utils/timedOfferSync");
 
 const sendScheduledEmails = async () => {
   const now = new Date();
@@ -55,5 +56,12 @@ const sendScheduledEmails = async () => {
 
 // Schedule the function to run every day at 9:00 AM
 cron.schedule("0 9 * * *", sendScheduledEmails);
+cron.schedule("* * * * *", async () => {
+  try {
+    await syncTimedOfferPricing();
+  } catch (error) {
+    console.error("Timed offer pricing sync failed:", error?.message || error);
+  }
+});
 
 module.exports = { sendScheduledEmails };

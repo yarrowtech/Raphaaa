@@ -37,6 +37,31 @@ const productSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    baseDiscountPrice: {
+        type: Number,
+        default: null,
+    },
+    baseOfferPercentage: {
+        type: Number,
+        default: 0,
+    },
+    activeSaleOfferId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Offer",
+        default: null,
+    },
+    activeSalePrice: {
+        type: Number,
+        default: null,
+    },
+    activeSaleOfferPercentage: {
+        type: Number,
+        default: 0,
+    },
+    activeSaleSyncedAt: {
+        type: Date,
+        default: null,
+    },
     countInStock: {
         type: Number,
         required: true,

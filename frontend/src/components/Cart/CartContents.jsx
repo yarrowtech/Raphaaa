@@ -43,6 +43,7 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
   const dispatch = useDispatch();
   const [savedItems, setSavedItems] = useState(loadSaved);
   const [stockByItem, setStockByItem] = useState({});
+  const [productMetaByItem, setProductMetaByItem] = useState({});
 
   const products = cart?.products || [];
 
@@ -66,6 +67,7 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
     const loadStock = async () => {
       if (!products.length) {
         if (!cancelled) setStockByItem({});
+        if (!cancelled) setProductMetaByItem({});
         return;
       }
 
@@ -75,11 +77,17 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
             const pid = String(p?.productId || "").trim();
             if (!pid) return [itemKey(p), Number(p?.quantity || 0)];
             const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products/${pid}`);
+            if (!cancelled) {
+              setProductMetaByItem((prev) => ({
+                ...prev,
+                [itemKey(p)]: data,
+              }));
+            }
             return [itemKey(p), resolveAvailableStock(data, p)];
           })
         );
         if (!cancelled) setStockByItem(Object.fromEntries(rows));
-      } catch (_) {
+      } catch {
         if (!cancelled) setStockByItem({});
       }
     };
@@ -152,9 +160,18 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
 
       {/* ── Product rows ── */}
       {products.map((product, index) => {
-        const hasDiscount = product.discountPrice && product.discountPrice < product.price;
-        const lineTotal   = (product.discountPrice ?? product.price) * product.quantity;
         const key = itemKey(product);
+        const meta = productMetaByItem[key] || {};
+        const originalPrice = Number(meta.price ?? product.price ?? 0);
+        const displayPrice = Number(
+          meta.displayPrice ??
+          meta.discountPrice ??
+          product.discountPrice ??
+          product.price ??
+          0
+        );
+        const hasDiscount = displayPrice > 0 && displayPrice < originalPrice;
+        const lineTotal   = displayPrice * product.quantity;
         const maxStock = Number(stockByItem[key] ?? 0);
         const stockLimitReached = maxStock > 0 && product.quantity >= maxStock;
 
@@ -193,11 +210,11 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
               {/* Price row */}
               <div className="flex items-baseline gap-1.5 mt-2">
                 <span className="text-sm font-bold text-gray-900">
-                  ₹{(product.discountPrice ?? product.price).toLocaleString("en-IN")}
+                  ₹{displayPrice.toLocaleString("en-IN")}
                 </span>
                 {hasDiscount && (
                   <span className="text-xs text-gray-400 line-through">
-                    ₹{product.price.toLocaleString("en-IN")}
+                    ₹{originalPrice.toLocaleString("en-IN")}
                   </span>
                 )}
               </div>
@@ -385,7 +402,13 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
                     {item.size && <span>Size {item.size}</span>}
                   </p>
                   <p className="text-xs font-bold text-gray-900 mt-1">
-                    ₹{Number(item.discountPrice ?? item.price).toLocaleString("en-IN")}
+                    ₹{Number(
+                      productMetaByItem[itemKey(item)]?.displayPrice ??
+                      productMetaByItem[itemKey(item)]?.discountPrice ??
+                      item.discountPrice ??
+                      item.price ??
+                      0
+                    ).toLocaleString("en-IN")}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 shrink-0">

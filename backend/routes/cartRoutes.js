@@ -255,6 +255,8 @@ const Product = require("../models/Product");
 const { protect } = require("../middleware/authMiddleware");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Offer = require("../models/offer");
+const { decorateProductWithTimedOffer } = require("../utils/timedOfferPricing");
 
 const router = express.Router();
 
@@ -296,6 +298,16 @@ const getProductImageForColor = (product, color) => {
     return product?.images?.[0]?.url || "";
 };
 
+const getTimedOffersForDisplay = async () =>
+    Offer.find()
+        .select("_id title startDate endDate isActive offerPercentage benefit priority productIds createdAt")
+        .lean();
+
+const resolveCartItemPrice = (product, offers = []) => {
+    const pricing = decorateProductWithTimedOffer(product, offers);
+    return Number(pricing?.displayPrice ?? pricing?.discountPrice ?? pricing?.price ?? product?.price ?? 0);
+};
+
 // Helper: resolve SKU from colorVariants or legacy variants
 const resolveSkuFromProduct = (product, color, size, skuFromRequest) => {
     if (skuFromRequest) return skuFromRequest;
@@ -323,6 +335,40 @@ const resolveSkuFromProduct = (product, color, size, skuFromRequest) => {
     return product.sku || "-";
 };
 
+const normalizeCartProducts = async (cart, offers = []) => {
+    if (!cart?.products?.length) {
+        return {
+            ...(cart?.toObject?.() || cart),
+            products: cart?.products || [],
+            totalPrice: Number(cart?.totalPrice || 0),
+        };
+    }
+
+    const products = await Promise.all(
+        cart.products.map(async (item) => {
+            const productDoc = await Product.findById(item.productId).select(
+                "_id price discountPrice offerPercentage timedOffer name images colorVariants variants skuCode sku"
+            );
+            if (!productDoc) return { ...(item.toObject?.() || item) };
+            return {
+                ...(item.toObject?.() || item),
+                price: resolveCartItemPrice(productDoc, offers),
+            };
+        })
+    );
+
+    const totalPrice = products.reduce(
+        (acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0),
+        0
+    );
+
+    return {
+        ...(cart.toObject?.() || cart),
+        products,
+        totalPrice,
+    };
+};
+
 // @route POST /api/cart
 // @desc Add a product to the cart for a guest or logged in user
 // @access Public
@@ -342,6 +388,8 @@ router.post("/", async(req, res) => {
 
         const resolvedSku = resolveSkuFromProduct(product, color, size, sku);
         const productImage = getProductImageForColor(product, color);
+        const timedOffers = await getTimedOffersForDisplay();
+        const resolvedPrice = resolveCartItemPrice(product, timedOffers);
 
         // Determine if the user is logged in or guest
         let cart = await getCart(effectiveUserId, effectiveGuestId);
@@ -369,7 +417,7 @@ router.post("/", async(req, res) => {
                     productId,
                     name: product.name,
                     image: productImage,
-                    price: product.discountPrice || product.price,
+                    price: resolvedPrice,
                     size,
                     color,
                     sku: resolvedSku,
@@ -383,7 +431,7 @@ router.post("/", async(req, res) => {
                 0
             );
             await cart.save();
-            return res.status(200).json(cart);
+            return res.status(200).json(await normalizeCartProducts(cart, timedOffers));
         } else {
             // create a new cart for guest or user
             const newCart = await Cart.create({
@@ -394,16 +442,16 @@ router.post("/", async(req, res) => {
                         productId,
                         name: product.name,
                         image: productImage,
-                        price: product.discountPrice || product.price,
+                        price: resolvedPrice,
                         size,
                         color,
                         sku: resolvedSku,
                         quantity,
                     },
                 ],
-                totalPrice: (product.discountPrice || product.price) * quantity,
+                totalPrice: resolvedPrice * quantity,
             });
-            return res.status(201).json(newCart);
+            return res.status(201).json(await normalizeCartProducts(newCart, timedOffers));
         }
     } catch (error) {
         console.error(error);
@@ -444,12 +492,12 @@ router.put("/", async(req, res) => {
                 cart.products.splice(productIndex, 1); // Remove product if the quantity is 0
             }
 
-            cart.totalPrice = cart.products.reduce(
-                (acc, item) => acc + item.price * item.quantity,
-                0
-            );
+            const timedOffers = await getTimedOffersForDisplay();
+            const normalizedCart = await normalizeCartProducts(cart, timedOffers);
+            cart.products = normalizedCart.products;
+            cart.totalPrice = normalizedCart.totalPrice;
             await cart.save();
-            return res.status(200).json(cart);
+            return res.status(200).json(normalizedCart);
         } else {
             return res.status(404).json({ message: "Product not found in cart" });
         }
@@ -487,12 +535,12 @@ router.delete("/", async (req, res) => {
         if (productIndex > -1){
             cart.products.splice(productIndex, 1);
 
-            cart.totalPrice = cart.products.reduce(
-                (acc, item) => acc + item.price * item.quantity,
-                0
-            );
+            const timedOffers = await getTimedOffersForDisplay();
+            const normalizedCart = await normalizeCartProducts(cart, timedOffers);
+            cart.products = normalizedCart.products;
+            cart.totalPrice = normalizedCart.totalPrice;
             await cart.save();
-            return res.status(200).json(cart);
+            return res.status(200).json(normalizedCart);
         } else {
             return res.status(404).json({ message: "Product not found in cart" });
         }
@@ -519,7 +567,8 @@ router.get("/", async(req, res) => {
 
         const cart = await getCart(effectiveUserId, effectiveGuestId);
         if(cart) {
-            res.json(cart);
+            const timedOffers = await getTimedOffersForDisplay();
+            res.json(await normalizeCartProducts(cart, timedOffers));
         } else {
             res.status(404).json({ message: "cart not found" });
         }
@@ -560,10 +609,10 @@ router.post("/merge", protect, async(req, res) => {
                     }
                 });
 
-                userCart.totalPrice = userCart.products.reduce(
-                    (acc, item) => acc + item.price * item.quantity,
-                    0
-                );
+                const timedOffers = await getTimedOffersForDisplay();
+                const normalizedUserCart = await normalizeCartProducts(userCart, timedOffers);
+                userCart.products = normalizedUserCart.products;
+                userCart.totalPrice = normalizedUserCart.totalPrice;
                 await userCart.save();
 
                 // Remove the guest cart after merging
@@ -572,20 +621,25 @@ router.post("/merge", protect, async(req, res) => {
                 } catch (error) {
                     console.error("Error deleting guest cart: ", error);
                 }
-                res.status(200).json(userCart);
+                res.status(200).json(normalizedUserCart);
             } else {
                 // If the user has no existing cart, assign the guest cart to the user
                 guestCart.user = req.user._id;
                 guestCart.guestId = undefined;
+                const timedOffers = await getTimedOffersForDisplay();
+                const normalizedGuestCart = await normalizeCartProducts(guestCart, timedOffers);
+                guestCart.products = normalizedGuestCart.products;
+                guestCart.totalPrice = normalizedGuestCart.totalPrice;
                 await guestCart.save();
 
-                res.status(200).json(guestCart);
+                res.status(200).json(normalizedGuestCart);
             }
         } else {
             // No guest cart found or guest cart is empty
             if(userCart){
                 // Return existing user cart
-                return res.status(200).json(userCart);
+                const timedOffers = await getTimedOffersForDisplay();
+                return res.status(200).json(await normalizeCartProducts(userCart, timedOffers));
             } else {
                 // No cart exists, create empty cart for user
                 const newCart = await Cart.create({

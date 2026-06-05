@@ -1965,16 +1965,32 @@ const ProductDetails = ({ productId }) => {
     : "";
   const saleLive = salePhase === "live";
   const saleUpcoming = salePhase === "upcoming";
-  const displayPrice = saleLive
-    ? Number(activeSaleOffer?.discountPrice || selectedProduct?.price || 0)
-    : Number(
-        activeSaleOffer
-          ? selectedProduct?.price || 0
-          : selectedProduct?.discountPrice || selectedProduct?.price || 0
-      );
-  const showDiscount = saleLive
-    ? Number(activeSaleOffer?.discountPrice || 0) < Number(selectedProduct?.price || 0)
-    : !activeSaleOffer && selectedProduct?.discountPrice && selectedProduct.discountPrice < selectedProduct.price;
+  const originalPrice = Number(selectedProduct?.price || 0);
+  const apiDisplayPrice = Number(
+    selectedProduct?.displayPrice ??
+      selectedProduct?.discountPrice ??
+      originalPrice
+  );
+  const resolvedOfferPercentage = Number(
+    activeSaleOffer?.offerPercentage ||
+      selectedProduct?.offerPercentage ||
+      0
+  );
+  const computedOfferPrice = resolvedOfferPercentage > 0
+    ? Number((originalPrice - (originalPrice * resolvedOfferPercentage) / 100).toFixed(2))
+    : originalPrice;
+  const priceCandidates = [
+    activeSaleOffer?.discountPrice,
+    selectedProduct?.timedOffer?.discountPrice,
+    apiDisplayPrice,
+    computedOfferPrice,
+  ]
+    .map(Number)
+    .filter((price) => Number.isFinite(price) && price > 0);
+  const displayPrice = priceCandidates.length > 0
+    ? Math.min(...priceCandidates)
+    : originalPrice;
+  const showDiscount = displayPrice > 0 && displayPrice < originalPrice;
   const timedOfferBadge = saleLabel;
 
   const getCardTimedOffer = (product) => {
@@ -3125,17 +3141,19 @@ const ProductDetails = ({ productId }) => {
                     {showDiscount && (
                       <>
                         <span className="text-base text-gray-400 line-through">
-                          ₹{Math.floor(selectedProduct.price)}
+                          ₹{Math.floor(originalPrice)}
                         </span>
                         <span className="text-sky-600 font-bold text-base">
-                          {saleLive ? `${timedOffer?.offerPercentage || 0}% off` : `${selectedProduct.offerPercentage}% off`}
+                          {saleLive
+                            ? `${activeSaleOffer?.offerPercentage || selectedProduct.offerPercentage || 0}% off`
+                            : `${selectedProduct.offerPercentage}% off`}
                         </span>
                       </>
                     )}
                   </div>
-                  {saleLive && (
+                  {showDiscount && (
                     <p className="text-green-600 text-sm font-medium">
-                      You save ₹{Math.floor(Number(selectedProduct.price || 0) - Number(timedOffer?.discountPrice || 0))}
+                      You save ₹{Math.floor(Math.max(0, originalPrice - displayPrice))}
                     </p>
                   )}
                   {/* {(saleLive || saleUpcoming) && (

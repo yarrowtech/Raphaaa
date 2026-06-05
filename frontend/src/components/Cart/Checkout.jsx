@@ -11,7 +11,7 @@ import {
   handlePaymentFailure,
   clearCheckout,
 } from "../../redux/slices/checkoutSlice";
-import { clearCart, updateCartItemQuantity } from "../../redux/slices/cartSlice";
+import { clearCart, removeFromCart, updateCartItemQuantity } from "../../redux/slices/cartSlice";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -167,7 +167,6 @@ const Checkout = () => {
   // Phase 4: promos + wallet
   const [couponCode, setCouponCode] = useState("");
   const [couponCodes, setCouponCodes] = useState([]);
-  const [couponPrefilled, setCouponPrefilled] = useState(false);
   const [walletRedeem, setWalletRedeem] = useState(0);
   const [orderNote, setOrderNote] = useState("");
   const [quote, setQuote] = useState(null);
@@ -182,7 +181,7 @@ const Checkout = () => {
 
   const computedSubtotal = Number(
     (cart?.products || []).reduce((sum, p) => {
-      const price = parseFloat(p.price) || 0;
+      const price = resolveDisplayPrice(p, productMetaByItem[itemKey(p)] || {});
       const qty = Number(p.quantity || 0);
       return sum + price * qty;
     }, 0).toFixed(2)
@@ -249,7 +248,7 @@ const Checkout = () => {
               productId: p.productId,
               name: p.name,
               image: p.image,
-              price: p.price,
+              price: resolveDisplayPrice(p, productMetaByItem[itemKey(p)] || {}),
               quantity: p.quantity,
               size: p.size,
               color: p.color,
@@ -285,7 +284,22 @@ const Checkout = () => {
     phone: "+91",
   });
 
-  const itemKey = (p) => `${p?.productId || ""}::${p?.size || ""}::${p?.color || ""}::${p?.sku || ""}`;
+  function itemKey(p) {
+    return `${p?.productId || ""}::${p?.size || ""}::${p?.color || ""}::${p?.sku || ""}`;
+  }
+
+  function resolveDisplayPrice(product, meta = {}) {
+    const candidates = [
+      meta.displayPrice,
+      meta.discountPrice,
+      product?.discountPrice,
+      product?.price,
+    ]
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value) && value > 0);
+
+    return candidates.length > 0 ? Math.min(...candidates) : 0;
+  }
 
   const resolveAvailableStock = (product, cartItem) => {
     if (!product) return 0;
@@ -359,28 +373,6 @@ const Checkout = () => {
     };
     fetchUserProfile();
   }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    if (!token || couponPrefilled) return;
-
-    const fetchMyCoupon = async () => {
-      try {
-        const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/users/my-coupon`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const code   = String(data?.code   || "").trim().toUpperCase();
-        const status = String(data?.status || "").toLowerCase();
-        if (code && status === "unused") {
-          setCouponCodes((prev) => (prev.includes(code) ? prev : [...prev, code]));
-        }
-      } catch (_) {}
-      finally { setCouponPrefilled(true); }
-    };
-
-    fetchMyCoupon();
-  }, [couponPrefilled]);
 
   useEffect(() => {
     const products = cart?.products || [];
@@ -470,6 +462,17 @@ const Checkout = () => {
     setQtyModeByItem((prev) => ({ ...prev, [key]: "preset" }));
   };
 
+  const handleRemoveItem = async (product) => {
+    await dispatch(
+      removeFromCart({
+        productId: product.productId,
+        userId: user?._id,
+        size: product.size,
+        color: product.color,
+      })
+    );
+  };
+
   const validatePhone = (phone) => {
     if (!phone.startsWith("+91")) phone = "+91" + phone.replace(/^\+91/, "");
     const phoneWithoutCode = phone.slice(3);
@@ -526,7 +529,7 @@ const Checkout = () => {
           productId: p.productId,
           name:      p.name,
           image:     p.image,
-          price:     p.price,
+          price:     resolveDisplayPrice(p, productMetaByItem[itemKey(p)] || {}),
           quantity:  p.quantity,
           size:      p.size,
           color:     p.color,
@@ -1448,8 +1451,16 @@ const Checkout = () => {
                         </div>
                       </div>
                       <p className="text-sm font-bold text-gray-900 shrink-0">
-                        ₹{(product.price * product.quantity).toLocaleString("en-IN")}
+                        ₹{(resolveDisplayPrice(product, productMetaByItem[itemKey(product)] || {}) * product.quantity).toLocaleString("en-IN")}
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(product)}
+                        className="ml-2 mt-1 inline-flex items-center justify-center rounded-lg border border-gray-200 px-2 py-1 text-[11px] font-semibold text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition"
+                        title="Remove item"
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))}
                 </div>
