@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FiSliders } from "react-icons/fi";
 import { HiX, HiChevronRight } from "react-icons/hi";
-import { MdFilterList } from "react-icons/md";
+import { MdFilterList, MdOutlineTimer } from "react-icons/md";
+import { BsLightningCharge } from "react-icons/bs";
 import FilterSidebar from "../components/Products/FilterSidebar";
 import ProductGrid from "../components/Products/ProductGrid";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
@@ -9,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProductsByFilters } from "../redux/slices/productsSlice";
 import axios from "axios";
 import { Helmet } from "react-helmet-async";
+import { cachedGet } from "../utils/httpCache";
 
 const SORT_OPTIONS = [
   { value: "",           label: "Featured"         },
@@ -34,6 +36,76 @@ const CollectionPage = () => {
 
   const sidebarRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* ── Flash Sale (mobile-only, CSS lg:hidden controls visibility) ── */
+  const [activeOffer, setActiveOffer] = useState(null);
+  const [selectedPct] = useState("all");
+  const [offerCd, setOfferCd] = useState({ h: "00", m: "00", s: "00" });
+  const now = Date.now();
+  const offerStartTime = activeOffer ? new Date(activeOffer.startDate).getTime() : null;
+  const offerEndTime = activeOffer ? new Date(activeOffer.endDate).getTime() : null;
+  const isOfferLive = Boolean(
+    activeOffer &&
+    Number.isFinite(offerStartTime) &&
+    Number.isFinite(offerEndTime) &&
+    now >= offerStartTime &&
+    now <= offerEndTime
+  );
+  const isOfferUpcoming = Boolean(
+    activeOffer &&
+    Number.isFinite(offerStartTime) &&
+    now < offerStartTime
+  );
+
+  useEffect(() => {
+    cachedGet(
+      "offers:public",
+      () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
+      60 * 1000
+    ).then((data) => {
+      const now = Date.now();
+      const list = Array.isArray(data) ? data : [];
+      const live = list.find(
+        (o) => new Date(o.startDate).getTime() <= now && new Date(o.endDate).getTime() >= now
+      );
+      // fallback: if no strictly-live offer found, use first non-expired offer
+      setActiveOffer(live || list[0] || null);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!activeOffer) return;
+    const start = new Date(activeOffer.startDate).getTime();
+    const end = new Date(activeOffer.endDate).getTime();
+    const fmt = (n) => String(Math.max(0, n)).padStart(2, "0");
+    const tick = () => {
+      const target = isOfferUpcoming ? start : end;
+      const diff = Math.max(0, Math.floor((target - Date.now()) / 1000));
+      setOfferCd({
+        h: fmt(Math.floor((diff % 86400) / 3600)),
+        m: fmt(Math.floor((diff % 3600) / 60)),
+        s: fmt(diff % 60),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [activeOffer, isOfferUpcoming]);
+
+  // CSS lg:hidden on the Flash Sale block handles mobile-only visibility;
+  // no JS isMobileView needed — avoids SSR/resize race conditions
+  const showFlashSale = Boolean(activeOffer);
+
+  const flashProducts = React.useMemo(() => {
+    if (!activeOffer || !products?.length) return products;
+    if (selectedPct === "all") return products;
+    const target = parseInt(selectedPct, 10);
+    return products.filter((p) => {
+      if (!p.discountPrice || !p.price || p.discountPrice >= p.price) return false;
+      const pct = Math.round(((p.price - p.discountPrice) / p.price) * 100);
+      return pct >= target - 5 && pct <= target + 15;
+    });
+  }, [activeOffer, selectedPct, products]);
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/collabs/active`).catch(() => {});
@@ -172,10 +244,118 @@ const CollectionPage = () => {
           </aside>
 
           {/* ── MAIN CONTENT ── */}
-          <main data-scroll-container className="flex-1 min-w-0 px-4 md:px-5 py-5 lg:h-full lg:overflow-y-auto">
+          <main data-scroll-container className="flex-1 min-w-0 py-5 lg:h-full lg:overflow-y-auto">
 
-            {/* ── Toolbar row ── */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            {/* ── Mobile Flash Sale header ── */}
+            {showFlashSale && (
+              <div className="lg:hidden mb-4">
+
+                {/* ── Hero card: title left, countdown right on blue blob ── */}
+                <div className="relative mx-4 mb-4" style={{ minHeight: "96px" }}>
+                  {/* Blue decorative blob — top-right circle */}
+                  <div
+                    className="absolute bg-blue-500 rounded-full"
+                    style={{ width: "190px", height: "190px", top: "-60px", right: "-40px" }}
+                  />
+                  {/* Softer inner blob ring */}
+                  <div
+                    className="absolute bg-blue-500/30 rounded-full"
+                    style={{ width: "140px", height: "140px", top: "-20px", right: "60px" }}
+                  />
+
+                  <div className="relative flex items-center justify-between px-4 py-4">
+                    {/* Left: title */}
+                    <div className="min-w-0 pr-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-500">
+                        {isOfferLive ? "Live Now" : "Sale starts in"}
+                      </p>
+                      <h1 className="text-[22px] font-black text-gray-900 leading-tight tracking-tight line-clamp-2">
+                        {activeOffer?.title || "Flash Sale"}
+                      </h1>
+                      <p className="text-[13px] text-gray-400 mt-0.5">
+                        {isOfferLive ? "Grab it before it ends" : "Get ready for the drop"}
+                      </p>
+                    </div>
+
+                    {/* Right: clock + number boxes (sit on blue blob) */}
+                    <div className="flex items-center gap-2 shrink-0 z-10">
+                      <MdOutlineTimer className="text-black text-2xl shrink-0 drop-shadow" />
+                      {[offerCd.h, offerCd.m, offerCd.s].map((val, i) => (
+                        <div
+                          key={i}
+                          className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm"
+                        >
+                          <span className="text-blue-600 font-black text-[15px] font-mono leading-none">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Discount filter tabs with downward pointer on active ── */}
+                {/* <div className="px-4">
+                  <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                    {["all", "10", "20", "30", "40", "50"].map((pct) => {
+                      const active = selectedPct === pct;
+                      return (
+                        <div key={pct} className="relative shrink-0 flex flex-col items-center pb-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPct(pct)}
+                            className={`px-5 py-2 rounded-full text-[13px] font-semibold border transition-all ${
+                              active
+                                ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                            }`}
+                          >
+                            {pct === "all" ? "All" : `${pct}%`}
+                          </button>
+                          {active && (
+                            <div
+                              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-600 rotate-45 rounded-[3px]"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div> */}
+
+                {/* ── Offer name + discount label ── */}
+                <div className="px-4 mt-1">
+                  {/* Offer title as section header */}
+                  {/* {activeOffer?.title && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.18em] whitespace-nowrap">
+                        {activeOffer.title}
+                      </p>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  )} */}
+
+                  {/* "N% Discount" label + sliders icon */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[17px] font-bold text-gray-900">
+                      {selectedPct === "all" ? "All Products" : `${selectedPct}% Discount`}
+                    </p>
+                    {/* Sliders icon — three horizontal lines with circles */}
+                    {/* <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-gray-700 shrink-0">
+                      <line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      <circle cx="7" cy="5" r="2" fill="white" stroke="currentColor" strokeWidth="1.8"/>
+                      <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      <circle cx="13" cy="10" r="2" fill="white" stroke="currentColor" strokeWidth="1.8"/>
+                      <line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      <circle cx="7" cy="15" r="2" fill="white" stroke="currentColor" strokeWidth="1.8"/>
+                    </svg> */}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ── Toolbar row (desktop always, mobile only when no active offer) ── */}
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 px-4 md:px-5 ${activeOffer ? "hidden lg:flex" : ""}`}>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 capitalize">
                   {displayName} {collection && collection !== "all" ? "Collection" : "Products"}
@@ -188,7 +368,7 @@ const CollectionPage = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Desktop filter toggle */}
+          
                 {!isAllCollectionsPage && (
                   <button
                     onClick={() => setSidebarOpen((p) => !p)}
@@ -198,7 +378,7 @@ const CollectionPage = () => {
                   </button>
                 )}
 
-                {/* Sort select */}
+             
                 <div className="relative">
                   <select
                     value={searchParams.get("sortBy") || ""}
@@ -214,9 +394,9 @@ const CollectionPage = () => {
               </div>
             </div>
 
-            {/* ── Active filter chips ── */}
+           
             {activeChips.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mb-4 px-4 md:px-5">
                 {activeChips.map(([key, value]) => (
                   <button
                     key={key}
@@ -238,7 +418,9 @@ const CollectionPage = () => {
             )}
 
             {/* ── Product grid ── */}
-            <ProductGrid products={products} loading={loading} />
+            <div className="px-4 md:px-5">
+              <ProductGrid products={activeOffer ? flashProducts : products} loading={loading} />
+            </div>
           </main>
         </div>
       </div>

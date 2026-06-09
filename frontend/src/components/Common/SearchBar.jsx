@@ -13,7 +13,7 @@ import { GoArrowUpRight } from "react-icons/go";
 const MAX_HISTORY = 6;
 const STORAGE_KEY = "searchHistory";
 
-const SearchBar = () => {
+const SearchBar = ({ inline = false, className = "", inputClassName = "", placeholder = "Search for products..." }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -35,6 +35,7 @@ const SearchBar = () => {
 
   // Toggle search bar
   const handleSearchToggle = () => setIsOpen(!isOpen);
+  const shouldRenderInline = inline || isOpen;
 
   // Search logic
   const handleSearch = (e) => {
@@ -44,7 +45,7 @@ const SearchBar = () => {
     updateHistory(searchTerm);
     dispatch(setFilters({ search: searchTerm }));
     dispatch(fetchProductsByFilters({ search: searchTerm }));
-    navigate(`/collections/all?search=${searchTerm}`);
+    navigate(`/collections/all?search=${encodeURIComponent(searchTerm.trim())}`);
     setSearchTerm("");
     setIsOpen(false);
     setSuggestions([]);
@@ -75,7 +76,7 @@ const SearchBar = () => {
     setIsOpen(false);
     dispatch(setFilters({ search: term }));
     dispatch(fetchProductsByFilters({ search: term }));
-    navigate(`/collections/all?search=${term}`);
+    navigate(`/collections/all?search=${encodeURIComponent(term)}`);
   };
 
   const handleDeleteHistoryItem = (termToDelete) => {
@@ -160,21 +161,21 @@ const SearchBar = () => {
   return (
     <div
       ref={searchRef}
-      className={`flex items-center justify-center w-full transition-all duration-300 ${
-        isOpen ? "absolute top-0 left-0 w-full bg-white h-28 z-50" : "w-auto"
-      } ease-in-out`}
+      className={`relative flex items-center justify-center w-full transition-all duration-300 ease-in-out ${className} ${
+        inline ? "min-w-0" : shouldRenderInline ? "absolute top-0 left-0 w-full bg-white h-28 z-50" : "w-auto"
+      }`}
     >
-      {isOpen ? (
+      {shouldRenderInline ? (
         <form
           onSubmit={handleSearch}
           className="relative flex items-center justify-center gap-3 md:gap-0 md:justify-center w-full"
         >
-          <div className="relative w-4/5 md:w-1/2 lg:w-1/2">
+          <div className={`relative w-full ${inline ? "min-w-0" : "w-4/5 md:w-1/2 lg:w-1/2"}`}>
             <input
               ref={searchInputRef}
               type="text"
-              className="bg-gray-100 py-3 px-4 pr-12 rounded-lg focus:outline-none w-full placeholder:text-gray-700"
-              placeholder="Search for products..."
+              className={`bg-gray-100 py-3 px-4 pr-12 rounded-lg focus:outline-none w-full placeholder:text-gray-700 ${inputClassName}`}
+              placeholder={placeholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
@@ -289,13 +290,15 @@ const SearchBar = () => {
           </div>
 
           {/* close icon */}
-          <button
-            type="button"
-            onClick={handleSearchToggle}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
-          >
-            <HiMiniXMark className="h-6 w-6 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-700 cursor-pointer" />
-          </button>
+          {!inline && (
+            <button
+              type="button"
+              onClick={handleSearchToggle}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
+            >
+              <HiMiniXMark className="h-6 w-6 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-700 cursor-pointer" />
+            </button>
+          )}
         </form>
       ) : (
         <button onClick={handleSearchToggle}>

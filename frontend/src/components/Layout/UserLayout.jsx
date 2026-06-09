@@ -22,8 +22,9 @@ const UserLayout = () => {
   const isMyActivityPage = location.pathname === "/my-activity"
   const isSettingsPage = location.pathname === "/settings"
   const isUpdateProfilePage = location.pathname === "/update-profile"
+  const isHomePage = location.pathname === "/"
   const hideMobileFooterMenu = isCheckoutPage || isCartPage
-  const hideNavbarOnMobile = isCartPage || location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
+  const hideNavbarOnMobile = isCartPage || location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage || isHomePage
   const hideFooterOnMobileRoutes = [
     "/profile",
     "/login",
@@ -34,8 +35,7 @@ const UserLayout = () => {
   ]
   const hideFooterOnMobile = hideFooterOnMobileRoutes.includes(location.pathname) || isOrderDetailsPage || isRecentlyViewedPage || isMyActivityPage
   const hideFooterOnMobileOnly = isSettingsPage || isUpdateProfilePage
-  const isHomePage = location.pathname === "/"
-  const hideTopbarOnMobile = !isHomePage || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
+  const hideTopbarOnMobile = true
 
   React.useEffect(() => {
     if (user?._id) {

@@ -19,13 +19,14 @@ import PreviouslyViewed from "./PreviouslyViewed";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiArrowRight, FiClock } from "react-icons/fi";
 import { cachedGet } from "../utils/httpCache";
+import MobileHome from "../components/Layout/MobileHome";
 
 const Home = () => {
   const dispatch = useDispatch();
-  const { products, loading, error } = useSelector((state) => state.products);
+  const { products: _products, loading: _loading, error: _error } = useSelector((state) => state.products);
   const [bestSellerProduct, setBestSellerProduct] = useState(null);
-  const [bestSellerLoading, setBestSellerLoading] = useState(true);
-  const [bestSellerError, setBestSellerError] = useState(null);
+  const [_bestSellerLoading, setBestSellerLoading] = useState(true);
+  const [_bestSellerError, setBestSellerError] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [activeOffer, setActiveOffer] = useState(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -302,6 +303,9 @@ const Home = () => {
 
   return (
     <>
+      {/* ── Mobile layout (< 1024px) ── */}
+      <MobileHome activeOffer={activeOffer} isOfferLive={isOfferLive} />
+
       <Helmet>
         <title>Raphaaa | Premium Streetwear & Lifestyle</title>
         <meta
@@ -309,6 +313,9 @@ const Home = () => {
           content="Shop premium streetwear, sneakers, and exclusive collections from Raphaaa."
         />
       </Helmet>
+
+      {/* ── Desktop / tablet layout (≥ 1024px) ── */}
+      <div className="hidden lg:block">
       <div>
         {/* Hero section */}
         {/* <Collab/> */}
@@ -647,6 +654,7 @@ const Home = () => {
           </div>
         )}
       </div>
+      </div>{/* end hidden lg:block */}
     </>
   );
 };
