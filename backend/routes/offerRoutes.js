@@ -65,8 +65,9 @@ router.get("/public", async (req, res) => {
       .populate("productIds", "name price images price discountPrice offerPercentage")
       .sort({ createdAt: -1 });
 
+    const now = new Date();
     const activeOffers = offers.filter(
-      offer => new Date(offer.endDate) >= new Date()
+      (offer) => offer.isActive !== false && new Date(offer.endDate) >= now
     );
 
     await setJson("offers", cacheKey, activeOffers, 60);

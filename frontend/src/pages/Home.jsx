@@ -12,17 +12,17 @@ import axios from "axios";
 import BestSellersSection from "../components/Products/BestSeller";
 import CategorySection from "../components/Products/CategorySection";
 import Collab from "../components/Products/Collab";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import FAQ from "../components/Common/FAQ";
 import PreviouslyViewed from "./PreviouslyViewed";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiArrowRight, FiClock } from "react-icons/fi";
-import { cachedGet } from "../utils/httpCache";
 import MobileHome from "../components/Layout/MobileHome";
 
 const Home = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { products: _products, loading: _loading, error: _error } = useSelector((state) => state.products);
   const [bestSellerProduct, setBestSellerProduct] = useState(null);
   const [_bestSellerLoading, setBestSellerLoading] = useState(true);
@@ -102,16 +102,15 @@ const Home = () => {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const data = await cachedGet(
-          "offers:public",
-          () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
-          60 * 1000
-        );
-        if (data.length > 0) {
-          setActiveOffer(data[0]); // always show the first offer
-        }
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`);
+        const now = new Date();
+        const visibleOffers = Array.isArray(data)
+          ? data.filter((offer) => offer?.isActive !== false && new Date(offer.endDate) >= now)
+          : [];
+        setActiveOffer(visibleOffers[0] || null);
       } catch (err) {
         console.error("Failed to load active offer", err);
+        setActiveOffer(null);
       }
     };
     fetchOffers();
@@ -345,7 +344,18 @@ const Home = () => {
       )} */}
 
         {activeOffer && (
-          <div className="relative w-full mb-0 overflow-hidden">
+          <div
+            className="relative w-full mb-0 overflow-hidden cursor-pointer"
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate("/offers")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/offers");
+              }
+            }}
+          >
             {/* Banner image */}
             {activeOffer.bannerImage ? (
               <div className="relative h-55 md:h-105 overflow-hidden">

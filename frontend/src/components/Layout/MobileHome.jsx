@@ -66,6 +66,10 @@ const normalizeHeroSlide = (slide) => ({
   image: slide.image,
   title: slide.title,
   badge: slide.badge,
+  ctaText: slide.ctaText || "Shop Now",
+  ctaLink: slide.ctaLink || "/collections/all",
+  ctaSecondaryText: slide.ctaSecondaryText || "",
+  ctaSecondaryLink: slide.ctaSecondaryLink || "",
   textAlign: slide.textAlign || slide.align || "left",
   contentPosition: slide.contentPosition || slide.position || "bottom",
   overlayDirection: slide.overlayDirection || slide.overlay || "left",
@@ -262,6 +266,7 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
       title: activeOffer.title,
       pct: activeOffer.offerPercentage,
       badge: "Big Sale",
+      ctaLink: "/offers",
       textAlign: activeOffer.textAlign || "left",
       contentPosition: activeOffer.contentPosition || "center",
       overlayDirection: activeOffer.overlayDirection || "left",
@@ -294,10 +299,16 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
   const offerProducts = Array.isArray(activeOffer?.productIds)
     ? activeOffer.productIds.map(normalizeOfferProduct).filter(Boolean)
     : [];
-  const flashSaleProducts = mergeUniqueProducts(
-    [...offerProducts, ...newArrivals, ...bestSellers],
-    []
-  ).filter((product) => offerProducts.some((offerProduct) => productKey(offerProduct) === productKey(product)) || isSaleProduct(product));
+  const flashSaleProducts = isOfferLive
+    ? mergeUniqueProducts(
+        [...offerProducts, ...newArrivals, ...bestSellers],
+        []
+      ).filter(
+        (product) =>
+          offerProducts.some((offerProduct) => productKey(offerProduct) === productKey(product)) ||
+          isSaleProduct(product)
+      )
+    : [];
   const popularProducts = bestSellers.length ? bestSellers : newArrivals.slice(0, 6);
   const popularBadges = ["Sale", "New", "", "Hot", "New", "Sale"];
 
@@ -342,7 +353,20 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
           >
             {offerBannerSlides.map((slide, i) => (
               <SwiperSlide key={i}>
-                <div className="relative" style={{ aspectRatio: "16/7" }}>
+                {(() => {
+                  const isOfferBanner =
+                    Boolean(activeOffer) &&
+                    slide.image === activeOffer.bannerImage &&
+                    slide.title === activeOffer.title;
+                  const slideLink = slide.ctaLink || (isOfferBanner ? "/offers" : "/collections/all");
+
+                  return (
+                <Link
+                  to={slideLink}
+                  className="relative block cursor-pointer"
+                  style={{ aspectRatio: "16/7" }}
+                  aria-label={slide.title || slide.badge || "Banner"}
+                >
                   {slide.image ? (
                     <>
                       <img
@@ -371,14 +395,14 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                               Up to {slide.pct}% OFF
                             </p>
                           )}
-                          {isOfferLive && (
-                            <Link
-                              to="/offers"
-                              className="mt-2 w-fit bg-white text-black text-[11px] font-bold px-3 py-1 rounded-full"
-                            >
-                              Shop Now
-                            </Link>
-                          )}
+                          <span className="mt-2 w-fit bg-white text-black text-[11px] font-bold px-3 py-1 rounded-full">
+                            {slide.ctaText || (isOfferBanner ? "Shop Now" : "View Now")}
+                          </span>
+                          {slide.ctaSecondaryText ? (
+                            <span className="mt-1 text-[10px] font-semibold text-orange-100/90">
+                              {slide.ctaSecondaryText}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </>
@@ -387,7 +411,9 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                       <p className="text-white text-xl font-black">{slide.title || "Big Sale"}</p>
                     </div>
                   )}
-                </div>
+                </Link>
+                  );
+                })()}
               </SwiperSlide>
             ))}
           </Swiper>

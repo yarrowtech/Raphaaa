@@ -54,7 +54,13 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
 
   // Click on product suggestion
   const handleSuggestionClick = (product) => {
-    navigate(`/product/${product.name.toLowerCase().replace(/\s+/g, "-")}`);
+    const slug = product.name.toLowerCase().replace(/\s+/g, "-");
+    const productId = product._id || product.productId || product.id;
+    navigate(
+      productId
+        ? `/product/${slug}/p/${encodeURIComponent(productId)}`
+        : `/product/${slug}`
+    );
     setSearchTerm("");
     setIsOpen(false);
     setSuggestions([]);
@@ -174,7 +180,7 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
             <input
               ref={searchInputRef}
               type="text"
-              className={`bg-gray-100 py-3 px-4 pr-12 rounded-lg focus:outline-none w-full placeholder:text-gray-700 ${inputClassName}`}
+              className={`bg-gray-100 py-3 px-4 pr-12 rounded-full md:rounded-lg focus:outline-none w-full placeholder:text-gray-700 ${inputClassName}`}
               placeholder={placeholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -182,7 +188,7 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-300"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-700 px-3 py-1 rounded-full md:rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-300"
             >
               <HiMiniMagnifyingGlass className="h-6 w-6" />
             </button>
