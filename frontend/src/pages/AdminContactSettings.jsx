@@ -1,11 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import { FaFacebook, FaInstagram, FaPhone, FaEnvelope } from "react-icons/fa";
+import { FaEnvelope, FaPhone, FaPlus, FaTrash } from "react-icons/fa";
 import { FaMessage } from "react-icons/fa6";
+import {
+  SOCIAL_PLATFORM_OPTIONS,
+  getSocialIcon,
+  mapContactToSocialLinks,
+} from "../utils/socialLinks";
+
+const createSocialLink = (overrides = {}) => ({
+  platform: "facebook",
+  label: "Facebook",
+  url: "",
+  enabled: true,
+  ...overrides,
+});
 
 const AdminContactSettings = () => {
   const [form, setForm] = useState({
+    socialLinks: [createSocialLink({ enabled: false })],
     showFacebook: false,
     facebookUrl: "",
     showInstagram: false,
@@ -42,8 +56,13 @@ const AdminContactSettings = () => {
         const { data } = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/settings/contact`
         );
-        setForm((prev) => ({ ...prev, ...data }));
-      } catch (error) {
+        const socialLinks = mapContactToSocialLinks(data);
+        setForm((prev) => ({
+          ...prev,
+          ...data,
+          socialLinks: socialLinks.length ? socialLinks : [createSocialLink({ enabled: false })],
+        }));
+      } catch {
         toast.error("Failed to load contact settings");
       }
     };
@@ -58,6 +77,45 @@ const AdminContactSettings = () => {
     }));
   };
 
+  const handleSocialLinkChange = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      socialLinks: prev.socialLinks.map((link, linkIndex) => {
+        if (linkIndex !== index) return link;
+
+        if (field === "platform") {
+          const nextLabel = value === "custom" ? link.label || "Custom" : SOCIAL_PLATFORM_OPTIONS.find((option) => option.value === value)?.label || link.label;
+          return {
+            ...link,
+            platform: value,
+            label: nextLabel,
+          };
+        }
+
+        return {
+          ...link,
+          [field]: value,
+        };
+      }),
+    }));
+  };
+
+  const addSocialLink = () => {
+    setForm((prev) => ({
+      ...prev,
+      socialLinks: [...prev.socialLinks, createSocialLink({ platform: "custom", label: "Custom" })],
+    }));
+  };
+
+  const removeSocialLink = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      socialLinks: prev.socialLinks.length > 1
+        ? prev.socialLinks.filter((_, linkIndex) => linkIndex !== index)
+        : [createSocialLink({ enabled: false })],
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -67,7 +125,7 @@ const AdminContactSettings = () => {
         form
       );
       toast.success("Contact settings updated successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to update settings");
     } finally {
       setLoading(false);
@@ -100,54 +158,104 @@ const AdminContactSettings = () => {
       <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-10">
         {/* === SOCIAL SECTION === */}
         <div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            Social Links
-          </h3>
-
-          {/* Facebook */}
-          <div className="space-y-2 mb-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                <FaFacebook className="text-blue-600" /> Show Facebook
-              </span>
-              <ToggleCheckbox
-                name="showFacebook"
-                checked={form.showFacebook}
-                onChange={handleChange}
-              />
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-700">Social Links</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Add any social network you want to show in the topbar, footer, and mobile menu.
+              </p>
             </div>
-
-            <input
-              type="url"
-              name="facebookUrl"
-              placeholder="https://facebook.com/yourpage"
-              value={form.facebookUrl}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-            />
+            <button
+              type="button"
+              onClick={addSocialLink}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
+            >
+              <FaPlus className="text-xs" />
+              Add Link
+            </button>
           </div>
 
-          {/* Instagram */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                <FaInstagram className="text-pink-500" /> Show Instagram
-              </span>
-              <ToggleCheckbox
-                name="showInstagram"
-                checked={form.showInstagram}
-                onChange={handleChange}
-              />
-            </div>
+          <div className="space-y-4">
+            {form.socialLinks.map((link, index) => {
+              const Icon = getSocialIcon(link.platform);
 
-            <input
-              type="url"
-              name="instagramUrl"
-              placeholder="https://instagram.com/yourhandle"
-              value={form.instagramUrl}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm"
-            />
+              return (
+                <div key={`${link.platform}-${index}`} className="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sky-600 shadow-sm">
+                        <Icon className="text-base" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">Social Link {index + 1}</p>
+                        <p className="text-xs text-gray-500">Choose the platform and paste the profile URL.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ToggleCheckbox
+                        name={`socialLinks.${index}.enabled`}
+                        checked={link.enabled}
+                        onChange={(event) => handleSocialLinkChange(index, "enabled", event.target.checked)}
+                      >
+                        Active
+                      </ToggleCheckbox>
+                      <button
+                        type="button"
+                        onClick={() => removeSocialLink(index)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm hover:text-red-600 hover:bg-red-50 transition-colors"
+                        aria-label="Remove social link"
+                      >
+                        <FaTrash className="text-xs" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Platform
+                      </label>
+                      <select
+                        value={link.platform}
+                        onChange={(event) => handleSocialLinkChange(index, "platform", event.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm bg-white"
+                      >
+                        {SOCIAL_PLATFORM_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Display Label
+                      </label>
+                      <input
+                        type="text"
+                        value={link.label}
+                        onChange={(event) => handleSocialLinkChange(index, "label", event.target.value)}
+                        placeholder="Instagram, YouTube, Pinterest..."
+                        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Profile URL
+                    </label>
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={(event) => handleSocialLinkChange(index, "url", event.target.value)}
+                      placeholder="https://www.youtube.com/@yourbrand"
+                      className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm"
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

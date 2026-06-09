@@ -332,6 +332,7 @@ const { sendMail } = require("../utils/sendMail");
 const { buildInvoicePDF } = require("../utils/invoice");
 const sendWhatsApp = require("../utils/sendWhatsApp");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
+const { deleteJson } = require("../utils/redisCache");
 
 const applyVariantStockDeduction = (product, item) => {
   const qty = Number(item?.quantity || 0);
@@ -792,6 +793,10 @@ router.post("/verify-payment", protect, async (req, res) => {
         email_address: req.user.email,
       };
       await order.save({ session });
+      await Promise.all([
+        deleteJson("users", `user:${req.user._id}:my-coupon`),
+        deleteJson("users", `user:${req.user._id}:my-coupons`),
+      ]);
 
       // Redeem wallet only after payment is captured
       try {

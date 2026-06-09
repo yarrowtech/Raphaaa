@@ -7,11 +7,11 @@ import visa from "../../assets/visa.png";
 import mastercard from "../../assets/mastercard.png";
 import upi from "../../assets/upi.png";
 import {
-  FaFacebook, FaInstagram, FaTwitter,
   FaTruck, FaUndo, FaLock, FaHeadset,
   FaWhatsapp, FaPhone, FaEnvelope,
 } from "react-icons/fa";
 import { HiArrowRight } from "react-icons/hi";
+import { getActiveSocialLinks, getSocialIcon } from "../../utils/socialLinks";
 
 const Footer = () => {
   const [subscribe,   setSubscribe]   = useState("");
@@ -19,6 +19,7 @@ const Footer = () => {
   const [contactInfo, setContactInfo] = useState(null);
   const startYear = 2025;
   const year = new Date().getFullYear();
+  const socialLinks = getActiveSocialLinks(contactInfo);
 
   useEffect(() => {
     axios
@@ -88,24 +89,21 @@ const Footer = () => {
 
             {/* Social icons */}
             <div className="flex items-center gap-2.5 mb-6">
-              {contactInfo?.showFacebook && contactInfo.facebookUrl && (
-                <a href={contactInfo.facebookUrl} target="_blank" rel="noreferrer"
-                  className="w-9 h-9 rounded-full bg-sky-100 hover:bg-blue-600 hover:text-white text-sky-700 flex items-center justify-center transition-all duration-200">
-                  <FaFacebook className="text-sm" />
-                </a>
-              )}
-              {contactInfo?.showInstagram && contactInfo.instagramUrl && (
-                <a href={contactInfo.instagramUrl} target="_blank" rel="noreferrer"
-                  className="w-9 h-9 rounded-full bg-sky-100 hover:bg-pink-500 hover:text-white text-sky-700 flex items-center justify-center transition-all duration-200">
-                  <FaInstagram className="text-sm" />
-                </a>
-              )}
-              {contactInfo?.showTwitter && contactInfo.twitterUrl && (
-                <a href={contactInfo.twitterUrl} target="_blank" rel="noreferrer"
-                  className="w-9 h-9 rounded-full bg-sky-100 hover:bg-sky-500 hover:text-white text-sky-700 flex items-center justify-center transition-all duration-200">
-                  <FaTwitter className="text-sm" />
-                </a>
-              )}
+              {socialLinks.map((link) => {
+                const Icon = getSocialIcon(link.platform);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={link.label}
+                    className="w-9 h-9 rounded-full bg-sky-100 hover:bg-sky-600 hover:text-white text-sky-700 flex items-center justify-center transition-all duration-200"
+                  >
+                    <Icon className="text-sm" />
+                  </a>
+                );
+              })}
               {contactInfo?.whatsappNumber && (
                 <a href={`https://wa.me/${contactInfo.whatsappNumber}`} target="_blank" rel="noreferrer"
                   className="w-9 h-9 rounded-full bg-sky-100 hover:bg-emerald-500 hover:text-white text-sky-700 flex items-center justify-center transition-all duration-200">

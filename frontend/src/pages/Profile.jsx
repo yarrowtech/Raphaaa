@@ -4,8 +4,8 @@ import {
   FaUserCircle, FaTrash, FaHeart, FaMapMarkerAlt,
   FaBoxOpen, FaCheckCircle, FaWallet, FaPlus, FaGift,
   FaArrowLeft, FaChevronRight, FaPhone, FaInfoCircle,
-  FaShieldAlt, FaFileAlt, FaShareAlt, FaEnvelope,
-  FaHome, FaBriefcase,
+  FaShieldAlt, FaFileAlt, FaEnvelope,
+  FaHome, FaBriefcase, FaCog, FaHistory,
 } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
 import { AiOutlineLogout } from "react-icons/ai";
@@ -18,8 +18,9 @@ import { logout } from "../redux/slices/authSlice";
 import { clearCart } from "../redux/slices/cartSlice";
 import axios from "axios";
 import AddressForm from "../components/Cart/AddressForm";
-import ViewAddress from "../components/Cart/ViewAddress";
-import { PenIcon, PenToolIcon } from "lucide-react";
+import { PenIcon } from "lucide-react";
+import Wishlist from "./Wishlist";
+import { cachedGet } from "../utils/httpCache";
 
 const NAV_ITEMS = [
   { key: "orders",    label: "My Orders",    icon: FaBoxOpen },
@@ -33,7 +34,6 @@ const NAV_ITEMS = [
 
 const TAB_TITLES = {
   orders:    "My Orders",
-  wishlist:  "My Wishlist",
   wallet:    "My Wallet",
   coupons:   "My Coupons",
   address:   "Addresses",
@@ -114,7 +114,8 @@ function MiniCouponCard({ c }) {
 }
 
 /* ─── Mobile menu row ─── */
-function MenuRow({ icon: Icon, label, onClick, iconBg = "bg-gray-100", iconColor = "text-gray-500", right }) {
+function MenuRow({ icon: _Icon, label, onClick, iconBg = "bg-gray-100", iconColor = "text-gray-500", right }) {
+  void _Icon;
   return (
     <button
       type="button"
@@ -122,7 +123,7 @@ function MenuRow({ icon: Icon, label, onClick, iconBg = "bg-gray-100", iconColor
       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
     >
       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
-        <Icon className={`text-xs ${iconColor}`} />
+        <_Icon className={`text-xs ${iconColor}`} />
       </div>
       <span className="flex-1 text-[13px] text-gray-800 font-normal">{label}</span>
       {right || <FaChevronRight className="text-gray-300 text-xs shrink-0" />}
@@ -133,13 +134,13 @@ function MenuRow({ icon: Icon, label, onClick, iconBg = "bg-gray-100", iconColor
 /* ─── Mobile section block ─── */
 function MenuSection({ title, children }) {
   return (
-    <div className="p-4">
-      <div className="bg-white rounded-2xl">
-      {title && (
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 pt-4 pb-0.5">{title}</p>
-      )}
-      <div className="divide-y divide-gray-100">{children}</div>
-    </div>
+    <div className="px-4 py-2">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        {title && (
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 pt-4 pb-0.5">{title}</p>
+        )}
+        <div className="divide-y divide-gray-100">{children}</div>
+      </div>
     </div>
   );
 }
@@ -150,9 +151,8 @@ export default function Profile() {
   const location  = useLocation();
   const dispatch  = useDispatch();
 
-  const [activeTab,       setActiveTab]      = useState("orders");
-  const [mobileShowMenu,  setMobileShowMenu] = useState(true);
-  const [wishlistItems,   setWishlistItems]  = useState([]);
+  const [activeTab,       setActiveTab]      = useState(location.state?.tab === "wishlist" ? "orders" : location.state?.tab || "orders");
+  const [mobileShowMenu,  setMobileShowMenu] = useState(!location.state?.tab);
   const [orderId,         setOrderId]        = useState("");
   const [orderVerified,   setOrderVerified]  = useState(null);
   const [submitting,      setSubmitting]     = useState(false);
@@ -166,7 +166,9 @@ export default function Profile() {
   const [topupAmount,     setTopupAmount]    = useState("");
   const [topupLoading,    setTopupLoading]   = useState(false);
   const [expandedTxn,     setExpandedTxn]   = useState(null);
-  const [myCoupon,        setMyCoupon]      = useState(null);
+  const [homeRecentlyViewed, setHomeRecentlyViewed] = useState([]);
+  const [homeCoupon,      setHomeCoupon]     = useState(null);
+  const [homeAllCoupons,  setHomeAllCoupons] = useState([]);
   const [myCoupons,       setMyCoupons]     = useState([]);
   const [couponLoading,   setCouponLoading] = useState(false);
 
@@ -234,21 +236,12 @@ export default function Profile() {
     setCouponLoading(true);
     const tokenHeaders = { headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` } };
     Promise.all([
-      axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/my-coupon`,  tokenHeaders).catch(() => ({ data: null })),
       axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/my-coupons`, tokenHeaders).catch(() => ({ data: { coupons: [] } })),
     ])
-      .then(([single, list]) => {
-        setMyCoupon(single?.data || null);
+      .then(([list]) => {
         setMyCoupons(Array.isArray(list?.data?.coupons) ? list.data.coupons : []);
       })
       .finally(() => setCouponLoading(false));
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab !== "wishlist") return;
-    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/wishlist`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
-    }).then((r) => setWishlistItems(r.data)).catch(console.error);
   }, [activeTab]);
 
   useEffect(() => {
@@ -379,9 +372,70 @@ export default function Profile() {
   };
 
   const handleMobileNav = (tab) => {
+    if (tab === "profile") {
+      navigate("/update-profile");
+      setMobileShowMenu(false);
+      return;
+    }
+    if (tab === "wishlist") {
+      setActiveTab("wishlist");
+      setMobileShowMenu(false);
+      return;
+    }
     setActiveTab(tab);
     setMobileShowMenu(false);
   };
+
+  const handleWishlistBack = () => {
+    setActiveTab("profile");
+    setMobileShowMenu(true);
+  };
+
+  const openRecentlyViewed = () => {
+    navigate("/recently-viewed", { state: { from: "/profile" } });
+  };
+
+  const getProductUrl = (item) => {
+    const slug = item?.name
+      ? item.name.toLowerCase().trim().replace(/\s+/g, "-")
+      : String(item?._id || "");
+    const sku = item?.skuCode || item?.sku || item?._id;
+    return `/product/${slug}/p/${encodeURIComponent(String(sku || ""))}`;
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("userToken");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    Promise.allSettled([
+      cachedGet(
+        `profile:recently-viewed:${user._id}`,
+        () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/recommendations/recently-viewed?limit=6`, { headers }),
+        20_000
+      ),
+      cachedGet(
+        `profile:my-coupon:${user._id}`,
+        () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/my-coupon`, { headers }),
+        15_000
+      ),
+      cachedGet(
+        `profile:my-coupons:${user._id}`,
+        () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/my-coupons`, { headers }),
+        15_000
+      ),
+    ])
+      .then(([recentlyViewedResult, couponResult, couponsResult]) => {
+        const recentlyViewedData = recentlyViewedResult.status === "fulfilled" ? recentlyViewedResult.value : [];
+        const couponData = couponResult.status === "fulfilled" ? couponResult.value : null;
+        const couponsData = couponsResult.status === "fulfilled" ? couponsResult.value : null;
+
+        setHomeRecentlyViewed(Array.isArray(recentlyViewedData) ? recentlyViewedData.slice(0, 6) : []);
+        setHomeCoupon(couponData || null);
+        setHomeAllCoupons(Array.isArray(couponsData?.coupons) ? couponsData.coupons : []);
+      })
+      .catch(() => {});
+  }, [user]);
 
   const initials = user?.name
     ?.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "U";
@@ -389,96 +443,13 @@ export default function Profile() {
   /* ═══════ TAB CONTENT (shared between mobile sub-page and desktop main) ═══════ */
   const TabContent = () => (
     <>
+      {activeTab === "wishlist" && (
+        <div className="p-0 md:p-0">
+          <Wishlist embedded onBack={handleWishlistBack} />
+        </div>
+      )}
       {activeTab === "orders" && (
         <div className="p-4 md:p-6"><MyOrders /></div>
-      )}
-
-      {activeTab === "wishlist" && (
-        <div className="p-4 md:p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                <FaHeart className="text-red-400 text-sm" />
-              </div>
-              <h2 className="text-lg font-bold text-gray-800">My Wishlist</h2>
-            </div>
-            {wishlistItems.length > 0 && (
-              <span className="text-xs font-semibold text-sky-700 bg-sky-50 border border-sky-100 px-3 py-1 rounded-full">
-                {wishlistItems.length} item{wishlistItems.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-          {wishlistItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-4">
-                <FaHeart className="text-3xl text-red-300" />
-              </div>
-              <h3 className="text-base font-bold text-gray-700 mb-1">Your wishlist is empty</h3>
-              <p className="text-sm text-gray-400 mb-5 max-w-xs">Save items you love and come back to them anytime.</p>
-              <Link to="/collections/all" className="px-6 py-2.5 rounded-xl bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition shadow-sm">
-                Explore Products
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {wishlistItems.map((item) => {
-                const img         = item.colorVariants?.[0]?.images?.[0]?.url || item.images?.[0]?.url || "/placeholder.png";
-                const hasDiscount = item.discountPrice && item.discountPrice < item.price;
-                const outOfStock  = item.countInStock === 0;
-                const lowStock    = item.countInStock > 0 && item.countInStock < 5;
-                return (
-                  <div key={item._id} className="group flex gap-4 bg-white border border-gray-100 rounded-2xl p-3 hover:border-sky-200 hover:shadow-md transition-all duration-200">
-                    <Link to={`/product/${item._id}`} className="relative shrink-0 w-24 h-24 md:w-28 md:h-28 rounded-xl overflow-hidden bg-gray-50">
-                      <img src={img} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {hasDiscount && (
-                        <span className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                          {item.offerPercentage || Math.round(100 - (item.discountPrice / item.price) * 100)}% OFF
-                        </span>
-                      )}
-                    </Link>
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                      <div>
-                        {item.brand && <p className="text-[10px] font-bold text-sky-600 uppercase tracking-wider mb-0.5">{item.brand}</p>}
-                        <Link to={`/product/${item._id}`}>
-                          <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 hover:text-sky-700 transition">{item.name}</p>
-                        </Link>
-                        {(item.category || item.gender) && (
-                          <p className="text-[11px] text-gray-400 mt-0.5 capitalize">{[item.gender, item.category].filter(Boolean).join(" · ")}</p>
-                        )}
-                        <div className="flex items-baseline gap-2 mt-2">
-                          <span className="text-base font-extrabold text-gray-900">₹{hasDiscount ? item.discountPrice.toLocaleString() : item.price.toLocaleString()}</span>
-                          {hasDiscount && <span className="text-xs text-gray-400 line-through">₹{item.price.toLocaleString()}</span>}
-                          {hasDiscount && <span className="text-xs font-bold text-emerald-600">{item.offerPercentage || Math.round(100 - (item.discountPrice / item.price) * 100)}% off</span>}
-                        </div>
-                        <div className="mt-1.5">
-                          {outOfStock ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> Out of Stock
-                            </span>
-                          ) : lowStock ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" /> Only {item.countInStock} left
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> In Stock
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 mt-3">
-                        <Link to={`/product/${item._id}`} className="flex-1 text-center text-xs font-bold py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 transition shadow-sm">View Product</Link>
-                        <button onClick={() => removeWishlist(item._id)} className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition" title="Remove">
-                          <FaTrash className="text-[11px]" /><span className="hidden sm:inline">Remove</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       )}
 
       {activeTab === "wallet" && (
@@ -882,111 +853,215 @@ export default function Profile() {
       {/* ══════════════════════════════════════════
           MOBILE / TABLET  (< lg) dsfg
       ══════════════════════════════════════════ */}
-      <div className="lg:hidden min-h-screen bg-gradient-to-b from-sky-300 via-sky-100 to-sky-30 pb-20">
+      <div className="lg:hidden min-h-screen">
 
         {mobileShowMenu ? (
-          /* ── Profile Home / Menu list ── */
+          /* ── Profile Home (redesigned) ── */
           <>
-            {/* Profile header — transparent so outer gradient shows through */}
-            <div className="px-5 pt-10 pb-14">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-blue-500 border-[3px] border-white/50 flex items-center justify-center text-white text-2xl font-extrabold overflow-hidden mb-3 shadow-lg">
+            {/* ── Top Action Bar ── */}
+            <div className="flex items-center justify-between px-5 pt-10 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shrink-0 bg-sky-600">
                   {user?.photo
                     ? <img src={user.photo} alt="" className="w-full h-full object-cover" />
-                    : <span>{initials}</span>}
+                    : <div className="w-full h-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">{initials}</div>}
                 </div>
-                <h2 className="text-slate-800 text-[15px] font-bold leading-tight">{user?.name}</h2>
-                <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
-                  {user?.mobile && (
-                    <span className="flex items-center gap-1 text-sky-200 text-xs">
-                      <FaPhone className="text-[10px] text-slate-800" />{user.mobile}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1 text-slate-800 text-xs">
-                    <FaEnvelope className="text-[10px] text-slate-800" />{user?.email}
-                  </span>
-                </div>
+                <button
+                  onClick={() => navigate("/my-activity")}
+                  className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-bold shadow-sm shadow-sky-200"
+                >
+                  My Activity
+                </button>
+              </div>
+              <div className="flex items-center gap-4">
+                <button onClick={() => navigate("/contact-us")} className="text-gray-400 hover:text-sky-600 transition">
+                  <FaEnvelope className="text-[18px]" />
+                </button>
+                <button onClick={() => handleMobileNav("coupons")} className="text-gray-400 hover:text-sky-600 transition">
+                  <FaGift className="text-[18px]" />
+                </button>
+                <button onClick={() => navigate("/settings")} className="text-gray-400 hover:text-sky-600 transition">
+                  <FaCog className="text-[18px]" />
+                </button>
               </div>
             </div>
 
-            {/* Quick actions card — overlaps header */}
-            <div className="mx-4 -mt-8">
-              <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(7,89,133,0.22)] border border-white/60 grid grid-cols-3 divide-x divide-gray-100 overflow-hidden">
+            {/* ── Greeting ── */}
+            <div className="px-5 mb-6">
+              <h1 className="text-[26px] font-black text-gray-900 leading-tight">
+                Hello, {user?.name?.split(" ")[0]}!!
+              </h1>
+            </div>
+
+            {/* ── Reward / Coupon Card ── */}
+            {homeCoupon && homeCoupon.status !== "used" && (
+              <div className="mx-5 mb-5">
+                <button
+                  type="button"
+                  onClick={() => handleMobileNav("coupons")}
+                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 rounded-2xl p-4 flex items-center gap-4 shadow-lg shadow-sky-100 text-left"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                    <FaHeart className="text-sky-500 text-xl" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-sm">You just got a reward!</p>
+                    <p className="text-sky-100 text-xs mt-0.5 truncate">
+                      Use code <span className="font-mono font-bold text-white">{homeCoupon.code}</span> · {homeCoupon.discount}% off your order
+                    </p>
+                  </div>
+                  <FaChevronRight className="text-white/60 text-xs shrink-0" />
+                </button>
+              </div>
+            )}
+
+            {/* ── Recently Viewed ── */}
+            {homeRecentlyViewed.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center justify-between px-5 mb-3">
+                  <p className="text-[15px] font-bold text-gray-900">Recently viewed</p>
+                  <button onClick={openRecentlyViewed} className="text-xs font-semibold text-sky-500">See all</button>
+                </div>
+                <div className="flex gap-3 px-5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                  {homeRecentlyViewed.map((item) => {
+                    const img = item.colorVariants?.[0]?.images?.[0]?.url || item.images?.[0]?.url || "/placeholder.png";
+                    return (
+                      <Link key={item._id} to={getProductUrl(item)} className="shrink-0">
+                        <div className="w-14 h-14 rounded-full border-2 border-sky-100 overflow-hidden bg-gray-50">
+                          <img src={img} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Recently Viewed ── */}
+            {/* <div className="mx-5 mb-5">
+              <button
+                type="button"
+                onClick={openRecentlyViewed}
+                className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3 text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center shrink-0">
+                  <FaHistory className="text-sky-600 text-sm" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900">Recently viewed</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Open your browsing history</p>
+                </div>
+                <FaChevronRight className="text-gray-300 text-xs shrink-0" />
+              </button>
+            </div> */}
+
+            {/* ── My Orders ── */}
+            <div className="px-5 mb-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[15px] font-bold text-gray-900">My Orders</p>
+                <button onClick={() => handleMobileNav("orders")} className="text-xs font-semibold text-sky-500">See all</button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
                 {[
-                  { icon: FaBoxOpen,              label: "Your orders", tab: "orders",    iconColor: "text-sky-600",   bg: "bg-sky-50" },
-                  { icon: FaWallet,               label: "My Wallet",   tab: "wallet",    iconColor: "text-emerald-600", bg: "bg-emerald-50" },
-                  { icon: HiOutlineExclamationCircle, label: "Need help?", tab: "complaint", iconColor: "text-amber-600",  bg: "bg-amber-50" },
-                ].map(({ icon: Icon, label, tab, iconColor, bg }) => (
+                  { label: "To Pay",     dot: false },
+                  { label: "To Receive", dot: true  },
+                  { label: "To Review",  dot: false },
+                ].map(({ label, dot }) => (
                   <button
-                    key={tab}
-                    type="button"
-                    onClick={() => handleMobileNav(tab)}
-                    className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-gray-50 transition-colors"
+                    key={label}
+                    onClick={() => handleMobileNav("orders")}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 text-xs font-semibold text-gray-600 bg-white hover:border-sky-300 hover:text-sky-600 transition-colors"
                   >
-                    <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center`}>
-                      <Icon className={`text-lg ${iconColor}`} />
-                    </div>
-                    <span className="text-[11px] font-semibold text-gray-700 text-center leading-tight px-1">{label}</span>
+                    {label}
+                    {dot && <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Sections */}
-            <div className="mt-5 space-y-0">
+            {/* ── My Coupons (horizontal scroll) ── */}
+            {homeAllCoupons.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center justify-between px-5 mb-3">
+                  <p className="text-[15px] font-bold text-gray-900">My Coupons</p>
+                  <button onClick={() => handleMobileNav("coupons")} className="text-xs font-semibold text-sky-500">See all</button>
+                </div>
+                <div className="flex gap-3 px-5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                  {homeAllCoupons.slice(0, 5).map((c) => (
+                    <div key={c.code} className="shrink-0 w-52">
+                      <MiniCouponCard c={c} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {/* transparent gap — gradient visible */}
-              <div className="h-3" />
+            {/* ── Quick Actions ── */}
+            <div className="mx-5 mb-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 grid grid-cols-3 divide-x divide-gray-100 overflow-hidden">
+                {[
+                  { icon: FaBoxOpen,                  label: "Your Orders",  tab: "orders",    iconColor: "text-sky-600",    bg: "bg-sky-50"    },
+                  { icon: FaWallet,                   label: "My Wallet",    tab: "wallet",    iconColor: "text-emerald-600", bg: "bg-emerald-50" },
+                  { icon: HiOutlineExclamationCircle, label: "Need Help?",   tab: "complaint", iconColor: "text-amber-600",  bg: "bg-amber-50"  },
+                ].map(({ icon: _Icon, label, tab, iconColor, bg }) => {
+                  void _Icon;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => handleMobileNav(tab)}
+                      className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center`}>
+                        <_Icon className={`text-lg ${iconColor}`} />
+                      </div>
+                      <span className="text-[11px] font-semibold text-gray-700 text-center leading-tight px-1">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-              {/* Your Information */}
+            {/* ── Full Menu ── */}
+            <div className="space-y-0 pb-6">
+              <div className="h-2" />
               <MenuSection title="Your information">
-                <MenuRow icon={FaBoxOpen}      label="My Orders"    onClick={() => handleMobileNav("orders")}    iconBg="bg-sky-50"     iconColor="text-sky-600" />
-                <MenuRow icon={FaHeart}        label="My Wishlist"  onClick={() => handleMobileNav("wishlist")}  iconBg="bg-red-50"     iconColor="text-red-500" />
-                <MenuRow icon={FaMapMarkerAlt} label="My Address"   onClick={() => handleMobileNav("address")}   iconBg="bg-blue-50"    iconColor="text-blue-600" />
-                <MenuRow icon={FaUserCircle}   label="Profile Info" onClick={() => handleMobileNav("profile")}   iconBg="bg-gray-100"   iconColor="text-gray-600" />
+                <MenuRow icon={FaBoxOpen}      label="My Orders"    onClick={() => handleMobileNav("orders")}    iconBg="bg-sky-50"   iconColor="text-sky-600" />
+                <MenuRow icon={FaHeart}        label="My Wishlist"  onClick={() => handleMobileNav("wishlist")}       iconBg="bg-red-50"   iconColor="text-red-500" />
+                <MenuRow icon={FaHistory}      label="Recently Viewed" onClick={openRecentlyViewed} iconBg="bg-sky-50" iconColor="text-sky-600" />
+                <MenuRow icon={FaMapMarkerAlt} label="My Address"   onClick={() => handleMobileNav("address")}   iconBg="bg-blue-50"  iconColor="text-blue-600" />
+                <MenuRow icon={FaUserCircle}   label="Profile Info" onClick={() => handleMobileNav("profile")}   iconBg="bg-gray-100" iconColor="text-gray-600" />
               </MenuSection>
-
-              <div className="h-3" />
-
-              {/* Payment & Coupons */}
+              <div className="h-2" />
               <MenuSection title="Payment and coupons">
                 <MenuRow icon={FaWallet} label="My Wallet"  onClick={() => handleMobileNav("wallet")}  iconBg="bg-emerald-50" iconColor="text-emerald-600" />
                 <MenuRow icon={FaGift}   label="My Coupons" onClick={() => handleMobileNav("coupons")} iconBg="bg-amber-50"   iconColor="text-amber-600" />
               </MenuSection>
-
-              <div className="h-3" />
-
-              {/* Other information */}
+              <div className="h-2" />
               <MenuSection title="Other information">
-                <MenuRow icon={FaInfoCircle} label="About Us"              onClick={() => navigate("/about")}          iconBg="bg-sky-50"   iconColor="text-sky-600" />
-                <MenuRow icon={FaPhone}      label="Contact Us"            onClick={() => navigate("/contact-us")}     iconBg="bg-teal-50"  iconColor="text-teal-600" />
-                <MenuRow icon={FaShieldAlt}  label="Privacy Policy"        onClick={() => navigate("/privacy-policy")} iconBg="bg-gray-100" iconColor="text-gray-600" />
-                <MenuRow icon={FaFileAlt}    label="Terms &amp; Conditions" onClick={() => navigate("/terms")}          iconBg="bg-gray-100" iconColor="text-gray-600" />
-                <MenuRow icon={HiOutlineExclamationCircle} label="Complaints" onClick={() => handleMobileNav("complaint")} iconBg="bg-orange-50" iconColor="text-orange-600" />
+                <MenuRow icon={FaInfoCircle}               label="About Us"               onClick={() => navigate("/about")}           iconBg="bg-sky-50"    iconColor="text-sky-600"    />
+                <MenuRow icon={FaPhone}                    label="Contact Us"             onClick={() => navigate("/contact-us")}      iconBg="bg-teal-50"   iconColor="text-teal-600"   />
+                <MenuRow icon={FaShieldAlt}                label="Privacy Policy"         onClick={() => navigate("/privacy-policy")}  iconBg="bg-gray-100"  iconColor="text-gray-600"   />
+                <MenuRow icon={FaFileAlt}                  label="Terms &amp; Conditions" onClick={() => navigate("/terms")}           iconBg="bg-gray-100"  iconColor="text-gray-600"   />
+                <MenuRow icon={HiOutlineExclamationCircle} label="Complaints"             onClick={() => handleMobileNav("complaint")} iconBg="bg-orange-50" iconColor="text-orange-600" />
               </MenuSection>
-
-              <div className="h-3" />
-
-              {/* Logout */}
-              <div className="p-5">
-                <div className="bg-white rounded-2xl">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-4 px-4 py-4 hover:bg-red-50 active:bg-red-100 transition-colors text-left"
-                >
-                  <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                    <AiOutlineLogout className="text-base text-red-500" />
-                  </div>
-                  <span className="flex-1 text-[13px] text-red-500 font-medium">Log out</span>
-                </button>
+              <div className="h-2" />
+              <div className="px-4 py-2">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-4 px-4 py-4 hover:bg-red-50 active:bg-red-100 transition-colors text-left rounded-2xl"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                      <AiOutlineLogout className="text-base text-red-500" />
+                    </div>
+                    <span className="flex-1 text-[13px] text-red-500 font-medium">Log out</span>
+                  </button>
+                </div>
               </div>
-              </div>
-
-              <div className="h-3" />
-
-              {/* Brand footer */}
-              <div className="bg-white py-6 flex flex-col items-center gap-1">
+              <div className="h-2" />
+              <div className="py-6 flex flex-col items-center gap-1">
                 <p className="text-sm font-bold text-gray-300 tracking-widest uppercase">Raphaaa</p>
                 <p className="text-[11px] text-gray-300">v1.0.0</p>
               </div>
@@ -1199,16 +1274,17 @@ export default function Profile() {
 
                 {/* Nav links */}
                 <nav className="p-2">
-                  {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
+                  {NAV_ITEMS.map(({ key, label, icon: _Icon }) => {
+                    void _Icon;
                     const active = activeTab === key;
                     return (
                       <button
                         key={key}
-                        onClick={() => key === "refer" ? navigate("/refer") : setActiveTab(key)}
+                        onClick={() => (key === "wishlist" ? handleMobileNav("wishlist") : key === "refer" ? navigate("/refer") : setActiveTab(key))}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5
                           ${active ? "bg-sky-50 text-sky-700 font-semibold" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
                       >
-                        <Icon className={`text-base shrink-0 ${active ? "text-sky-600" : "text-gray-400"}`} />
+                        <_Icon className={`text-base shrink-0 ${active ? "text-sky-600" : "text-gray-400"}`} />
                         <span>{label}</span>
                         {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sky-500" />}
                       </button>

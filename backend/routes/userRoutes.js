@@ -13,6 +13,7 @@ const generateEmailOTP = () => Math.floor(100000 + Math.random() * 900000).toStr
 const crypto = require("crypto");
 const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
 const getJwtExpiresIn = () => process.env.JWT_EXPIRES_IN || "40h";
+const { getJson, setJson } = require("../utils/redisCache");
 
 // const ALLOWED_EMAILS = new Set([
 //   "test@example.com",
@@ -191,6 +192,9 @@ router.post("/google-login", async (req, res) => {
         },
       });
       await user.save();
+    } else if (photo && user.photo !== photo) {
+      user.photo = photo;
+      await user.save();
     }
 
     const payload = { user: { id: user._id, role: user.role } };
@@ -207,7 +211,7 @@ router.post("/google-login", async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            photo: user.photo,
+            photo: user.photo || photo || "",
           },
           token,
         });
@@ -504,6 +508,10 @@ router.put("/reset-password/:token", async (req, res) => {
 // @access Private
 router.get("/my-coupon", protect, async (req, res) => {
   try {
+    const cacheKey = `user:${req.user._id}:my-coupon`;
+    const cached = await getJson("users", cacheKey);
+    if (cached) return res.json(cached);
+
     const user = await User.findById(req.user._id).select("coupon");
 
     if (!user || !user.coupon) {
@@ -528,11 +536,13 @@ router.get("/my-coupon", protect, async (req, res) => {
     const usedLegacyWelcome = couponCode.startsWith("WELCOME") && hasAnyOrder;
     const used = usedFromSnapshot || usedLegacyWelcome;
     const isExpired = user?.coupon?.expiresAt ? new Date(user.coupon.expiresAt) <= new Date() : true;
-    res.json({
+    const payload = {
       ...user.coupon.toObject?.() || user.coupon,
       used,
       status: used ? "used" : isExpired ? "expired" : "unused",
-    });
+    };
+    await setJson("users", cacheKey, payload, 30);
+    res.json(payload);
   } catch (error) {
     console.error("Coupon fetch failed:", error);
     res.status(500).json({ message: "Server error while fetching coupon" });
@@ -544,6 +554,10 @@ router.get("/my-coupon", protect, async (req, res) => {
 // @access Private
 router.get("/my-coupons", protect, async (req, res) => {
   try {
+    const cacheKey = `user:${req.user._id}:my-coupons`;
+    const cached = await getJson("users", cacheKey);
+    if (cached) return res.json(cached);
+
     const Order = require("../models/Order");
     const user = await User.findById(req.user._id).select("coupon");
     const orders = await Order.find({ user: req.user._id }).select("orderId createdAt couponSnapshot").lean();
@@ -592,7 +606,9 @@ router.get("/my-coupons", protect, async (req, res) => {
       });
     }
 
-    res.json({ coupons: list });
+    const payload = { coupons: list };
+    await setJson("users", cacheKey, payload, 30);
+    res.json(payload);
   } catch (error) {
     console.error("Coupon list fetch failed:", error);
     res.status(500).json({ message: "Server error while fetching coupons" });

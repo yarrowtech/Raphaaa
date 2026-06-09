@@ -13,6 +13,9 @@ import heroImg3  from "../../assets/hero3.webp";
 import mensImg   from "../../assets/mens-collection.jpg";
 import womensImg from "../../assets/womens-collection.jpg";
 import classicImg from "../../assets/classic.webp";
+import men from "/men.webp";
+import women from "/women.webp";
+import classic from "/classic.webp";
 
 const DEFAULT_SLIDES = [
   {
@@ -89,9 +92,9 @@ const CATEGORIES = [
 ];
 
 const PROMO = [
-  { image: mensImg,    label: "Men's Collection",  sub: "Top Wear & More",  link: "/collections/all?gender=Men",   badge: "New In" },
-  { image: womensImg,  label: "Women's Fashion",   sub: "Trending Styles",  link: "/collections/all?gender=Women", badge: "Hot" },
-  { image: classicImg, label: "Classic Fits",      sub: "Timeless Pieces",  link: "/collections/all",              badge: "Editor's Pick" },
+  { image: men,    label: "Men's Collection",  sub: "Top Wear & More",  link: "/collections/all?gender=Men",   badge: "New In" },
+  { image: women,  label: "Women's Fashion",   sub: "Trending Styles",  link: "/collections/all?gender=Women", badge: "Hot" },
+  { image: classic, label: "Classic Fits",      sub: "Timeless Pieces",  link: "/collections/all",              badge: "Editor's Pick" },
 ];
 
 const Hero = () => {

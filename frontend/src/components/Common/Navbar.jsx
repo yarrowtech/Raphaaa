@@ -6,14 +6,13 @@ import SearchBar from "./SearchBar";
 import CartDrawer from "../Layout/CartDrawer";
 import { IoIosClose } from "react-icons/io";
 import logo from "../../assets/logo1.png";
-import { TbBrandMeta } from "react-icons/tb";
-import { IoLogoInstagram } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 import axios from "axios";
 import { GiTreasureMap } from "react-icons/gi"; // example icon
 import useSmartLoader from "../../hooks/useSmartLoader";
 import { toast } from "sonner";
+import { getActiveSocialLinks, getSocialIcon } from "../../utils/socialLinks";
 
 const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -56,6 +55,7 @@ const Navbar = () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/settings/contact`);
     return res.data;
   });
+  const socialLinks = getActiveSocialLinks(contactInfo);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -326,24 +326,21 @@ const Navbar = () => {
           <div className="mt-8 pt-4 absolute bottom-0 pb-8">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Follow Us</h3>
             <div className="flex space-x-4 mb-4">
-              {contactInfo?.showFacebook && (
-                <a
-                  href={contactInfo.facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <TbBrandMeta className="h-5 w-5 text-blue-600 inline" />
-                </a>
-              )}
-              {contactInfo?.showInstagram && (
-                <a
-                  href={contactInfo.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <IoLogoInstagram className="h-5 w-5 inline text-[#E1306C]" />
-                </a>
-              )}
+              {socialLinks.map((link) => {
+                const Icon = getSocialIcon(link.platform);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                    title={link.label}
+                  >
+                    <Icon className="h-5 w-5 text-sky-600 inline" />
+                  </a>
+                );
+              })}
             </div>
 
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Contact</h3>

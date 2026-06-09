@@ -28,6 +28,7 @@ import {
 } from "react-icons/fa";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
+import { HiTrash } from "react-icons/hi2";
 import { Verified } from "lucide-react";
 
 
@@ -896,7 +897,7 @@ const Checkout = () => {
                   <p className="text-xs text-gray-500 mt-1">Delivery by {deliveryStr}</p>
                 </div>
               </div>
-              <div className="flex items-center mt-3">
+              <div className="flex items-center justify-between gap-3 mt-3">
                 {(() => {
                   const key = itemKey(product);
                   const maxStock = Number(stockByItem[key] ?? 0);
@@ -947,6 +948,14 @@ const Checkout = () => {
                     </div>
                   );
                 })()}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveItem(product)}
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-200 bg-red-50 text-red-600 active:scale-95 transition lg:hidden"
+                  title="Remove from cart"
+                >
+                  <HiTrash className="text-sm" />
+                </button>
               </div>
             </div>
           );

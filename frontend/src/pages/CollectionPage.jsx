@@ -30,6 +30,7 @@ const CollectionPage = () => {
   const dispatch   = useDispatch();
   const { products, loading } = useSelector((s) => s.products);
   const queryParams = Object.fromEntries([...searchParams]);
+  const isAllCollectionsPage = !collection || collection === "all";
 
   const sidebarRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -102,20 +103,21 @@ const CollectionPage = () => {
 
       <div className="min-h-screen">
 
-        {/* ── Breadcrumb ── */}
-        <div className="bg-linear-to-r from-sky-200 to-sky-100">
-          <div className="max-w-400 mx-auto px-4 md:px-6 py-3 flex items-center gap-1.5 text-xs text-slate-950-400 font-medium">
-            <span className="hover:text-gray-700 cursor-pointer transition" onClick={() => navigate("/")}>Home</span>
-            <HiChevronRight className="text-slate-950" />
-            <span className="hover:text-gray-700 cursor-pointer transition" onClick={() => navigate("/collections/all")}>Collections</span>
-            {collection && collection !== "all" && (
-              <>
-                <HiChevronRight className="text-gray-300" />
-                <span className="text-gray-800 capitalize font-semibold">{collection}</span>
-              </>
-            )}
+        {!isAllCollectionsPage && (
+          <div className="bg-linear-to-r from-sky-200 to-sky-100">
+            <div className="max-w-400 mx-auto px-4 md:px-6 py-3 flex items-center gap-1.5 text-xs text-slate-950-400 font-medium">
+              <span className="hover:text-gray-700 cursor-pointer transition" onClick={() => navigate("/")}>Home</span>
+              <HiChevronRight className="text-slate-950" />
+              <span className="hover:text-gray-700 cursor-pointer transition" onClick={() => navigate("/collections/all")}>Collections</span>
+              {collection && collection !== "all" && (
+                <>
+                  <HiChevronRight className="text-gray-300" />
+                  <span className="text-gray-800 capitalize font-semibold">{collection}</span>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Page body ── */}
         <div className="max-w-400 mx-auto flex items-start lg:h-[calc(100vh-88px)] lg:overflow-hidden">
@@ -187,12 +189,14 @@ const CollectionPage = () => {
 
               <div className="flex items-center gap-2">
                 {/* Desktop filter toggle */}
-                <button
-                  onClick={() => setSidebarOpen((p) => !p)}
-                  className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
-                >
-                  <MdFilterList className="text-base" /> Filter
-                </button>
+                {!isAllCollectionsPage && (
+                  <button
+                    onClick={() => setSidebarOpen((p) => !p)}
+                    className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
+                  >
+                    <MdFilterList className="text-base" /> Filter
+                  </button>
+                )}
 
                 {/* Sort select */}
                 <div className="relative">

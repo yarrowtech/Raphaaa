@@ -1,11 +1,15 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UserLayout from "./components/Layout/UserLayout";
 import Home from "./pages/Home";
 import { Toaster } from "sonner";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Wishlist from "./pages/Wishlist";
+import RecentlyViewed from "./pages/RecentlyViewed";
+import Settings from "./pages/Settings";
+import MyActivity from "./pages/MyActivity";
 import ExclusiveDrop from "./pages/ExclusiveDrop";
 import DropDetail from "./pages/DropDetail";
 import CollectionPage from "./pages/CollectionPage";
@@ -115,6 +119,25 @@ const App = () => {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="profile" element={<Profile />} />
+            <Route
+              path="wishlist"
+              element={
+                <ProtectedRoute>
+                  <Wishlist />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="recently-viewed" element={<RecentlyViewed />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="update-profile" element={<Settings initialView="profile" />} />
+            <Route
+              path="my-activity"
+              element={
+                <ProtectedRoute>
+                  <MyActivity />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="collections/:collection"
               element={<CollectionPage />}

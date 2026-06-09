@@ -8,6 +8,7 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const { enqueueJob } = require("../services/jobQueue");
 const { syncTimedOfferPricing } = require("../utils/timedOfferSync");
+const { getJson, setJson, deleteJson } = require("../utils/redisCache");
 
 // Create offer
 router.post("/", protect, admin, async (req, res) => {
@@ -44,6 +45,7 @@ const sendInitialOfferEmails = async (offer) => {
 };
 await sendInitialOfferEmails(offer);
   await syncTimedOfferPricing({ productIds: offer.productIds });
+  await deleteJson("offers", "public");
 
 
   res.status(201).json(offer);
@@ -52,6 +54,13 @@ await sendInitialOfferEmails(offer);
 // Public: Get all active offers for users
 router.get("/public", async (req, res) => {
   try {
+    const cacheKey = "public";
+    const cached = await getJson("offers", cacheKey);
+    if (cached) {
+      res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+      return res.json(cached);
+    }
+
     const offers = await Offer.find()
       .populate("productIds", "name price images price discountPrice offerPercentage")
       .sort({ createdAt: -1 });
@@ -60,6 +69,8 @@ router.get("/public", async (req, res) => {
       offer => new Date(offer.endDate) >= new Date()
     );
 
+    await setJson("offers", cacheKey, activeOffers, 60);
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json(activeOffers);
   } catch (err) {
     console.error("Public offer fetch failed:", err.message);
@@ -103,6 +114,7 @@ router.put("/:id", protect, admin, async (req, res) => {
     ...(updatedOffer?.productIds || []),
   ];
   await syncTimedOfferPricing({ productIds: affectedProductIds });
+  await deleteJson("offers", "public");
 
   res.json(updatedOffer);
 });
@@ -115,6 +127,7 @@ router.delete("/:id", protect, admin, async (req, res) => {
   }
 
   await syncTimedOfferPricing({ productIds: offer.productIds });
+  await deleteJson("offers", "public");
   res.json({ message: "Offer deleted" });
 });
 

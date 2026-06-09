@@ -1657,6 +1657,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { trackView } from "../../utils/recentlyViewed";
 import ProductGrid from "./ProductGrid";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { useParams, useNavigate } from "react-router-dom";
@@ -1681,6 +1682,7 @@ import { FiCopy } from "react-icons/fi";
 import ProductQA from "./ProductQA";
 import { Helmet } from "react-helmet-async";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
+import { cachedGet } from "../../utils/httpCache";
 import { HiScale } from "react-icons/hi2";
 
 // Local CSS for the size-chart drawer animation (kept here to avoid global CSS churn)
@@ -1786,9 +1788,12 @@ const ProductDetails = ({ productId }) => {
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`)
-      .then((res) => setPublicOffers(Array.isArray(res.data) ? res.data : []))
+    cachedGet(
+      "offers:public",
+      () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
+      60 * 1000
+    )
+      .then((data) => setPublicOffers(Array.isArray(data) ? data : []))
       .catch(() => setPublicOffers([]));
   }, []);
 
@@ -2247,27 +2252,7 @@ const ProductDetails = ({ productId }) => {
     const p = selectedProduct;
     if (!p?._id) return;
 
-    try {
-      const key = "recentlyViewedProductIds";
-      const raw = localStorage.getItem(key);
-      const parsed = raw ? JSON.parse(raw) : [];
-      const ids = Array.isArray(parsed) ? parsed : [];
-      const next = [String(p._id), ...ids.filter((x) => String(x) !== String(p._id))].slice(0, 30);
-      localStorage.setItem(key, JSON.stringify(next));
-    } catch (_) {
-      // ignore
-    }
-
-    const token = localStorage.getItem("userToken");
-    if (token) {
-      axios
-        .post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/recommendations/recently-viewed/${p._id}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .catch(() => {});
-    }
+    trackView(p);
 
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/recommendations/fbt/${p._id}?limit=8`)

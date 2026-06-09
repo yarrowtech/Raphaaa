@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Collab = require("../models/Collab");
 const Product = require("../models/Product");
+const { getJson, setJson, deleteJson } = require("../utils/redisCache");
 
 // @route   POST /api/collabs
 // @desc    Create new collab
@@ -9,6 +10,7 @@ router.post("/", async (req, res) => {
   try {
     const { title, description, collaborators, isPublished, image } = req.body;
     const collab = await Collab.create({ title, description, collaborators, isPublished, image });
+    await deleteJson("collabs", "active");
     res.status(201).json(collab);
   } catch (err) {
     res.status(500).json({ message: "Failed to create collab", error: err.message });
@@ -55,8 +57,18 @@ router.get("/all", async (req, res) => {
 // @desc    Check if any collab is currently published
 router.get("/active", async (req, res) => {
   try {
+    const cacheKey = "active";
+    const cached = await getJson("collabs", cacheKey);
+    if (cached) {
+      res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+      return res.json(cached);
+    }
+
     const isActive = await Collab.exists({ isPublished: true });
-    res.json({ isActive: !!isActive });
+    const payload = { isActive: !!isActive };
+    await setJson("collabs", cacheKey, payload, 120);
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+    res.json(payload);
   } catch (err) {
     res.status(500).json({ message: "Failed to check active collab", error: err.message });
   }
@@ -79,6 +91,7 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const collab = await Collab.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    await deleteJson("collabs", "active");
     res.json(collab);
   } catch (err) {
     res.status(500).json({ message: "Failed to update collab", error: err.message });
@@ -91,6 +104,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const collab = await Collab.findByIdAndDelete(req.params.id);
     if (!collab) return res.status(404).json({ message: "Collab not found" });
+    await deleteJson("collabs", "active");
     res.json({ message: "Collab deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Failed to delete collab", error: err.message });

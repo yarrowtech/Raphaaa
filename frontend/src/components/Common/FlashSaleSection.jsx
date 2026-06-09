@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { cachedGet } from "../../utils/httpCache";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL;
 
@@ -36,9 +37,12 @@ const FlashSaleSection = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`${BACKEND}/api/offers/public`)
-      .then(({ data }) => {
+    cachedGet(
+      "offers:public",
+      () => axios.get(`${BACKEND}/api/offers/public`),
+      60 * 1000
+    )
+      .then((data) => {
         const now = new Date();
         // Pick the soonest-ending active offer
         const active = (data || [])

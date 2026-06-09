@@ -18,6 +18,7 @@ import FAQ from "../components/Common/FAQ";
 import PreviouslyViewed from "./PreviouslyViewed";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiArrowRight, FiClock } from "react-icons/fi";
+import { cachedGet } from "../utils/httpCache";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -45,13 +46,15 @@ const Home = () => {
         setBestSellerLoading(true);
         setBestSellerError(null);
 
-        const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`
+        const data = await cachedGet(
+          "products:best-seller",
+          () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`),
+          5 * 60 * 1000
         );
 
         // Validate the response data
-        if (response.data && response.data._id) {
-          setBestSellerProduct(response.data);
+        if (data && data._id) {
+          setBestSellerProduct(data);
         } else {
           setBestSellerError("Invalid best seller product data");
         }
@@ -98,8 +101,10 @@ const Home = () => {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/offers/public`
+        const data = await cachedGet(
+          "offers:public",
+          () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
+          60 * 1000
         );
         if (data.length > 0) {
           setActiveOffer(data[0]); // always show the first offer

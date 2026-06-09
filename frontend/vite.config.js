@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  define: {
+    __APP_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
   base: '/',
   server: {
     host: true,

@@ -64,7 +64,7 @@ const { sendMail } = require("../utils/sendMail");
 const sendWhatsApp = require("../utils/sendWhatsApp");
 const Collab = require("../models/Collab");
 const { buildInvoicePDF } = require("../utils/invoice");
-const { getJson, setJson } = require("../utils/redisCache");
+const { getJson, setJson, deleteJson } = require("../utils/redisCache");
 const { priceQuote } = require("../services/pricingService");
 const { getAvailableCredits, redeem } = require("../services/walletService");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
@@ -292,6 +292,10 @@ router.post("/cod", protect, async (req, res) => {
     };
 
     const createdOrder = await order.save();
+    await Promise.all([
+      deleteJson("users", `user:${req.user._id}:my-coupon`),
+      deleteJson("users", `user:${req.user._id}:my-coupons`),
+    ]);
 
     if (walletApplied > 0) {
       await redeem({

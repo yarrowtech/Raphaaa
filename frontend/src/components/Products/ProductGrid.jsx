@@ -6,6 +6,7 @@ import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
 import axios from "axios";
 import { toast } from "sonner";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
+import { cachedGet } from "../../utils/httpCache";
 
 /* ── Skeleton ── */
 const Skeleton = () => (
@@ -49,8 +50,12 @@ const ProductGrid = ({ products = [], loading, error }) => {
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`)
-      .then((res) => setPublicOffers(Array.isArray(res.data) ? res.data : []))
+    cachedGet(
+      "offers:public",
+      () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
+      60 * 1000
+    )
+      .then((data) => setPublicOffers(Array.isArray(data) ? data : []))
       .catch(() => setPublicOffers([]));
   }, []);
 

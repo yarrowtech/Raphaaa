@@ -62,7 +62,10 @@ router.get("/recently-viewed", protect, async (req, res) => {
     const items = (user?.recentlyViewed || [])
       .filter((rv) => rv?.product && rv.product.isPublished)
       .slice(0, limit)
-      .map((rv) => rv.product);
+      .map((rv) => ({
+        ...rv.product.toObject(),
+        viewedAt: rv.viewedAt,
+      }));
 
     res.json(items);
   } catch (err) {
@@ -171,4 +174,3 @@ router.get("/complete-the-look/:productId", async (req, res) => {
 });
 
 module.exports = router;
-

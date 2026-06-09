@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
-import { TbBrandMeta } from "react-icons/tb";
-import { IoLogoInstagram } from "react-icons/io5";
-import { RiCustomerServiceFill, RiTwitterXLine } from "react-icons/ri";
-import { FaFacebook } from "react-icons/fa";
+import { RiCustomerServiceFill } from "react-icons/ri";
 import axios from "axios";
 import useSmartLoader from "../../hooks/useSmartLoader";
+import { getActiveSocialLinks, getSocialIcon } from "../../utils/socialLinks";
 
 const Topbar = () => {
   // const [loading, setLoading] = useState(true);
@@ -19,6 +16,7 @@ const Topbar = () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/settings/contact`);
     return res.data;
   })
+  const socialLinks = getActiveSocialLinks(contactInfo);
 
   // useEffect(() => {
   //   const fetchContactInfo = async () => {
@@ -59,29 +57,22 @@ const Topbar = () => {
         {/* Left: Social Icons */}
         <span className="font-semibold text-xs mr-3 hidden md:flex md:flex-wrap md:justify-center md:items-center md:gap-1">Follow Us:</span>
         <div className="hidden md:flex items-center space-x-4">
-          {contactInfo?.showFacebook && (
-            <a
-              href={contactInfo.facebookUrl}
-              className="hover:text-blue-600 transition-transform duration-200 hover:scale-110"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-            >
-              <FaFacebook className="h-5 w-5" />
-            </a>
-          )}
-          {contactInfo?.showInstagram && (
-            <a
-              href={contactInfo.instagramUrl}
-              className="hover:text-pink-600 transition-transform duration-200 hover:scale-110"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-            >
-              <IoLogoInstagram className="h-5 w-5" />
-            </a>
-          )}
-          {/* Twitter support can be added later */}
+          {socialLinks.map((link) => {
+            const Icon = getSocialIcon(link.platform);
+            return (
+              <a
+                key={link.id}
+                href={link.url}
+                className="hover:text-sky-700 transition-transform duration-200 hover:scale-110"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                title={link.label}
+              >
+                <Icon className="h-5 w-5" />
+              </a>
+            );
+          })}
         </div>
 
         {/* Center: Shipping message */}

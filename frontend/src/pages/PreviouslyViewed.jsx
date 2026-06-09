@@ -11,28 +11,14 @@ const PreviouslyViewed = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("userToken");
-        if (token) {
-          const { data } = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}/api/recommendations/recently-viewed?limit=12`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setViewedProducts(Array.isArray(data) ? data : []);
-          return;
-        }
-
-        const key = "recentlyViewedProductIds";
-        const raw = localStorage.getItem(key);
-        const ids = raw ? JSON.parse(raw) : [];
-        const list = Array.isArray(ids) ? ids : [];
-        if (list.length === 0) {
+        if (!token) {
           setViewedProducts([]);
           return;
         }
 
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/products/by-ids?ids=${encodeURIComponent(
-            list.slice(0, 12).join(",")
-          )}`
+          `${import.meta.env.VITE_BACKEND_URL}/api/recommendations/recently-viewed?limit=12`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setViewedProducts(Array.isArray(data) ? data : []);
       } catch (err) {

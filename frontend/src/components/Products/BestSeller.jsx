@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
 import "./BestSellersSection.css";
+import { cachedGet } from "../../utils/httpCache";
 
 const BestSellersSection = () => {
   const [collabActive, setCollabActive] = useState(null);
@@ -12,9 +13,12 @@ const BestSellersSection = () => {
 
   // Check collab status
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_BACKEND_URL}/api/collabs/active`)
-      .then((res) => setCollabActive(res.data.isActive))
+    cachedGet(
+      "collabs:active",
+      () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/collabs/active`),
+      2 * 60 * 1000
+    )
+      .then((data) => setCollabActive(Boolean(data?.isActive)))
       .catch(() => setCollabActive(false));
   }, []);
 
@@ -23,12 +27,14 @@ const BestSellersSection = () => {
     if (collabActive === false) {
       const fetchBestSellers = async () => {
         try {
-          const { data } = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`
+          const data = await cachedGet(
+            "products:best-seller",
+            () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products/best-seller`),
+            5 * 60 * 1000
           );
           // API may return a single product object or an array
           setBestSellers(Array.isArray(data) ? data : data?._id ? [data] : []);
-        } catch (err) {
+        } catch {
           setError("Failed to load best sellers");
         } finally {
           setLoading(false);

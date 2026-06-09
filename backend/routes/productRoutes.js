@@ -674,6 +674,13 @@ router.get("/by-ids", async (req, res) => {
 // routes/productRoutes.js or analyticsRoutes.js
 router.get("/best-seller", async (req, res) => {
   try {
+    const cacheKey = "best-seller";
+    const cached = await getJson("products", cacheKey);
+    if (cached) {
+      res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=900");
+      return res.json(cached);
+    }
+
     const bestSellers = await Order.aggregate([
       { $unwind: "$orderItems" }, // Break down array of items
 
@@ -724,6 +731,8 @@ router.get("/best-seller", async (req, res) => {
       },
     ]);
 
+    await setJson("products", cacheKey, bestSellers, 300);
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=900");
     res.status(200).json(bestSellers);
   } catch (error) {
     console.error("Error fetching best sellers:", error);

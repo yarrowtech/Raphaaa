@@ -15,17 +15,26 @@ const UserLayout = () => {
   const location = useLocation()
   const isOrderDetailsPage = /^\/order\/[^/]+$/.test(location.pathname)
   const isCheckoutPage = location.pathname === "/checkout"
-  const hideMobileFooterMenu = isCheckoutPage || location.pathname === "/cart"
+  const isCollectionsPage = location.pathname === "/collections/all"
+  const isWishlistPage = location.pathname === "/wishlist"
+  const isRecentlyViewedPage = location.pathname === "/recently-viewed"
+  const isMyActivityPage = location.pathname === "/my-activity"
+  const isSettingsPage = location.pathname === "/settings"
+  const isUpdateProfilePage = location.pathname === "/update-profile"
+  const hideMobileFooterMenu = isCheckoutPage
+  const hideNavbarOnMobile = location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
   const hideFooterOnMobileRoutes = [
     "/profile",
     "/login",
     "/register",
     "/forgot-password",
     "/checkout",
+    "/cart",
   ]
-  const hideFooterOnMobile = hideFooterOnMobileRoutes.includes(location.pathname) || isOrderDetailsPage
+  const hideFooterOnMobile = hideFooterOnMobileRoutes.includes(location.pathname) || isOrderDetailsPage || isRecentlyViewedPage || isMyActivityPage
+  const hideFooterOnMobileOnly = isSettingsPage || isUpdateProfilePage
   const isHomePage = location.pathname === "/"
-  const hideTopbarOnMobile = !isHomePage
+  const hideTopbarOnMobile = !isHomePage || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
 
   React.useEffect(() => {
     if (user?._id) {
@@ -39,13 +48,34 @@ const UserLayout = () => {
 
   return (
     <>
-      <div className={isCheckoutPage ? "hidden lg:block" : ""}>
-        <Header hideTopbarOnMobile={hideTopbarOnMobile} />
+      <div
+        className={
+          isCollectionsPage
+            ? "hidden lg:block"
+            : isCheckoutPage || isWishlistPage || isRecentlyViewedPage || isMyActivityPage
+              ? "hidden"
+              : ""
+        }
+      >
+        <Header
+          hideTopbarOnMobile={hideTopbarOnMobile}
+          hideNavbarOnMobile={hideNavbarOnMobile}
+        />
       </div>
-      <main className="pb-20 lg:pb-0">
+      <main className={hideMobileFooterMenu ? "pb-0" : "pb-20 lg:pb-0"}>
         <Outlet/>
       </main>
-      <div className={hideFooterOnMobile ? "hidden lg:block" : ""}>
+      <div
+        className={
+          isCollectionsPage
+            ? "hidden"
+            : isWishlistPage || isRecentlyViewedPage || isMyActivityPage || hideFooterOnMobile
+              ? "hidden"
+              : hideFooterOnMobileOnly
+                ? "hidden lg:block"
+                : ""
+        }
+      >
         <Footer/>
       </div>
       {!hideMobileFooterMenu && <MobileFooterNav />}

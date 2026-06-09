@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { BsLightningCharge } from "react-icons/bs";
 import { FiClock, FiArrowRight } from "react-icons/fi";
 import { HiOutlineFire } from "react-icons/hi";
+import { cachedGet } from "../utils/httpCache";
 
 // Per-offer live countdown component
 const OfferCountdown = ({ startDate, endDate }) => {
@@ -87,8 +88,10 @@ const OffersShowcase = () => {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/offers/public`
+        const data = await cachedGet(
+          "offers:public",
+          () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`),
+          60 * 1000
         );
         setOffers(data.filter((o) => new Date(o.endDate) >= new Date()));
       } catch {

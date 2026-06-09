@@ -64,7 +64,20 @@ const setJson = async (scope, key, value, ttlSeconds = 60) => {
   }
 };
 
+const deleteJson = async (scope, key) => {
+  try {
+    const c = await getClient();
+    if (!c) return false;
+    await c.del(buildKey(scope, key));
+    return true;
+  } catch (err) {
+    console.error("Redis deleteJson failed:", err.message);
+    return false;
+  }
+};
+
 module.exports = {
   getJson,
   setJson,
+  deleteJson,
 };

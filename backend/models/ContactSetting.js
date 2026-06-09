@@ -13,6 +13,12 @@ const contactSettingSchema = new mongoose.Schema({
   phone: { type: String, default: "" },
   showTopText: { type: Boolean, default: false },
   topText:     { type: String,  default: "" },
+  socialLinks: [{
+    platform: { type: String, default: "" },
+    label:    { type: String, default: "" },
+    url:      { type: String, default: "" },
+    enabled:  { type: Boolean, default: true },
+  }],
   // Legal & business info (editable from admin panel)
   gstin:                  { type: String, default: "" },
   cin:                    { type: String, default: "" },
