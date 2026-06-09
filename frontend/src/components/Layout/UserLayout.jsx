@@ -8,6 +8,7 @@ import WhatsAppWidget from '../Common/WhatsAppWidget'
 import ExitIntentPopup from '../Common/ExitIntentPopup'
 import MobileFooterNav from './MobileFooterNav'
 import { fetchCart } from '../../redux/slices/cartSlice'
+import PushNotificationRegistrar from '../Common/PushNotificationRegistrar'
 
 const UserLayout = () => {
   const dispatch = useDispatch()
@@ -85,6 +86,7 @@ const UserLayout = () => {
       </div>
       <WhatsAppWidget />
       <ExitIntentPopup />
+      {user?._id && <PushNotificationRegistrar />}
     </>
   )
 }

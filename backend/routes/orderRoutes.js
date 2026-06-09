@@ -62,6 +62,7 @@ const {
 } = require("../controller/revenueController");
 const { sendMail } = require("../utils/sendMail");
 const sendWhatsApp = require("../utils/sendWhatsApp");
+const { sendPushToUser } = require("../utils/push");
 const Collab = require("../models/Collab");
 const { buildInvoicePDF } = require("../utils/invoice");
 const { getJson, setJson, deleteJson } = require("../utils/redisCache");
@@ -386,6 +387,16 @@ router.post("/cod", protect, async (req, res) => {
           },
         ],
       });
+
+      await sendPushToUser(
+        { userId: req.user._id, email: userEmail },
+        {
+          title: "Order placed",
+          body: `Your order ${createdOrder.orderId} has been placed successfully.`,
+          url: `/order/${createdOrder._id}`,
+          data: { url: `/order/${createdOrder._id}`, orderId: createdOrder._id.toString() },
+        }
+      );
     } catch (emailError) {
       console.error(
         "Failed to send order confirmation email:",
@@ -475,6 +486,26 @@ router.put("/:id/status", protect, async (req, res) => {
     }
 
     const updatedOrder = await order.save();
+    if (status) {
+      const pushText = {
+        Processing: "Your order is being processed.",
+        Packed: "Your order has been packed.",
+        Shipped: "Your order has been shipped.",
+        Transfer: "Your order has been transferred to the shipping partner.",
+        Delivered: "Your order has been delivered.",
+        Cancelled: "Your order has been cancelled.",
+      }[status] || `Your order status changed to ${status}.`;
+
+      await sendPushToUser(
+        { userId: order.user },
+        {
+          title: `Order ${status}`,
+          body: pushText,
+          url: `/order/${updatedOrder._id}`,
+          data: { url: `/order/${updatedOrder._id}`, orderId: updatedOrder._id.toString(), status },
+        }
+      );
+    }
     res.json(updatedOrder);
   } catch (error) {
     console.error("Order status update error:", error);

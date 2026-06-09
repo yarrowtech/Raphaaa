@@ -331,6 +331,7 @@ const mongoose = require("mongoose");
 const { sendMail } = require("../utils/sendMail");
 const { buildInvoicePDF } = require("../utils/invoice");
 const sendWhatsApp = require("../utils/sendWhatsApp");
+const { sendPushToUser } = require("../utils/push");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
 const { deleteJson } = require("../utils/redisCache");
 
@@ -921,6 +922,20 @@ router.post("/verify-payment", protect, async (req, res) => {
               { filename: `Invoice_${populatedOrder._id}.pdf`, content: invoiceBuffer },
             ],
           });
+
+          await sendPushToUser(
+            { userId: populatedOrder.user._id, email: populatedOrder.user.email },
+            {
+              title: "Payment successful",
+              body: `Your payment for order ${populatedOrder.orderId} was successful.`,
+              url: `/order/${populatedOrder._id}`,
+              data: {
+                url: `/order/${populatedOrder._id}`,
+                orderId: populatedOrder._id.toString(),
+                paymentStatus: "paid",
+              },
+            }
+          );
         } else {
           console.warn("No user email found on order; skipping invoice email.");
         }

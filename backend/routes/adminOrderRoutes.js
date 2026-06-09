@@ -207,6 +207,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const { protect, adminOrMerchantise } = require('../middleware/authMiddleware');
 const { sendMail } = require("../utils/sendMail");
+const { sendPushToUser } = require("../utils/push");
 const {
   createShiprocketOrder,
   syncOrderTrackingStatus,
@@ -376,6 +377,16 @@ router.put('/:id', protect, adminOrMerchantiseMiddleware, async (req, res) => {
           <p>Team Raphaaa</p>
         `
       });
+
+      await sendPushToUser(
+        { userId: order.user._id, email: order.user.email },
+        {
+          title: `Order ${status}`,
+          body: statusMessages[status] || `Your order status changed to ${status}.`,
+          url: `/order/${updatedOrder._id}`,
+          data: { url: `/order/${updatedOrder._id}`, orderId: updatedOrder._id.toString(), status },
+        }
+      );
     }
     
     // console.log('Order status updated by', req.user.role, ':', updatedOrder._id, 'New status:', updatedOrder.status);

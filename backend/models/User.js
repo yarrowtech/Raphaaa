@@ -51,6 +51,13 @@ const userSchema = new mongoose.Schema(
     },
     mobile: { type: String },
     mobileVerified: { type: Boolean, default: false },
+    pushSubscription: {
+      endpoint: { type: String, default: "" },
+      keys: {
+        auth: { type: String, default: "" },
+        p256dh: { type: String, default: "" },
+      },
+    },
     referralCode:  { type: String, unique: true, sparse: true },
     referredBy:    { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     referralCount: { type: Number, default: 0 },

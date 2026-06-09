@@ -549,6 +549,29 @@ router.get("/my-coupon", protect, async (req, res) => {
   }
 });
 
+router.post("/push-subscription", protect, async (req, res) => {
+  try {
+    const subscription = req.body?.subscription;
+    if (!subscription?.endpoint || !subscription?.keys?.auth || !subscription?.keys?.p256dh) {
+      return res.status(400).json({ message: "Invalid push subscription" });
+    }
+
+    req.user.pushSubscription = {
+      endpoint: subscription.endpoint,
+      keys: {
+        auth: subscription.keys.auth,
+        p256dh: subscription.keys.p256dh,
+      },
+    };
+
+    await req.user.save();
+    res.json({ message: "Push subscription saved" });
+  } catch (error) {
+    console.error("Save push subscription error:", error);
+    res.status(500).json({ message: "Failed to save push subscription" });
+  }
+});
+
 // @route GET /api/users/my-coupons
 // @desc Get all coupons for logged-in user with status
 // @access Private
