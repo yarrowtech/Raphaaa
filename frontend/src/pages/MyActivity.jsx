@@ -90,7 +90,7 @@ const MyActivity = () => {
 
       {/* ── Back bar ── */}
       <div className="px-4 pt-5 pb-2">
-        <div className="flex items-center gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3">
+        <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center shrink-0"

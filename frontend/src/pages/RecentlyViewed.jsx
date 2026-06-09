@@ -182,10 +182,10 @@ const RecentlyViewed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen pb-24">
       {showBackBar ? (
         <div className="px-4 pt-4 pb-4">
-          <div className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-3">
+          <div className="flex items-center gap-3 px-4 py-3">
             <button
               type="button"
               onClick={handleBack}

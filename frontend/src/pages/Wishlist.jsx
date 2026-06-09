@@ -148,7 +148,7 @@ const Wishlist = ({ embedded = false, onBack = null }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 md:bg-linear-to-b md:from-sky-50 md:via-white md:to-sky-50/30 pb-24 md:pb-10">
+    <div className="min-h-screen md:bg-linear-to-b md:from-sky-50 md:via-white md:to-sky-50/30 pb-24 md:pb-10">
       <div className="md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:py-8">
         {showBackBar && (
           <div className="px-4 pt-4 md:pt-0 md:px-0 mb-4 md:mb-6">
