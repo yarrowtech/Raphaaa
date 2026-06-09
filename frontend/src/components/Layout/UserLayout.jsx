@@ -15,14 +15,15 @@ const UserLayout = () => {
   const location = useLocation()
   const isOrderDetailsPage = /^\/order\/[^/]+$/.test(location.pathname)
   const isCheckoutPage = location.pathname === "/checkout"
+  const isCartPage = location.pathname === "/cart"
   const isCollectionsPage = location.pathname === "/collections/all"
   const isWishlistPage = location.pathname === "/wishlist"
   const isRecentlyViewedPage = location.pathname === "/recently-viewed"
   const isMyActivityPage = location.pathname === "/my-activity"
   const isSettingsPage = location.pathname === "/settings"
   const isUpdateProfilePage = location.pathname === "/update-profile"
-  const hideMobileFooterMenu = isCheckoutPage
-  const hideNavbarOnMobile = location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
+  const hideMobileFooterMenu = isCheckoutPage || isCartPage
+  const hideNavbarOnMobile = isCartPage || location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
   const hideFooterOnMobileRoutes = [
     "/profile",
     "/login",
