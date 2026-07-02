@@ -139,10 +139,10 @@ const Footer = () => {
             <h4 className="text-xs font-bold text-sky-700 uppercase tracking-widest mb-5">Shop</h4>
             <ul className="space-y-3">
               {[
-                { to: "/collections/all?category=Top+Wear&gender=Men",     label: "Men's Top Wear" },
-                { to: "/collections/all?category=Bottom+Wear&gender=Men",  label: "Men's Bottom Wear" },
-                { to: "/collections/all?category=Top+Wear&gender=Women",   label: "Women's Top Wear" },
-                { to: "/collections/all?category=Bottom+Wear&gender=Women",label: "Women's Bottom Wear" },
+                { to: "/collections/all?gender=Men",     label: "Men's Collections" },
+                // { to: "/collections/all?category=Bottom+Wear&gender=Men",  label: "Men's Bottom Wear" },
+                { to: "/collections/all?gender=Women",   label: "Women's Collections" },
+                // { to: "/collections/all?category=Bottom+Wear&gender=Women",label: "Women's Bottom Wear" },
                 { to: "/collections/all",                                   label: "All Collections" },
                 { to: "/collections/all?sort=newest",                       label: "New Arrivals" },
                 { to: "/collections/all?sort=bestseller",                   label: "Best Sellers" },

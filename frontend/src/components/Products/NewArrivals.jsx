@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
+import { HiSparkles } from "react-icons/hi2";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import useSmartLoader from "../../hooks/useSmartLoader";
@@ -137,17 +138,25 @@ const NewArrivals = () => {
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                {/* New badge */}
+                {/* New ribbon badge */}
                 {new Date() - new Date(product.createdAt) < 2 * 24 * 60 * 60 * 1000 && (
-                  <span className="absolute top-2 left-2 bg-sky-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                    New
-                  </span>
+                  <div className="absolute top-3 left-0 z-10 drop-shadow-md">
+                    <span
+                      className="flex items-center gap-1 bg-sky-500 text-white text-[10px] font-bold pl-2.5 pr-4 py-1"
+                      style={{ clipPath: "polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%)" }}
+                    >
+                      <HiSparkles className="text-[10px] shrink-0" />
+                      New
+                    </span>
+                    <span className="absolute -bottom-1.25 left-0 w-0 h-0 border-t-[5px] border-t-sky-800 border-r-[5px] border-r-transparent" />
+                  </div>
                 )}
                 {/* Discount badge */}
                 {product.offerPercentage > 0 && (
-                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                    {product.offerPercentage}% OFF
-                  </span>
+                  <div className="absolute top-2 right-2 z-10 flex flex-col items-center justify-center bg-white border-2 border-emerald-500 text-emerald-600 rounded-full w-10 h-10 shadow-md">
+                    <span className="text-[10px] font-extrabold leading-none">{product.offerPercentage}%</span>
+                    <span className="text-[6px] font-bold leading-none">OFF</span>
+                  </div>
                 )}
               </div>
 

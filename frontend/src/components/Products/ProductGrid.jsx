@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import demoImg from "../../assets/login.jpg";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
+import { HiChevronLeft, HiChevronRight, HiSparkles } from "react-icons/hi2";
 import axios from "axios";
 import { toast } from "sonner";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
@@ -255,13 +255,22 @@ const ProductGrid = ({ products = [], loading, error }) => {
                     loading="lazy"
                   />
 
-                  {/* Badges top-left */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                    {isNew && (
-                      <span className="bg-black text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm">
+                  {/* "New" ribbon badge */}
+                  {isNew && (
+                    <div className="absolute top-3 left-0 z-10 drop-shadow-md">
+                      <span
+                        className="flex items-center gap-1 bg-sky-500 text-white text-[10px] font-bold pl-2.5 pr-4 py-1"
+                        style={{ clipPath: "polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%)" }}
+                      >
+                        <HiSparkles className="text-[10px] shrink-0" />
                         New
                       </span>
-                    )}
+                      <span className="absolute -bottom-1.25 left-0 w-0 h-0 border-t-[5px] border-t-sky-800 border-r-[5px] border-r-transparent" />
+                    </div>
+                  )}
+
+                  {/* Badges top-left */}
+                  <div className={`absolute left-3 flex flex-col gap-1.5 ${isNew ? "top-11" : "top-3"}`}>
                     {saleSoon && (
                       <span className="bg-amber-500 text-white text-[9px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-sm">
                         {badgeText}
