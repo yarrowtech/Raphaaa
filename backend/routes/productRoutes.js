@@ -62,7 +62,7 @@ const buildCategoryMatch = (value) => {
     .join("[-\\s_]*");
 
   return {
-    $regex: pattern,
+    $regex: `^[-\\s_]*${pattern}[-\\s_]*$`,
     $options: "i",
   };
 };
