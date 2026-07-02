@@ -35,6 +35,32 @@ const cleanStr = (v) => {
   return s === "" ? undefined : s;
 };
 
+const escapeRegex = (value) =>
+  String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeCategoryText = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+const buildCategoryMatch = (value) => {
+  const category = cleanStr(value);
+  if (!category) return undefined;
+
+  const normalized = normalizeCategoryText(category);
+  if (!normalized) return undefined;
+
+  const pattern = normalized
+    .split("")
+    .map((ch) => escapeRegex(ch))
+    .join("[-\\s_]*");
+
+  return {
+    $regex: pattern,
+    $options: "i",
+  };
+};
+
 const normalizeGender = (v) => {
   const g = cleanStr(v);
   if (!g) return undefined;
@@ -44,6 +70,8 @@ const normalizeGender = (v) => {
   if (m === "kids" || m === "kid" || m === "children" || m === "child") return "Kids";
   return g;
 };
+
+const normalizeGenderQuery = (value) => normalizeGender(value);
 
 // @route GET /api/products/delivery/check?pincode=700001&cod=0&weight=0.5
 // @desc Check delivery serviceability and ETA by pincode via Shiprocket
@@ -360,8 +388,10 @@ router.get("/", async (req, res) => {
       query.collections = collection;
     }
 
-    if (category && category.toLowerCase() !== "all") {
-      query.category = category;
+    const normalizedGender = normalizeGenderQuery(gender);
+    const categoryMatch = buildCategoryMatch(category);
+    if (categoryMatch && String(category).toLowerCase() !== "all") {
+      query.category = categoryMatch;
     }
 
     if (material) {
@@ -380,8 +410,8 @@ router.get("/", async (req, res) => {
       query.colors = { $in: [color] };
     }
 
-    if (gender) {
-      query.gender = gender;
+    if (normalizedGender) {
+      query.gender = normalizedGender;
     }
 
     if (minPrice || maxPrice) {
@@ -502,8 +532,10 @@ router.get("/facets", async (req, res) => {
     if (collection && String(collection).toLowerCase() !== "all") {
       match.collections = collection;
     }
-    if (category && String(category).toLowerCase() !== "all") {
-      match.category = category;
+    const normalizedGender = normalizeGenderQuery(gender);
+    const categoryMatch = buildCategoryMatch(category);
+    if (categoryMatch && String(category).toLowerCase() !== "all") {
+      match.category = categoryMatch;
     }
     if (material) {
       match.material = { $in: String(material).split(",") };
@@ -517,8 +549,8 @@ router.get("/facets", async (req, res) => {
     if (color) {
       match.colors = { $in: [String(color)] };
     }
-    if (gender) {
-      match.gender = gender;
+    if (normalizedGender) {
+      match.gender = normalizedGender;
     }
     if (minPrice || maxPrice) {
       match.price = {};

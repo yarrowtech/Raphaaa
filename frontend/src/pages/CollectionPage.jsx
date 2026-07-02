@@ -25,6 +25,24 @@ const FILTER_LABEL = {
   minPrice: "Min ₹", maxPrice: "Max ₹",
 };
 
+const normalizeGender = (value) => {
+  const key = String(value || "").trim().toLowerCase();
+  if (key === "man" || key === "male") return "Men";
+  if (key === "woman" || key === "female") return "Women";
+  if (key === "kid" || key === "child" || key === "children") return "Kids";
+  if (key === "men") return "Men";
+  if (key === "women") return "Women";
+  if (key === "kids") return "Kids";
+  return value;
+};
+
+const prettifySlug = (value) =>
+  String(value || "")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+
 const CollectionPage = () => {
   const { collection }  = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -155,8 +173,18 @@ const CollectionPage = () => {
   const activeChips = [...searchParams.entries()].filter(([k]) => k !== "sortBy");
 
   const displayName = collection && collection !== "all"
-    ? collection.charAt(0).toUpperCase() + collection.slice(1)
+    ? prettifySlug(collection)
     : "All";
+
+  useEffect(() => {
+    const gender = searchParams.get("gender");
+    const normalizedGender = normalizeGender(gender);
+    if (!gender || !normalizedGender || normalizedGender === gender) return;
+
+    const next = new URLSearchParams(searchParams);
+    next.set("gender", normalizedGender);
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const pageTitle   = `${displayName} Collection | Raphaaa`;
   const pageDesc    = `Shop the ${displayName} collection at Raphaaa — premium quality clothing.`;
