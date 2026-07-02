@@ -160,32 +160,38 @@ const EditProductPage = () => {
 
   useEffect(() => {
     if (!selectedProduct) return;
+    const savedDraft = selectedProduct.draftState || {};
+    const savedProductData = savedDraft.productData || {};
+    const savedColorVariants = Array.isArray(savedDraft.colorVariants) ? savedDraft.colorVariants : null;
+
     setProductData({
-      name:           selectedProduct.name           || "",
-      description:    selectedProduct.description    || "",
-      price:          selectedProduct.price          || 0,
-      countInStock:   selectedProduct.countInStock   || 0,
-      sku:            selectedProduct.sku            || "",
-      category:       selectedProduct.category       || "",
-      brand:          selectedProduct.brand          || "",
-      collections:    selectedProduct.collections    || "",
-      material:       selectedProduct.material       || "",
-      gender:         normalizeGenderLabel(selectedProduct.gender),
-      images:         selectedProduct.images         || [],
-      sizeChart:      selectedProduct.sizeChart      || { imageUrl: "", title: "Size Chart" },
-      offerPercentage: selectedProduct.offerPercentage || 0,
-      discountPrice:  selectedProduct.discountPrice  || 0,
-      isFeatured:     selectedProduct.isFeatured     || false,
-      isPublished:    selectedProduct.isPublished    || false,
-      tags:           Array.isArray(selectedProduct.tags)
-                        ? selectedProduct.tags.join(", ")
-                        : (selectedProduct.tags || ""),
-      dimensions:     selectedProduct.dimensions     || { length: "", width: "", height: "" },
-      weight:         selectedProduct.weight         || "",
+      name:           savedProductData.name ?? selectedProduct.name ?? "",
+      description:    savedProductData.description ?? selectedProduct.description ?? "",
+      price:          savedProductData.price ?? selectedProduct.price ?? 0,
+      countInStock:   savedProductData.countInStock ?? selectedProduct.countInStock ?? 0,
+      sku:            savedProductData.sku ?? selectedProduct.sku ?? "",
+      category:       savedProductData.category ?? selectedProduct.category ?? "",
+      brand:          savedProductData.brand ?? selectedProduct.brand ?? "",
+      collections:    savedProductData.collections ?? selectedProduct.collections ?? "",
+      material:       savedProductData.material ?? selectedProduct.material ?? "",
+      gender:         normalizeGenderLabel(savedProductData.gender ?? selectedProduct.gender),
+      images:         savedProductData.images ?? selectedProduct.images ?? [],
+      sizeChart:      savedProductData.sizeChart ?? selectedProduct.sizeChart ?? { imageUrl: "", title: "Size Chart" },
+      offerPercentage: savedProductData.offerPercentage ?? selectedProduct.offerPercentage ?? 0,
+      discountPrice:  savedProductData.discountPrice ?? selectedProduct.discountPrice ?? 0,
+      isFeatured:     savedProductData.isFeatured ?? selectedProduct.isFeatured ?? false,
+      isPublished:    savedProductData.isPublished ?? selectedProduct.isPublished ?? false,
+      tags:           Array.isArray(savedProductData.tags)
+                        ? savedProductData.tags.join(", ")
+                        : (savedProductData.tags ?? (Array.isArray(selectedProduct.tags) ? selectedProduct.tags.join(", ") : (selectedProduct.tags || ""))),
+      dimensions:     savedProductData.dimensions ?? selectedProduct.dimensions ?? { length: "", width: "", height: "" },
+      weight:         savedProductData.weight ?? selectedProduct.weight ?? "",
     });
 
     // Prefer colorVariants; fall back to building from legacy variants
-    if (Array.isArray(selectedProduct.colorVariants) && selectedProduct.colorVariants.length > 0) {
+    if (savedColorVariants && savedColorVariants.length > 0) {
+      setColorVariants(dbColorVariantsToState(savedColorVariants));
+    } else if (Array.isArray(selectedProduct.colorVariants) && selectedProduct.colorVariants.length > 0) {
       setColorVariants(dbColorVariantsToState(selectedProduct.colorVariants));
     } else if (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0) {
       // Convert legacy flat variants → colorVariants structure
@@ -352,6 +358,52 @@ const EditProductPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const isPublishing = Boolean(productData.isPublished);
+
+    if (!isPublishing) {
+      const draftPayload = {
+        ...productData,
+        price: productData.price === "" ? undefined : Number(productData.price),
+        discountPrice: productData.discountPrice === "" ? undefined : Number(productData.discountPrice),
+        offerPercentage: Number(productData.offerPercentage || 0),
+        countInStock: productData.countInStock || 0,
+        sku: productData.sku || "",
+        sizes: [],
+        colors: [],
+        colorVariants: [],
+        variants: [],
+        images: productData.images || [],
+        tags: typeof productData.tags === "string"
+          ? productData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+          : productData.tags,
+        sizeChart: {
+          templateId: productData.sizeChart?.templateId || "",
+          imageUrl: productData.sizeChart?.imageUrl || "",
+          measureImageUrl: productData.sizeChart?.measureImageUrl || "",
+          title: productData.sizeChart?.title || "Size Chart",
+          audience: productData.sizeChart?.audience || "Unisex",
+        },
+        draftState: {
+          productData: {
+            ...productData,
+            tags: typeof productData.tags === "string"
+              ? productData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+              : productData.tags,
+          },
+          colorVariants,
+        },
+      };
+
+      try {
+        await dispatch(updateProduct({ id, productData: draftPayload })).unwrap();
+        toast.success("Draft saved!");
+        navigate("/admin/products");
+      } catch (err) {
+        toast.error(err?.message || "Failed to save draft");
+      }
+      return;
+    }
+
     const normalizedColorVariants = colorVariants
       .map((cv) => ({
         color:     cv.color.trim(),
@@ -396,6 +448,7 @@ const EditProductPage = () => {
         title: productData.sizeChart?.title || "Size Chart",
         audience: productData.sizeChart?.audience || "Unisex",
       },
+      draftState: null,
     };
 
     setUploading(true);

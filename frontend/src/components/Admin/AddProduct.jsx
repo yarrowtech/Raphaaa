@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { createProduct } from "../../redux/slices/adminProductSlice";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { Link } from "react-router-dom";
+import { FiCloud } from "react-icons/fi";
 import {
   COLOR_OPTIONS,
   createColorOption,
@@ -66,29 +67,240 @@ const emptyColorVariant = (index) => ({
   sizes: [emptySize()],
 });
 
+const DRAFT_STORAGE_KEY = "raphaaa:add-product-draft";
+
+const getInitialProductData = () => ({
+  name: "",
+  description: "",
+  price: "",
+  discountPrice: "",
+  offerPercentage: "",
+  sku: "",
+  category: "",
+  brand: "",
+  collections: "",
+  material: "",
+  gender: "",
+  sizeChart: { imageUrl: "", measureImageUrl: "", title: "Size Chart", audience: "Unisex", templateId: "" },
+  isFeatured: false,
+  isPublished: false,
+  tags: "",
+  dimensions: { length: "", width: "", height: "" },
+  weight: "",
+  mrp: "",
+  countryOfOrigin: "India",
+  materialComposition: "",
+  washCare: "",
+  netQuantity: "1 Piece",
+  manufacturerInfo: "",
+  images: [],
+});
+
+const normalizeDraftProductData = (data = {}) => ({
+  ...getInitialProductData(),
+  ...data,
+  sizeChart: {
+    ...getInitialProductData().sizeChart,
+    ...(data.sizeChart || {}),
+  },
+  dimensions: {
+    ...getInitialProductData().dimensions,
+    ...(data.dimensions || {}),
+  },
+});
+
+const normalizeDraftColorVariants = (variants = []) =>
+  Array.isArray(variants) && variants.length > 0
+    ? variants.map((cv, index) => ({
+        id: cv?.id || Date.now() + index,
+        color: cv?.color || "",
+        colorName: cv?.colorName || "",
+        images: Array.isArray(cv?.images) ? cv.images : [],
+        sizes: Array.isArray(cv?.sizes) && cv.sizes.length > 0 ? cv.sizes : [emptySize()],
+      }))
+    : [emptyColorVariant(0)];
+
+const hasDraftContent = (productData, colorVariants) => {
+  const flatValues = [
+    productData?.name,
+    productData?.description,
+    productData?.price,
+    productData?.discountPrice,
+    productData?.offerPercentage,
+    productData?.sku,
+    productData?.category,
+    productData?.brand,
+    productData?.collections,
+    productData?.material,
+    productData?.gender,
+    productData?.tags,
+    productData?.weight,
+    productData?.mrp,
+    productData?.countryOfOrigin,
+    productData?.materialComposition,
+    productData?.washCare,
+    productData?.netQuantity,
+    productData?.manufacturerInfo,
+    productData?.sizeChart?.imageUrl,
+    productData?.sizeChart?.measureImageUrl,
+    productData?.sizeChart?.title,
+  ];
+
+  if (flatValues.some((v) => String(v || "").trim() !== "")) return true;
+
+  return Array.isArray(colorVariants) && colorVariants.some((cv) =>
+    String(cv?.color || "").trim() !== "" ||
+    String(cv?.colorName || "").trim() !== "" ||
+    (Array.isArray(cv?.images) && cv.images.length > 0) ||
+    (Array.isArray(cv?.sizes) && cv.sizes.some((s) =>
+      String(s?.size || "").trim() !== "" ||
+      String(s?.sku || "").trim() !== "" ||
+      String(s?.countInStock || "").trim() !== ""
+    ))
+  );
+};
+
 const AddProduct = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.adminProducts);
+  const autosaveTimerRef = useRef(null);
+  const isHydratingDraftRef = useRef(true);
+  const isSubmittingRef = useRef(false);
 
   const [colorVariants, setColorVariants] = useState([emptyColorVariant(0)]);
   const [draggedImage, setDraggedImage] = useState(null);
-  const [productData, setProductData] = useState({
-    name: "", description: "", price: "", discountPrice: "",
-    offerPercentage: "", sku: "", category: "", brand: "",
-    collections: "", material: "", gender: "",
-    sizeChart: { imageUrl: "", title: "Size Chart" },
-    isFeatured: false, isPublished: false, tags: "",
-    dimensions: { length: "", width: "", height: "" },
-    weight: "",
-    mrp: "", countryOfOrigin: "India", materialComposition: "",
-    washCare: "", netQuantity: "1 Piece", manufacturerInfo: "",
-  });
+  const [productData, setProductData] = useState(() => getInitialProductData());
+  const [draftId, setDraftId] = useState(() => localStorage.getItem(DRAFT_STORAGE_KEY) || "");
 
   const [metaOptions, setMetaOptions] = useState({ category: [], collection: [], gender: [], material: [] });
   const [colorOptions, setColorOptions] = useState(() => COLOR_OPTIONS);
   const [uploadingColor, setUploadingColor] = useState(null);
   const [sizeCharts, setSizeCharts] = useState([]);
   const [selectedSizeChartId, setSelectedSizeChartId] = useState("");
+  const [isHydratingDraft, setIsHydratingDraft] = useState(true);
+  const [draftStatus, setDraftStatus] = useState("idle");
+
+  const buildDraftState = (nextProductData = productData, nextColorVariants = colorVariants) => ({
+    productData: normalizeDraftProductData(nextProductData),
+    colorVariants: Array.isArray(nextColorVariants) ? nextColorVariants : [],
+  });
+
+  const buildDraftSavePayload = (nextProductData = productData, nextColorVariants = colorVariants) => {
+    const normalizedProductData = normalizeDraftProductData(nextProductData);
+    const totalStock = (Array.isArray(nextColorVariants) ? nextColorVariants : []).reduce(
+      (sum, cv) => sum + (Array.isArray(cv?.sizes)
+        ? cv.sizes.reduce((inner, sz) => inner + Math.max(0, Number(sz?.countInStock || 0)), 0)
+        : 0),
+      0
+    );
+
+    return {
+      ...normalizedProductData,
+      price: normalizedProductData.price === "" ? undefined : Number(normalizedProductData.price),
+      discountPrice: normalizedProductData.discountPrice === "" ? undefined : Number(normalizedProductData.discountPrice),
+      offerPercentage: normalizedProductData.offerPercentage === "" ? 0 : Number(normalizedProductData.offerPercentage || 0),
+      countInStock: totalStock,
+      sku: normalizedProductData.sku || "",
+      sizes: [],
+      colors: [],
+      colorVariants: [],
+      variants: [],
+      images: normalizedProductData.images || [],
+      tags: typeof normalizedProductData.tags === "string"
+        ? normalizedProductData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+        : [],
+      dimensions: {
+        length: normalizedProductData.dimensions?.length === "" ? undefined : Number(normalizedProductData.dimensions?.length),
+        width: normalizedProductData.dimensions?.width === "" ? undefined : Number(normalizedProductData.dimensions?.width),
+        height: normalizedProductData.dimensions?.height === "" ? undefined : Number(normalizedProductData.dimensions?.height),
+      },
+      weight: normalizedProductData.weight === "" ? undefined : Number(normalizedProductData.weight),
+      mrp: normalizedProductData.mrp === "" ? undefined : Number(normalizedProductData.mrp),
+      countryOfOrigin: normalizedProductData.countryOfOrigin || "India",
+      materialComposition: normalizedProductData.materialComposition || undefined,
+      washCare: normalizedProductData.washCare || undefined,
+      netQuantity: normalizedProductData.netQuantity || undefined,
+      manufacturerInfo: normalizedProductData.manufacturerInfo || undefined,
+      isPublished: false,
+      draftState: buildDraftState(nextProductData, nextColorVariants),
+    };
+  };
+
+  const buildPublishPayload = (nextProductData = productData, nextColorVariants = colorVariants) => {
+    const normalizedColorVariants = (Array.isArray(nextColorVariants) ? nextColorVariants : [])
+      .map((cv) => ({
+        color: cv.color.trim(),
+        colorName: cv.colorName.trim() || prettyColorLabel(cv.color),
+        images: cv.images,
+        sizes: cv.sizes
+          .map((s) => ({
+            size: normalizeSize(s.size),
+            sku: s.sku.trim(),
+            countInStock: Number(s.countInStock || 0),
+          }))
+          .filter((s) => s.size && s.sku),
+      }))
+      .filter((cv) => cv.color && cv.sizes.length > 0);
+
+    if (!normalizedColorVariants.length) {
+      return { error: "Add at least one color with a valid size, SKU and stock." };
+    }
+
+    const allSizes = [...new Set(normalizedColorVariants.flatMap((cv) => cv.sizes.map((s) => s.size)))];
+    const allColors = [...new Set(normalizedColorVariants.map((cv) => cv.color))];
+    const totalStock = normalizedColorVariants.reduce(
+      (sum, cv) => sum + cv.sizes.reduce((s2, sz) => s2 + Math.max(0, Number(sz.countInStock || 0)), 0),
+      0
+    );
+    const firstSku = nextProductData.sku || normalizedColorVariants[0]?.sizes[0]?.sku;
+    const normalizedProductData = normalizeDraftProductData(nextProductData);
+
+    const payload = {
+      ...normalizedProductData,
+      price: Number(normalizedProductData.price),
+      offerPercentage: normalizedProductData.offerPercentage ? Number(normalizedProductData.offerPercentage) : 0,
+      discountPrice: normalizedProductData.offerPercentage
+        ? Math.round(Number(normalizedProductData.price) - (Number(normalizedProductData.price) * Number(normalizedProductData.offerPercentage)) / 100)
+        : normalizedProductData.discountPrice ? Math.round(Number(normalizedProductData.discountPrice)) : undefined,
+      countInStock: totalStock,
+      sku: firstSku,
+      sizes: allSizes,
+      colors: allColors,
+      colorVariants: normalizedColorVariants,
+      variants: [],
+      images: normalizedColorVariants[0]?.images || [],
+      weight: normalizedProductData.weight ? Number(normalizedProductData.weight) : undefined,
+      mrp: normalizedProductData.mrp ? Number(normalizedProductData.mrp) : undefined,
+      countryOfOrigin: normalizedProductData.countryOfOrigin || "India",
+      materialComposition: normalizedProductData.materialComposition || undefined,
+      washCare: normalizedProductData.washCare || undefined,
+      netQuantity: normalizedProductData.netQuantity || undefined,
+      manufacturerInfo: normalizedProductData.manufacturerInfo || undefined,
+      tags: normalizedProductData.tags
+        ? normalizedProductData.tags.split(",").map((t) => t.trim()).filter(Boolean)
+        : [],
+      dimensions: {
+        length: normalizedProductData.dimensions.length ? Number(normalizedProductData.dimensions.length) : undefined,
+        width:  normalizedProductData.dimensions.width  ? Number(normalizedProductData.dimensions.width)  : undefined,
+        height: normalizedProductData.dimensions.height ? Number(normalizedProductData.dimensions.height) : undefined,
+      },
+      sizeChart: {
+        templateId: normalizedProductData.sizeChart?.templateId || "",
+        imageUrl: normalizedProductData.sizeChart?.imageUrl || "",
+        measureImageUrl: normalizedProductData.sizeChart?.measureImageUrl || "",
+        title: normalizedProductData.sizeChart?.title || "Size Chart",
+        audience: normalizedProductData.sizeChart?.audience || "Unisex",
+      },
+      draftState: null,
+      isPublished: true,
+    };
+
+    if (!payload.dimensions.length && !payload.dimensions.width && !payload.dimensions.height) {
+      delete payload.dimensions;
+    }
+
+    return { payload };
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("userToken");
@@ -128,6 +340,102 @@ const AddProduct = () => {
     };
     fetchSizeCharts();
   }, []);
+
+  useEffect(() => {
+    const savedDraftId = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!savedDraftId) {
+      isHydratingDraftRef.current = false;
+      setIsHydratingDraft(false);
+      return;
+    }
+
+    setDraftId(savedDraftId);
+
+    const loadDraft = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE}/api/products/${savedDraftId}`);
+        const saved = data?.draftState;
+
+        if (saved?.productData || saved?.colorVariants) {
+          setProductData(normalizeDraftProductData(saved.productData));
+          setColorVariants(normalizeDraftColorVariants(saved.colorVariants));
+          if (saved.productData?.sizeChart?.templateId) {
+            setSelectedSizeChartId(saved.productData.sizeChart.templateId);
+          }
+        } else if (data) {
+          setProductData(normalizeDraftProductData({
+            name: data.name || "",
+            description: data.description || "",
+            price: data.price ?? "",
+            discountPrice: data.discountPrice ?? "",
+            offerPercentage: data.offerPercentage ?? "",
+            sku: data.sku || "",
+            category: data.category || "",
+            brand: data.brand || "",
+            collections: data.collections || "",
+            material: data.material || "",
+            gender: data.gender || "",
+            sizeChart: data.sizeChart || { imageUrl: "", title: "Size Chart" },
+            isFeatured: data.isFeatured || false,
+            isPublished: data.isPublished || false,
+            tags: Array.isArray(data.tags) ? data.tags.join(", ") : (data.tags || ""),
+            dimensions: data.dimensions || { length: "", width: "", height: "" },
+            weight: data.weight ?? "",
+            mrp: data.mrp ?? "",
+            countryOfOrigin: data.countryOfOrigin || "India",
+            materialComposition: data.materialComposition || "",
+            washCare: data.washCare || "",
+            netQuantity: data.netQuantity || "1 Piece",
+            manufacturerInfo: data.manufacturerInfo || "",
+            images: data.images || [],
+          }));
+          setColorVariants(normalizeDraftColorVariants((data.colorVariants || []).map((cv) => ({
+            ...cv,
+            id: cv?.id,
+          }))));
+        }
+      } catch (error) {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        setDraftId("");
+      } finally {
+        isHydratingDraftRef.current = false;
+        setIsHydratingDraft(false);
+      }
+    };
+
+    loadDraft();
+  }, []);
+
+  useEffect(() => {
+    if (isHydratingDraft || isSubmittingRef.current || !hasDraftContent(productData, colorVariants)) return;
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    setDraftStatus("saving");
+    autosaveTimerRef.current = setTimeout(async () => {
+      const payload = buildDraftSavePayload(productData, colorVariants);
+      const headers = { Authorization: `Bearer ${localStorage.getItem("userToken")}` };
+
+      try {
+        if (draftId) {
+          await axios.put(`${API_BASE}/api/products/${draftId}`, payload, { headers });
+        } else {
+          const { data } = await axios.post(`${API_BASE}/api/products`, payload, { headers });
+          if (data?._id) {
+            setDraftId(data._id);
+            localStorage.setItem(DRAFT_STORAGE_KEY, data._id);
+          }
+        }
+        setDraftStatus("saved");
+      } catch (error) {
+        console.error("Draft autosave failed:", error);
+        setDraftStatus("error");
+      }
+    }, 1400);
+
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [productData, colorVariants, draftId, isHydratingDraft]);
 
   // ─── Product field handlers ───────────────────────────────────────────────
   const handleProductChange = (e) => {
@@ -258,98 +566,45 @@ const AddProduct = () => {
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
+    isSubmittingRef.current = true;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
 
-    const normalizedColorVariants = colorVariants
-      .map((cv) => ({
-        color: cv.color.trim(),
-        colorName: cv.colorName.trim() || prettyColorLabel(cv.color),
-        images: cv.images,
-        sizes: cv.sizes
-          .map((s) => ({
-            size: normalizeSize(s.size),
-            sku: s.sku.trim(),
-            countInStock: Number(s.countInStock || 0),
-          }))
-          .filter((s) => s.size && s.sku),
-      }))
-      .filter((cv) => cv.color && cv.sizes.length > 0);
-
-    if (!normalizedColorVariants.length) {
-      toast.error("Add at least one color with a valid size, SKU and stock.");
+    const published = buildPublishPayload(productData, colorVariants);
+    if (published.error) {
+      toast.error(published.error);
+      isSubmittingRef.current = false;
       return;
     }
 
-    const allSizes   = [...new Set(normalizedColorVariants.flatMap((cv) => cv.sizes.map((s) => s.size)))];
-    const allColors  = [...new Set(normalizedColorVariants.map((cv) => cv.color))];
-    const totalStock = normalizedColorVariants.reduce(
-      (sum, cv) => sum + cv.sizes.reduce((s2, sz) => s2 + Math.max(0, Number(sz.countInStock || 0)), 0),
-      0
-    );
-    const firstSku = productData.sku?.trim() || normalizedColorVariants[0]?.sizes[0]?.sku;
-
     const payload = {
-      ...productData,
-      price: Number(productData.price),
-      offerPercentage: productData.offerPercentage ? Number(productData.offerPercentage) : 0,
-      discountPrice: productData.offerPercentage
-        ? Math.round(Number(productData.price) - (Number(productData.price) * Number(productData.offerPercentage)) / 100)
-        : productData.discountPrice ? Math.round(Number(productData.discountPrice)) : undefined,
-      countInStock: totalStock,
-      sku: firstSku,
-      sizes: allSizes,
-      colors: allColors,
-      colorVariants: normalizedColorVariants,
-      variants: [],
-      images: normalizedColorVariants[0]?.images || [],
-      weight: productData.weight ? Number(productData.weight) : undefined,
-      mrp: productData.mrp ? Number(productData.mrp) : undefined,
-      countryOfOrigin:     productData.countryOfOrigin   || "India",
-      materialComposition: productData.materialComposition || undefined,
-      washCare:            productData.washCare            || undefined,
-      netQuantity:         productData.netQuantity         || undefined,
-      manufacturerInfo:    productData.manufacturerInfo    || undefined,
-      tags: productData.tags
-        ? productData.tags.split(",").map((t) => t.trim()).filter(Boolean)
-        : [],
-      dimensions: {
-        length: productData.dimensions.length ? Number(productData.dimensions.length) : undefined,
-        width:  productData.dimensions.width  ? Number(productData.dimensions.width)  : undefined,
-        height: productData.dimensions.height ? Number(productData.dimensions.height) : undefined,
-      },
-      sizeChart: {
-        templateId: productData.sizeChart?.templateId || "",
-        imageUrl: productData.sizeChart?.imageUrl || "",
-        measureImageUrl: productData.sizeChart?.measureImageUrl || "",
-        title: productData.sizeChart?.title || "Size Chart",
-        audience: productData.sizeChart?.audience || "Unisex",
-      },
+      ...published.payload,
+      isPublished: true,
     };
 
-    if (!payload.dimensions.length && !payload.dimensions.width && !payload.dimensions.height)
-      delete payload.dimensions;
-
     try {
-      await dispatch(createProduct(payload)).unwrap();
+      const headers = { Authorization: `Bearer ${localStorage.getItem("userToken")}` };
+      if (draftId) {
+        await axios.put(`${API_BASE}/api/products/${draftId}`, payload, { headers });
+      } else {
+        await dispatch(createProduct(payload)).unwrap();
+      }
       toast.success("Product added successfully!");
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setDraftId("");
     } catch (err) {
       const details = err?.details;
       const message =
         err?.message ||
         (Array.isArray(details) && details.length ? details[0] : "Failed to add product");
       toast.error(message);
+      isSubmittingRef.current = false;
       return;
     }
 
-    setProductData({
-      name: "", description: "", price: "", discountPrice: "",
-      offerPercentage: "", sku: "", category: "", brand: "",
-      collections: "", material: "", gender: "",
-      sizeChart: { imageUrl: "", title: "Size Chart" },
-      isFeatured: false, isPublished: false, tags: "",
-      dimensions: { length: "", width: "", height: "" },
-      weight: "",
-    });
+    setProductData(getInitialProductData());
     setColorVariants([emptyColorVariant(0)]);
+    setSelectedSizeChartId("");
+    isSubmittingRef.current = false;
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -363,9 +618,48 @@ const AddProduct = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-xl font-extrabold text-gray-900">Add New Product</h1>
           <p className="text-xs text-gray-400 mt-0.5">Fill all required fields to publish a new product</p>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                draftStatus === "saving"
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : draftStatus === "saved"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : draftStatus === "error"
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : "bg-slate-50 text-slate-600 border-slate-200"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  draftStatus === "saving"
+                    ? "bg-amber-500 animate-pulse"
+                    : draftStatus === "saved"
+                      ? "bg-emerald-500"
+                      : draftStatus === "error"
+                        ? "bg-red-500"
+                        : "bg-slate-400"
+                }`}
+              />
+              {draftStatus === "saving" && "Saving draft..."}
+              {draftStatus === "saved" && (
+                <>
+                  <FiCloud className="text-[11px]" />
+                  <span>Draft saved</span>
+                </>
+              )}
+              {draftStatus === "error" && "Draft save failed"}
+              {draftStatus === "idle" && "Draft autosave ready"}
+            </span>
+            {draftId && (
+              <span className="text-[11px] text-gray-400">
+                Draft ID: {draftId}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

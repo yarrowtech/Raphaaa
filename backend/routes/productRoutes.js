@@ -35,6 +35,12 @@ const cleanStr = (v) => {
   return s === "" ? undefined : s;
 };
 
+const cleanNum = (v) => {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+};
+
 const escapeRegex = (value) =>
   String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -232,6 +238,7 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
       colorVariants,
       sizeChart,
       returnPolicy,
+      draftState,
     } = req.body;
 
     const normalizeSizeChart = (value) => {
@@ -241,6 +248,23 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
         audience: getCanonicalAudience(value.audience, "Unisex"),
       };
     };
+
+    const isDraftSave = String(isPublished) !== "true";
+
+    if (isDraftSave) {
+      const draftDoc = {
+        ...req.body,
+        isPublished: false,
+        draftState: draftState ?? null,
+        user: req.user._id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await Product.collection.insertOne(draftDoc);
+      const createdProduct = await Product.findById(result.insertedId);
+      return res.status(201).json(createdProduct);
+    }
 
     // Prefer new colorVariants structure, fall back to legacy variants
     const normalizedColorVariants = normalizeColorVariants(colorVariants);
@@ -265,8 +289,8 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
     const product = new Product({
       name: cleanStr(name),
       description: cleanStr(description),
-      price: Number(price),
-      discountPrice: discountPrice !== undefined && discountPrice !== null && discountPrice !== "" ? Number(discountPrice) : undefined,
+      price: cleanNum(price),
+      discountPrice: cleanNum(discountPrice),
       countInStock: finalStock,
       category: cleanStr(category),
       brand: cleanStr(brand),
@@ -291,6 +315,7 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
         days: Number.isFinite(Number(returnPolicy?.days)) ? Math.max(0, Number(returnPolicy.days)) : 7,
         text: String(returnPolicy?.text || "").trim(),
       },
+      draftState: isPublished ? null : (draftState ?? null),
       user: req.user._id,
     });
 
@@ -846,6 +871,7 @@ router.put("/:id", protect, admin, async (req, res) => {
       colorVariants,
       sizeChart,
       returnPolicy,
+      draftState,
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -859,6 +885,27 @@ router.put("/:id", protect, admin, async (req, res) => {
     };
 
     if (product) {
+      const isDraftSave = product.isPublished === false && String(isPublished) !== "true";
+
+      if (isDraftSave) {
+        const draftUpdate = {
+          ...req.body,
+          isPublished: false,
+          draftState: draftState ?? product.draftState ?? null,
+          updatedAt: new Date(),
+        };
+        delete draftUpdate._id;
+        delete draftUpdate.user;
+
+        await Product.collection.updateOne(
+          { _id: product._id },
+          { $set: draftUpdate }
+        );
+
+        const updatedDraft = await Product.findById(product._id);
+        return res.json(updatedDraft);
+      }
+
       const prevPrice = Number(product.discountPrice || product.price || 0);
       const prevStock = Number(product.countInStock || 0);
       const normalizedColorVariants = normalizeColorVariants(colorVariants);
@@ -890,8 +937,8 @@ router.put("/:id", protect, admin, async (req, res) => {
 
       product.name = name ?? product.name;
       product.description = description ?? product.description;
-      product.price = price ?? product.price;
-      product.discountPrice = discountPrice ?? product.discountPrice;
+      product.price = cleanNum(price) ?? product.price;
+      product.discountPrice = cleanNum(discountPrice) ?? product.discountPrice;
       product.countInStock = finalStock;
       product.category = category ?? product.category;
       product.brand = brand ?? product.brand;
@@ -905,10 +952,11 @@ router.put("/:id", protect, admin, async (req, res) => {
       product.isPublished = isPublished !== undefined ? isPublished : product.isPublished;
       product.tags = tags ?? product.tags;
       product.dimensions = dimensions ?? product.dimensions;
-      product.weight = weight ?? product.weight;
+      product.weight = cleanNum(weight) ?? product.weight;
       product.sku = finalSku;
-      product.offerPercentage = offerPercentage ?? 0;
+      product.offerPercentage = cleanNum(offerPercentage) ?? 0;
       product.sizeChart = sizeChart ? normalizeSizeChart(sizeChart) : product.sizeChart;
+      product.draftState = product.isPublished ? null : (draftState ?? product.draftState ?? null);
       if (returnPolicy !== undefined) {
         product.returnPolicy = {
           eligible: returnPolicy?.eligible !== false,

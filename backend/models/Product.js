@@ -19,16 +19,16 @@ const colorVariantSchema = new mongoose.Schema({
 const productSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
+        required: function () { return this.isPublished !== false; },
         trim: true,
     },
     description: {
         type: String,
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     price: {
         type: Number,
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     discountPrice: {
         type: Number,
@@ -64,27 +64,27 @@ const productSchema = new mongoose.Schema({
     },
     countInStock: {
         type: Number,
-        required: true,
+        required: function () { return this.isPublished !== false; },
         default: 0,
     },
     sku: {
       type: String,
-      required: true,
+      required: function () { return this.isPublished !== false; },
     },
     category: {
         type: String,
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     brand: {
         type: String,
     },
     sizes: {
         type: [String],
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     colors: {
         type: [String],
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     // New structured variant system: one entry per color, each with its own images & sizes
     colorVariants: [colorVariantSchema],
@@ -121,7 +121,7 @@ const productSchema = new mongoose.Schema({
     ],
     collections: {
         type: String,
-        required: true,
+        required: function () { return this.isPublished !== false; },
     },
     material: {
         type: String,
@@ -206,6 +206,11 @@ const productSchema = new mongoose.Schema({
     },
     // Trust indicators for conversion blocks (rendered as small badges/icons).
     trustBadges: [{ type: String, trim: true }],
+    // Raw in-progress form state for unpublished drafts.
+    draftState: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null,
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

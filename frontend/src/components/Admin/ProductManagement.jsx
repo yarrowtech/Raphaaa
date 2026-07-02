@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { deleteProduct, fetchAdminProducts } from "../../redux/slices/adminProductSlice";
 import { FiEdit } from "react-icons/fi";
 import { FaTrash, FaSearch, FaBoxOpen, FaPlus } from "react-icons/fa";
@@ -17,12 +17,14 @@ const StockBadge = ({ count }) => {
 
 const ProductManagement = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { products, loading, error } = useSelector((s) => s.adminProducts);
   const user = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
   const [searchTerm,       setSearchTerm]       = useState("");
   const [skuSearchTerm,    setSkuSearchTerm]     = useState("");
   const [sortOption,       setSortOption]        = useState("");
+  const [viewFilter,       setViewFilter]        = useState("all");
   const [currentPage,      setCurrentPage]       = useState(1);
   const [showConfirmModal, setShowConfirmModal]  = useState(false);
   const [productToDelete,  setProductToDelete]   = useState(null);
@@ -45,11 +47,20 @@ const ProductManagement = () => {
   };
 
   /* ── filter + sort ── */
-  const filtered = products.filter((p) => {
+  const draftProducts = products.filter((p) => !p.isPublished);
+  const publishedProducts = products.filter((p) => p.isPublished);
+
+  const scopedProducts = viewFilter === "drafts"
+    ? draftProducts
+    : viewFilter === "published"
+      ? publishedProducts
+      : products;
+
+  const filtered = scopedProducts.filter((p) => {
     const variantSku = (p.variants || []).map((v) => v?.sku || "").join(" ");
     const colorSku   = (p.colorVariants || []).flatMap((cv) => (cv.sizes || []).map((s) => s?.sku || "")).join(" ");
     return (
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) &&
       (!skuSearchTerm ||
         p.sku?.toLowerCase().includes(skuSearchTerm.toLowerCase()) ||
         variantSku.toLowerCase().includes(skuSearchTerm.toLowerCase()) ||
@@ -70,6 +81,10 @@ const ProductManagement = () => {
 
   const getProductImage = (p) =>
     p.colorVariants?.[0]?.images?.[0]?.url || p.images?.[0]?.url || null;
+
+  const openProduct = (product) => {
+    navigate(`/admin/products/${product._id}/edit`);
+  };
 
   /* ── loading / error ── */
   if (loading) return (
@@ -102,6 +117,36 @@ const ProductManagement = () => {
         >
           <FaPlus className="text-xs" /> Add Product
         </Link>
+      </div>
+
+      {/* ── View switcher ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { key: "all", label: "All Products", count: products.length },
+          { key: "drafts", label: "Drafts", count: draftProducts.length },
+          { key: "published", label: "Published", count: publishedProducts.length },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => {
+              setViewFilter(tab.key);
+              setCurrentPage(1);
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border transition ${
+              viewFilter === tab.key
+                ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            {tab.label}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+              viewFilter === tab.key ? "bg-white/15 text-white" : "bg-gray-100 text-gray-500"
+            }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* ── Filter bar ── */}
@@ -172,26 +217,32 @@ const ProductManagement = () => {
                 currentList.map((product) => {
                   const imgUrl      = getProductImage(product);
                   const variantCount = (product.colorVariants?.length || 0) + (product.variants?.length || 0);
+                  const displayName  = product.name || "Untitled Draft";
+                  const draftLabel   = !product.isPublished;
 
                   return (
-                    <tr key={product._id} className="hover:bg-gray-50/70 transition group">
+                    <tr
+                      key={product._id}
+                      className="hover:bg-gray-50/70 transition group cursor-pointer"
+                      onClick={() => openProduct(product)}
+                    >
                       {/* Product */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="relative w-11 h-11 shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 group-hover:border-violet-200 transition">
                             {imgUrl
-                              ? <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
+                              ? <img src={imgUrl} alt={displayName} className="w-full h-full object-cover" />
                               : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs font-bold">N/A</div>
                             }
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-800 truncate max-w-[180px]">{product.name}</p>
+                            <p className="font-semibold text-gray-800 truncate max-w-[180px]">{displayName}</p>
                             {product.brand && <p className="text-[11px] text-gray-400">{product.brand}</p>}
                             <div className="flex gap-1 mt-0.5 flex-wrap">
                               {product.isFeatured && <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Featured</span>}
-                              {product.isPublished
-                                ? <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Published</span>
-                                : <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Draft</span>
+                              {draftLabel
+                                ? <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Draft</span>
+                                : <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Published</span>
                               }
                             </div>
                           </div>
@@ -240,12 +291,17 @@ const ProductManagement = () => {
                         <div className="flex items-center gap-2">
                           <Link
                             to={`/admin/products/${product._id}/edit`}
+                            onClick={(e) => e.stopPropagation()}
                             className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition"
                           >
                             <FiEdit className="text-xs" /> Edit
                           </Link>
                           <button
-                            onClick={() => { setProductToDelete(product._id); setShowConfirmModal(true); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProductToDelete(product._id);
+                              setShowConfirmModal(true);
+                            }}
                             className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition"
                           >
                             <FaTrash className="text-[10px]" /> Delete
