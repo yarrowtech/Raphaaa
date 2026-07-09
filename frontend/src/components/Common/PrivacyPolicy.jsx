@@ -27,7 +27,7 @@ const PrivacyPolicy = () => {
 
         {policy.content ? (
           <div
-            className="space-y-6 text-gray-700 text-lg leading-relaxed"
+            className="prose prose-gray max-w-none space-y-6 text-gray-700 text-lg leading-relaxed"
             dangerouslySetInnerHTML={{ __html: policy.content }}
           />
         ) : (

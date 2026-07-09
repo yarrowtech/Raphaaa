@@ -115,6 +115,24 @@ router.post("/prelogin-role", async (req, res) => {
   }
 });
 
+// @route POST /api/users/check-email
+// @desc Check whether an email is already registered and return the user's name
+// @access Public
+router.post("/check-email", async (req, res) => {
+  try {
+    const email = String(req.body?.email || "").toLowerCase().trim();
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email }).select("name");
+    if (!user) return res.json({ exists: false });
+
+    return res.json({ exists: true, name: user.name });
+  } catch (error) {
+    console.error("check-email error:", error);
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+});
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
