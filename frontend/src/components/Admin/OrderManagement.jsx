@@ -422,7 +422,7 @@ import {
 } from "../../redux/slices/adminOrderSlice";
 import { FaEye, FaCheckCircle, FaSearch, FaClipboardList } from "react-icons/fa";
 import { HiChevronLeft, HiChevronRight, HiXMark } from "react-icons/hi2";
-import { MdFilterList } from "react-icons/md";
+import { MdFilterList, MdOutlineRefresh, MdRefresh } from "react-icons/md";
 import { toast } from "sonner";
 
 const OrderManagement = () => {
@@ -437,6 +437,7 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const ordersPerPage = 10;
 
   // Check if user has permission to access this page
@@ -466,11 +467,14 @@ const OrderManagement = () => {
   };
 
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
       await dispatch(fetchAllOrders()).unwrap();
       toast.success("Orders refreshed");
     } catch {
       toast.error("Failed to refresh orders");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -517,7 +521,7 @@ const OrderManagement = () => {
     );
   };
 
-  if (loading) return (
+  if (loading && orders.length === 0) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -595,14 +599,23 @@ const OrderManagement = () => {
         <button
           type="button"
           onClick={handleRefresh}
-          className="px-3 py-2.5 text-xs font-bold rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition"
+          disabled={isRefreshing}
+          className="px-3 py-2.5 text-xs font-bold rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Refresh
+          <MdOutlineRefresh className={isRefreshing ? "animate-spin" : ""} />
         </button>
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {loading && orders.length > 0 && (
+          <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs text-gray-500 font-medium">Loading orders…</p>
+            </div>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

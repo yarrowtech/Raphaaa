@@ -4,6 +4,7 @@ export const ROUTES = {
   PASSWORD: 'Password',
   SIGN_UP: 'SignUp',
   HOME: 'Home',
+  STORE: 'Store',
   SHOPPING: 'Shopping',
   PRODUCT_DETAILS: 'ProductDetails',
 };

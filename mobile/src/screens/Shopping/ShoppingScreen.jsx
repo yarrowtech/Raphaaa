@@ -9,6 +9,8 @@ import { ROUTES } from '../../navigation/routes';
 
 function ShoppingScreen({ navigation, route }) {
   const searchQuery = route?.params?.search || '';
+  const category = route?.params?.category || '';
+  const gender = route?.params?.gender || '';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,8 +20,8 @@ function ShoppingScreen({ navigation, route }) {
       try {
         setLoading(true);
         setError('');
-        const data = searchQuery
-          ? await getProductsByFilter({ search: searchQuery, limit: 50 })
+        const data = searchQuery || category || gender
+          ? await getProductsByFilter({ search: searchQuery, category, gender, limit: 50 })
           : await getProducts(50);
         setProducts(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -31,7 +33,7 @@ function ShoppingScreen({ navigation, route }) {
     };
 
     loadProducts();
-  }, [searchQuery]);
+  }, [searchQuery, category, gender]);
 
   const getPrimaryImage = (product) => {
     const directImage = product?.images?.[0]?.url;
@@ -81,7 +83,9 @@ function ShoppingScreen({ navigation, route }) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>{searchQuery ? `Results for "${searchQuery}"` : 'Shopping'}</Text>
+          <Text style={styles.title}>
+            {searchQuery ? `Results for "${searchQuery}"` : category || gender || 'Shopping'}
+          </Text>
           <Text style={styles.subtitle}>{products.length} products</Text>
         </View>
 
@@ -188,7 +192,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl + spacing.xl,
   },
   header: {
     marginTop: spacing.md,

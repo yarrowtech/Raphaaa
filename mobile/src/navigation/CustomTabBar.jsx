@@ -4,17 +4,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faHouse,
-  faBagShopping,
   faHeart,
-  faUser,
+  faCartShopping,
+  faMagnifyingGlass,
+  faGear,
 } from '@fortawesome/free-solid-svg-icons';
-import { colors, radius, spacing } from '../theme';
+import { Text } from 'react-native';
+import { colors, spacing } from '../theme';
 
 const TAB_ICONS = {
   Home: faHouse,
-  Shopping: faBagShopping,
   Favorite: faHeart,
-  Account: faUser,
+  Shopping: faCartShopping,
+  Store: faMagnifyingGlass,
+  Account: faGear,
 };
 
 function CustomTabBar({ state, descriptors, navigation }) {
@@ -25,7 +28,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   useEffect(() => {
     if (!tabWidth) return;
 
-    const targetX = state.index * tabWidth + 6;
+    const targetX = state.index * tabWidth + (tabWidth - 42) / 2;
     Animated.spring(activeIndicatorX, {
       toValue: targetX,
       useNativeDriver: true,
@@ -53,10 +56,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
             pointerEvents="none"
             style={[
               styles.activeIndicator,
-              {
-                width: Math.max(46, tabWidth - 16),
-                transform: [{ translateX: activeIndicatorX }],
-              },
+              { transform: [{ translateX: activeIndicatorX }] },
             ]}
           />
         ) : null}
@@ -64,6 +64,11 @@ function CustomTabBar({ state, descriptors, navigation }) {
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const icon = TAB_ICONS[route.name];
+          const tabBarLabel = descriptors[route.key]?.options?.tabBarLabel;
+          const label =
+            typeof tabBarLabel === 'string'
+              ? tabBarLabel
+              : descriptors[route.key]?.options?.title || route.name;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -79,13 +84,16 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
           return (
             <Pressable key={route.key} onPress={onPress} style={styles.tab}>
-              <View style={isFocused ? styles.activeIconWrap : styles.iconWrap}>
+              <View style={[styles.iconWrap, isFocused && styles.iconWrapActive]}>
                 <FontAwesomeIcon
                   icon={icon}
-                  size={isFocused ? 18 : 19}
+                  size={20}
                   color={isFocused ? colors.textInverse : colors.textMuted}
                 />
               </View>
+              <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
+                {label}
+              </Text>
             </Pressable>
           );
         })}
@@ -96,58 +104,66 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 40,
-    paddingTop: spacing.sm,
-    backgroundColor: 'transparent',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.lg,
+    paddingTop: 1,
+    backgroundColor: 'white',
+    borderRadius: 999,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   bar: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: 100,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xs,
+    backgroundColor: 'transparent',
+    borderRadius: 999,
+    paddingVertical: 8,
     position: 'relative',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
   },
   tab: {
     flex: 1,
+    minHeight: 60,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: spacing.xs,
     zIndex: 2,
   },
-  activeIndicator: {
-    position: 'absolute',
-    top: 8,
-    height: 38,
-    width: 'auto',
-    borderRadius: 100,
-    backgroundColor: colors.primary,
-    zIndex: 1,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   iconWrap: {
-    width: 38,
-    height: 38,
+    width: 42,
+    height: 42,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 100,
+  iconWrapActive: {
     backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // marginBottom: 8,
+    borderRadius: 999,
+  },
+  label: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  labelActive: {
+    color: colors.primary,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    top: 8,
+    left: 0,
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    zIndex: 1,
   },
 });
 

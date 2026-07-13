@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/Home/HomeScreen';
+import StoreScreen from '../screens/Store/StoreScreen';
 import ShoppingScreen from '../screens/Shopping/ShoppingScreen';
 import FavoriteScreen from '../screens/Favorite/FavoriteScreen';
 import AccountScreen from '../screens/Account/AccountScreen';
@@ -29,9 +30,20 @@ function MainTabNavigator({ navigation, route }) {
       screenOptions={{ headerShown: false }}
       tabBar={renderTabBar}>
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shopping" component={ShoppingScreen} />
-      <Tab.Screen name="Favorite" component={FavoriteScreen} />
-      <Tab.Screen name="Account">
+      <Tab.Screen
+        name="Favorite"
+        component={FavoriteScreen}
+        options={{ tabBarLabel: 'Wishlist' }}
+      />
+      <Tab.Screen
+        name="Shopping"
+        component={ShoppingScreen}
+        options={{ tabBarLabel: 'Cart' }}
+      />
+      <Tab.Screen name="Store" component={StoreScreen} options={{ tabBarLabel: 'Search' }} />
+      <Tab.Screen
+        name="Account"
+        options={{ tabBarLabel: 'Settings' }}>
         {(props) => <AccountScreen {...props} user={sessionUser} onLogout={handleLogout} navigation={navigation} />}
       </Tab.Screen>
     </Tab.Navigator>

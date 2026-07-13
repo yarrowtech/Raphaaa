@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '@env';
 
-const fallbackBaseUrl = 'http://10.0.2.2:9000';
+const fallbackBaseUrl = 'http://192.168.1.96:9000';
 export const BASE_URL = API_BASE_URL || fallbackBaseUrl;
 
 async function request(path, options = {}) {
@@ -96,6 +96,12 @@ export function getNewArrivals() {
   });
 }
 
+export function getMetaOptions() {
+  return request('/api/meta-options/public', {
+    method: 'GET',
+  });
+}
+
 export default {
   BASE_URL,
   checkEmail,
@@ -107,4 +113,5 @@ export default {
   getBestSellers,
   getProductById,
   getNewArrivals,
+  getMetaOptions,
 };

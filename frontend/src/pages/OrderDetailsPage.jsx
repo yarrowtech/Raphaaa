@@ -6,6 +6,7 @@ import { cancelOrder, createReturnRequest, fetchOrderDetails } from "../redux/sl
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
+import { getGstRate, getOrderGstSummary } from "../utils/gst";
 
 const OrderDetailsPage = () => {
   const { id } = useParams();
@@ -129,7 +130,7 @@ const OrderDetailsPage = () => {
     // ✅ Product Table
     autoTable(doc, {
       startY: 72,
-      head: [["#", "Description", "Variant", "SKU / HSN", "Qty", "Rate", "Per", "Disc.%", "Amount"]],
+      head: [["#", "Description", "Variant", "SKU / HSN", "Qty", "Rate", "Per", "GST %", "Amount"]],
       body: (orderDetails?.orderItems || []).map((item, i) => [
         i + 1,
         item?.name || "-",
@@ -138,7 +139,7 @@ const OrderDetailsPage = () => {
         item?.quantity ?? 0,
         item?.price?.toFixed(2) ?? "0.00",
         "pcs",
-        "0%",
+        `${(getGstRate(item?.price ?? 0) * 100).toFixed(0)}%`,
         `INR. ${((item?.quantity ?? 0) * (item?.price ?? 0)).toFixed(2)}`,
       ]),
       theme: "grid",
@@ -157,19 +158,17 @@ const OrderDetailsPage = () => {
       },
     });
 
-    // Totals
-    const subtotal = (orderDetails?.orderItems || []).reduce(
-      (sum, item) => sum + (item?.price ?? 0) * (item?.quantity ?? 0),
-      0
+    // Totals — prices are GST-inclusive, so GST is back-calculated per item
+    // using India's apparel slab (5% up to ₹1000/unit, 12% above), not added on top.
+    const { taxableValue, gstAmount, grossAmount: total } = getOrderGstSummary(
+      orderDetails?.orderItems || []
     );
-    const gst = subtotal * 0.05;
-    const total = subtotal + gst;
 
     const y = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(10);
-    doc.text(`Subtotal: INR. ${subtotal.toFixed(2)}`, 150, y);
-    doc.text(`GST (5%): INR. ${gst.toFixed(2)}`, 150, y + 5);
-    doc.text(`Total: INR. ${total.toFixed(2)}`, 150, y + 10);
+    doc.text(`Taxable Value: INR. ${taxableValue.toFixed(2)}`, 150, y);
+    doc.text(`GST: INR. ${gstAmount.toFixed(2)}`, 150, y + 5);
+    doc.text(`Total (Incl. GST): INR. ${total.toFixed(2)}`, 150, y + 10);
 
     // Amount in words
     const numberToWords = (num) => {
@@ -210,20 +209,16 @@ const OrderDetailsPage = () => {
     ];
     terms.forEach((t, i) => doc.text(t, 14, y + 55 + i * 5));
 
-    // ✅ Digital Signature + Authorized Signatory
-    try {
-      const signatureImg = "/signature.png"; // Ensure this file exists
-      const imgWidth = 40;
-      const imgHeight = 20;
-      const imgX = 150;
-      const imgY = y + 65;
-      doc.addImage(signatureImg, "PNG", imgX, imgY, imgWidth, imgHeight);
-    } catch (err) {
-      console.error("Signature image not found:", err);
-    }
-
-    doc.setFontSize(10);
-    doc.text("Authorised Signatory", 150, y + 90);
+    // ✅ Electronically generated — no signature required
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(9);
+    doc.text(
+      "This is an electronically generated invoice and does not require a signature.",
+      14,
+      y + 70,
+      { maxWidth: 180 }
+    );
+    doc.setFont("helvetica", "normal");
 
     // ✅ Page numbers
     const totalPages = doc.internal.getNumberOfPages();
@@ -649,6 +644,9 @@ const OrderDetailsPage = () => {
               <p className="text-[11px] text-gray-400 uppercase tracking-widest">Order Total</p>
               <p className="text-lg font-extrabold text-sky-700">
                 ₹{(orderDetails.totalPrice || computedSubtotal).toLocaleString("en-IN")}
+              </p>
+              <p className="text-[11px] text-gray-400">
+                Inclusive of GST ₹{getOrderGstSummary(orderDetails.orderItems || []).gstAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>

@@ -30,6 +30,7 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { HiX } from "react-icons/hi";
 import { HiTrash } from "react-icons/hi2";
 import { Verified } from "lucide-react";
+import { getOrderGstSummary } from "../../utils/gst";
 
 
 
@@ -159,19 +160,13 @@ const Checkout = () => {
   const [displayCount, setDisplayCount] = useState(4);
   const [addressesOpen, setAddressesOpen] = useState(false);
   const [featuredCollab, setFeaturedCollab] = useState(null);
-  const [showPriceDetails, setShowPriceDetails] = useState(false);
+  const [showPriceDetails, setShowPriceDetails] = useState(true);
   const [stockByItem, setStockByItem] = useState({});
   const [qtyModeByItem, setQtyModeByItem] = useState({});
   const [customQtyByItem, setCustomQtyByItem] = useState({});
   const [productMetaByItem, setProductMetaByItem] = useState({});
 
   // Phase 4: promos + wallet
-  const [couponCode, setCouponCode] = useState("");
-  const [couponCodes, setCouponCodes] = useState([]);
-  const [walletRedeem, setWalletRedeem] = useState(0);
-  const [orderNote, setOrderNote] = useState("");
-  const [quote, setQuote] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const currentStep = razorpayOrderId ? 3 : 2;
 
@@ -188,19 +183,35 @@ const Checkout = () => {
     }, 0).toFixed(2)
   );
 
+  // Informational only — prices (and shipping/zone fees) are GST-inclusive,
+  // so this doesn't change the total. Freight is taxed at the goods' blended rate.
+  const gstSummary = getOrderGstSummary(
+    cart?.products || [],
+    (p) => resolveDisplayPrice(p, productMetaByItem[itemKey(p)] || {}),
+    0 // Assuming fees are added later or handled within quote
+  );
+
+  const [couponCode, setCouponCode] = useState("");
+  const [couponCodes, setCouponCodes] = useState([]);
+  const [walletRedeem, setWalletRedeem] = useState(0);
+  const [orderNote, setOrderNote] = useState("");
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
   const displaySubtotal  = Number(quote?.subtotal    ?? computedSubtotal);
   const freeThreshold    = Number(quote?.freeShippingThreshold ?? 999);
   const displayShipping  = Number(quote?.shipping    ?? (computedSubtotal >= freeThreshold ? 0 : 99));
   const shippingDiscount = Number(quote?.shippingDiscount ?? 0);
   const netShipping      = Math.max(0, displayShipping - shippingDiscount);
-  const displayTotal     = Number(quote?.totalAfterWallet ?? (computedSubtotal + netShipping));
+
+  const displayTotal     = Number(quote?.totalAfterWallet ?? (computedSubtotal + netShipping + gstSummary.gstAmount));
   const isFirstOrder     = quote?.isNewUser === true;
   const zoneCharge       = Number(quote?.zoneCharge ?? 0);
   const zoneName         = quote?.zoneName || null;
 
   // Mobile price breakdown helpers
   const feesTotal      = netShipping + zoneCharge;
-  const discountsTotal = Math.max(0, displaySubtotal + feesTotal - displayTotal);
+  const discountsTotal = Math.max(0, displaySubtotal + feesTotal - (displayTotal - gstSummary.gstAmount));
   const savingsTotal   = discountsTotal;
 
   useEffect(() => {
@@ -733,7 +744,7 @@ const Checkout = () => {
           MOBILE / TABLET  (< lg)
       ══════════════════════════════════════════════ */}
       <div className="lg:hidden min-h-screen pb-28">
-
+        
         {/* ── Sticky header ── */}
         <div className="sticky top-0 z-30 bg-white shadow-sm">
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100">
@@ -742,13 +753,13 @@ const Checkout = () => {
             </button>
             <h1 className="text-base font-semibold text-gray-800">Order Summary</h1>
           </div>
-          <div className="px-4 pt-4 pb-1">
+          <div className="pt-4 pb-1">
             <CheckoutProgress currentStep={currentStep} />
           </div>
         </div>
-
+        <div className="p-5">
         {/* ── Deliver to ── */}
-        <div className="mt-2 bg-white px-4 pt-4 pb-4 shadow-sm">
+        <div className="mt-2 bg-white px-4 pt-4 pb-4 shadow-sm rounded-xl">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm text-gray-500 font-medium mb-1.5">Deliver to:</p>
@@ -832,7 +843,7 @@ const Checkout = () => {
         </div>
 
         {/* ── Products ── */}
-        <div className="mt-2 bg-white divide-y divide-gray-100 shadow-sm">
+        <div className="mt-2 bg-white divide-y divide-gray-100 shadow-sm rounded-xl">
           {cart?.products?.map((product, index) => {
             const meta = productMetaByItem[itemKey(product)] || {};
             const slug = meta.slug || String(product.name || "").toLowerCase().replace(/\s+/g, "-");
@@ -852,9 +863,9 @@ const Checkout = () => {
                   </p>
                   {(product.color || product.size) && (
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {product.color && <span>{formatColor(product.color)}</span>}
+                      {product.color && <span>Colour: {formatColor(product.color)}</span>}
                       {product.color && product.size && <span> · </span>}
-                      {product.size && <span>Size: {product.size}</span>}
+                      {product.size && <span>Size {product.size}</span>}
                     </p>
                   )}
 
@@ -963,7 +974,7 @@ const Checkout = () => {
         </div>
 
         {/* ── Coupons ── */}
-        <div className="mt-2 bg-white px-4 py-4 shadow-sm">
+        <div className="mt-2 bg-white px-4 py-4 shadow-sm rounded-xl">
           <h4 className="text-sm font-bold text-gray-700 mb-3">Coupons &amp; Offers</h4>
           <div className="flex gap-2">
             <input
@@ -1011,7 +1022,7 @@ const Checkout = () => {
         </div>
 
         {/* ── Payment method ── */}
-        <div className="mt-2 bg-white px-4 py-4 shadow-sm">
+        <div className="mt-2 bg-white px-4 py-4 shadow-sm rounded-xl">
           <h4 className="text-sm font-bold text-gray-700 mb-3">Payment Method</h4>
           <div className="space-y-2">
             {[
@@ -1045,17 +1056,50 @@ const Checkout = () => {
         </div>
 
         {/* ── Price breakdown ── */}
-        <div className="mt-2 bg-white px-4 py-4 shadow-sm">
+        <div className="mt-2 bg-white px-4 py-4 shadow-sm rounded-xl">
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm text-gray-700">
               <span className="border-b border-dashed border-gray-400 pb-px cursor-default">MRP</span>
               <span>₹{displaySubtotal.toLocaleString("en-IN")}</span>
             </div>
-            <div className="flex items-center justify-between text-sm text-gray-700">
-              <span className="flex items-center gap-1">
-                Fees <FaChevronDown className="text-[10px] text-gray-400" />
-              </span>
-              <span>₹{feesTotal.toLocaleString("en-IN")}</span>
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowPriceDetails((v) => !v)}
+                className="w-full flex items-center justify-between text-sm text-gray-700"
+              >
+                <span className="flex items-center gap-1">
+                  Fees{" "}
+                  <FaChevronDown
+                    className={`text-[10px] text-gray-400 transition-transform ${showPriceDetails ? "rotate-180" : ""}`}
+                  />
+                </span>
+                <span>₹{feesTotal.toLocaleString("en-IN")}</span>
+              </button>
+              {showPriceDetails && (
+                <div className="mt-2 pl-3 space-y-1.5 border-l-2 border-gray-100">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Shipping</span>
+                    <span>{netShipping === 0 ? "Free" : `₹${netShipping.toLocaleString("en-IN")}`}</span>
+                  </div>
+                  {zoneCharge > 0 && (
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{zoneName ? `${zoneName} delivery surcharge` : "Delivery surcharge"}</span>
+                      <span>₹{zoneCharge.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                  {paymentMethod === "cash_on_delivery" && (
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>COD charges</span>
+                      <span>₹0</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>GST <span className="text-[10px] text-gray-400">(already included above)</span></span>
+              <span>₹{gstSummary.gstAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
             </div>
             {discountsTotal > 0 && (
               <div className="flex items-center justify-between text-sm">
@@ -1090,7 +1134,7 @@ const Checkout = () => {
         </div>
 
         {/* ── Order note ── */}
-        <div className="mt-2 bg-white px-4 py-4 shadow-sm">
+        <div className="mt-2 bg-white px-4 py-4 shadow-sm rounded-xl">
           <h4 className="text-sm font-bold text-gray-700 mb-2">
             Order Note <span className="text-gray-400 font-normal text-xs">(optional)</span>
           </h4>
@@ -1117,7 +1161,7 @@ const Checkout = () => {
 
         {/* Razorpay widget (mobile) */}
         {razorpayOrderId && (
-          <div className="mt-2 bg-white px-4 py-4">
+          <div className="mt-2 bg-white px-4 py-4 shadow-sm rounded-xl">
             <h3 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wide">Complete Payment</h3>
             <RazorpayButton
               amount={amount} currency={currency}
@@ -1146,7 +1190,7 @@ const Checkout = () => {
 
         {/* ── Fixed bottom bar ── */}
         {!razorpayOrderId && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between z-40 shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between z-40 shadow-lg rounded-xl">
             <div>
               {displaySubtotal > displayTotal && (
                 <p className="text-xs text-gray-400 line-through leading-none mb-0.5">
@@ -1160,7 +1204,7 @@ const Checkout = () => {
                 onClick={() => setShowPriceDetails((v) => !v)}
                 className="text-xs text-sky-600 font-medium mt-0.5"
               >
-                View price details
+                {showPriceDetails ? "Hide price details" : "View price details"}
               </button>
             </div>
             <button
@@ -1181,6 +1225,8 @@ const Checkout = () => {
             </button>
           </div>
         )}
+      
+      </div>
       </div>
 
       {/* ══════════════════════════════════════════════
@@ -1411,8 +1457,9 @@ const Checkout = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {product.color && <span>Colour: {formatColor(product.color)} · </span>}
-                          {product.size && <span>Size {product.size}</span>}
+                          {product.color && <span>Colour: {formatColor(product.color)}</span>}
+                          {product.color && product.size && <span> · </span>}
+                          {product.size && <span>Size: {product.size}</span>}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           {(() => {
@@ -1587,6 +1634,12 @@ const Checkout = () => {
                       <span className="text-gray-500">₹0</span>
                     </div>
                   )}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">
+                      GST <span className="text-[10px] text-gray-400">(already included above)</span>
+                    </span>
+                    <span className="text-gray-600">₹{gstSummary.gstAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
+                  </div>
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className="text-base font-bold text-gray-900">Total</span>
                     <span className="text-lg font-extrabold text-sky-700">

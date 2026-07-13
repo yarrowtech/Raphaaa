@@ -14,11 +14,12 @@ import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faMagnifyingGlass,
+  faMicrophone,
   faArrowRight,
   faMars,
   faVenus,
   faChild,
-  faCartShopping,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { colors, radius, spacing, typography } from '../../theme';
 import {
@@ -29,7 +30,6 @@ import {
   getNewArrivals,
 } from '../../services/api';
 import { ROUTES } from '../../navigation/routes';
-import { useCart } from '../../context/CartContext';
 
 const GENDER_TABS = [
   { id: 'Men', label: 'Men', icon: faMars },
@@ -101,7 +101,6 @@ const getBannerTextAlignStyle = (align) => {
 };
 
 function HomeScreen({ navigation }) {
-  const { cartCount } = useCart();
   const [banners, setBanners] = useState([]);
   const [bannersLoading, setBannersLoading] = useState(true);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -113,6 +112,8 @@ function HomeScreen({ navigation }) {
   const [newItems, setNewItems] = useState([]);
   const [newItemsLoading, setNewItemsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickChips, setQuickChips] = useState([]);
+  const [quickChipsLoading, setQuickChipsLoading] = useState(true);
   const bannerScrollRef = useRef(null);
 
   const handleSearchSubmit = () => {
@@ -120,6 +121,78 @@ function HomeScreen({ navigation }) {
     if (!trimmed) return;
     navigation.navigate(ROUTES.SHOPPING, { search: trimmed });
   };
+
+  const handleQuickChipPress = (chip) => {
+    navigation.navigate(
+      ROUTES.SHOPPING,
+      chip.type === 'gender' ? { gender: chip.value } : { category: chip.value }
+    );
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadQuickChips = async () => {
+      setQuickChipsLoading(true);
+      try {
+        const facets = await getProductFacets();
+        const categoryEntries = Array.isArray(facets?.categories)
+          ? facets.categories.map((entry) => entry?._id).filter(Boolean)
+          : [];
+
+        const entries = [
+          ...GENDER_TABS.map((tab) => ({ type: 'gender', value: tab.id })),
+          ...categoryEntries.map((value) => ({ type: 'category', value })),
+        ];
+
+        const withImages = await Promise.all(
+          entries.map(async (entry, index) => {
+            const filter =
+              entry.type === 'gender' ? { gender: entry.value } : { category: entry.value };
+
+            let image = null;
+            try {
+              const products = await getProductsByFilter({ ...filter, limit: 1 });
+              const product = Array.isArray(products) ? products[0] : null;
+              image =
+                product?.colorVariants?.[0]?.images?.[0]?.url ||
+                product?.images?.[0]?.url ||
+                null;
+            } catch (error) {
+              console.log(`Failed to load image for ${entry.value}`, error.message);
+            }
+
+            return {
+              key: `${entry.type}-${entry.value}`,
+              type: entry.type,
+              value: entry.value,
+              image,
+              color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+            };
+          })
+        );
+
+        if (isMounted) {
+          setQuickChips(withImages);
+        }
+      } catch (error) {
+        console.log('Failed to load quick categories', error.message);
+        if (isMounted) {
+          setQuickChips([]);
+        }
+      } finally {
+        if (isMounted) {
+          setQuickChipsLoading(false);
+        }
+      }
+    };
+
+    loadQuickChips();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const loadBanners = async () => {
@@ -271,26 +344,15 @@ function HomeScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <View style={styles.headerSpacer} />
           <Image
             source={require('../../../assets/images/logo1.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
-          <View style={styles.headerIcons}>
-            {/* <Pressable style={styles.iconButton}>
-              <FontAwesomeIcon icon={faCamera} size={16} color={colors.text} />
-            </Pressable> */}
-            <Pressable
-              style={styles.iconButton}
-              onPress={() => navigation.navigate(ROUTES.SHOPPING)}>
-              <FontAwesomeIcon icon={faCartShopping} size={16} color={colors.text} />
-              {cartCount > 0 ? (
-                <View style={styles.cartBadge}>
-                  <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
-                </View>
-              ) : null}
-            </Pressable>
-          </View>
+          <Pressable style={styles.avatar} onPress={() => navigation.navigate('Account')}>
+            <FontAwesomeIcon icon={faUser} size={16} color={colors.textInverse} />
+          </Pressable>
         </View>
 
         <View style={styles.searchBar}>
@@ -300,11 +362,56 @@ function HomeScreen({ navigation }) {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearchSubmit}
-            placeholder="Search for products"
+            placeholder="Search any Product..."
             placeholderTextColor={colors.textMuted}
             returnKeyType="search"
           />
+          <Pressable hitSlop={8}>
+            <FontAwesomeIcon icon={faMicrophone} size={14} color={colors.textMuted} />
+          </Pressable>
         </View>
+
+        {quickChipsLoading ? (
+          <View style={styles.quickChipsLoading}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : quickChips.length > 0 ? (
+          <View>
+            <View style={styles.sectionDivider}>
+              <View style={styles.sectionDividerLine} />
+              <Text style={styles.sectionDividerText}>Quick Categories</Text>
+              <View style={styles.sectionDividerLine} />
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickChipsRow}>
+              {quickChips.map((chip) => (
+                <Pressable
+                  key={chip.key}
+                  style={styles.quickChip}
+                  onPress={() => handleQuickChipPress(chip)}>
+                  <View style={[styles.quickChipCircle, { backgroundColor: chip.color }]}>
+                    {chip.image ? (
+                      <Image
+                        source={{ uri: chip.image }}
+                        style={styles.quickChipImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={styles.quickChipInitial}>
+                        {chip.value.charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.quickChipLabel} numberOfLines={1}>
+                    {chip.value}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
         {banners.length > 0 || bannersLoading ? (
           <View style={styles.bannerShadowWrap}>
@@ -340,9 +447,23 @@ function HomeScreen({ navigation }) {
                       <View style={[styles.bannerOverlay, overlayStyle]} />
                       <View style={[styles.bannerContent, positionStyle, textAlignStyle]}>
                         <View style={styles.bannerTextWrapper}>
+                          {banner.badge ? (
+                            <Text style={styles.bannerBadge}>{banner.badge}</Text>
+                          ) : null}
                           {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
-                          {banner.subtitle || banner.description ? (
-                            <Text style={styles.bannerSubtitle}>{banner.subtitle || banner.description}</Text>
+                          {banner.subtitle ? (
+                            <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
+                          ) : null}
+                          {/* {banner.description ? (
+                            <Text style={styles.bannerSubtitle}>{banner.description}</Text>
+                          ) : null} */}
+                          {banner.ctaText ? (
+                            <Pressable
+                              style={styles.bannerCta}
+                              onPress={() => navigation.navigate(ROUTES.SHOPPING)}>
+                              <Text style={styles.bannerCtaText}>{banner.ctaText}</Text>
+                              <FontAwesomeIcon icon={faArrowRight} size={12} color={colors.textInverse} />
+                            </Pressable>
                           ) : null}
                         </View>
                       </View>
@@ -371,7 +492,7 @@ function HomeScreen({ navigation }) {
           </View>
         ) : null}
 
-        <View style={styles.genderTabs}>
+        {/* <View style={styles.genderTabs}>
           {GENDER_TABS.map((tab) => {
             const isActive = selectedGender === tab.id;
             return (
@@ -400,7 +521,7 @@ function HomeScreen({ navigation }) {
               </Pressable>
             );
           })}
-        </View>
+        </View> */}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Categories</Text>
@@ -587,34 +708,17 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     color: colors.text,
   },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+  headerSpacer: {
+    width: 40,
+    height: 40,
   },
-  iconButton: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.white,
   },
   searchBar: {
     flexDirection: 'row',
@@ -632,9 +736,68 @@ const styles = StyleSheet.create({
     color: colors.text,
     padding: 0,
   },
+  quickChipsLoading: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  sectionDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#5b9cc5',
+  },
+  sectionDividerText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    letterSpacing: 1,
+    color: colors.primaryDark,
+    textTransform: 'uppercase',
+  },
+  quickChipsRow: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+    marginTop: spacing.md,
+    paddingRight: spacing.md,
+  },
+  quickChip: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    width: 64,
+  },
+  quickChipCircle: {
+    width: 70,
+    height: 120,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderColor: 'white',
+    borderWidth: 2,
+    backgroundColor: colors.surface,
+  },
+  quickChipImage: {
+    width: '100%',
+    height: '100%',
+  },
+  quickChipInitial: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    color: colors.text,
+  },
+  quickChipLabel: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text,
+    textAlign: 'center',
+  },
   bannerShadowWrap: {
     marginTop: spacing.lg,
-    marginHorizontal: -spacing.xl,
     borderRadius: 24,
     // shadowColor: '#000',
     // shadowOpacity: 0.15,
@@ -644,17 +807,16 @@ const styles = StyleSheet.create({
   },
   banner: {
     position: 'relative',
-    borderBottomEndRadius: 50,
-    borderBottomStartRadius: 24,
+    borderRadius: 24,
     overflow: 'hidden',
-    minHeight: 190,
+    minHeight: 180,
     backgroundColor: '#FFB020',
   },
   bannerTrack: {
     flexDirection: 'row',
   },
   bannerSlide: {
-    height: 190,
+    height: 180,
   },
   bannerImage: {
     width: '100%',
@@ -672,16 +834,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     inset: 0,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
   },
   bannerTextWrapper: {
     maxWidth: '78%',
     gap: spacing.xs,
   },
   bannerLoading: {
-    minHeight: 190,
+    minHeight: 180,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bannerBadge: {
+    color: colors.textInverse,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   bannerTitle: {
     color: colors.textInverse,
@@ -691,7 +860,24 @@ const styles = StyleSheet.create({
   bannerSubtitle: {
     color: colors.textInverse,
     fontSize: typography.size.md,
-    // fontWeight: typography.weight.medium,
+  },
+  bannerCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: 'transparent',
+    borderColor: 'white',
+    borderWidth: 1,
+  },
+  bannerCtaText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    color: colors.textInverse,
   },
   dotsRow: {
     flexDirection: 'row',
@@ -892,6 +1078,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginTop: spacing.xs,
   },
+  scrollTitle: {
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  }
 });
 
 export default HomeScreen;

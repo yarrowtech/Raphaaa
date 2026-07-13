@@ -196,14 +196,14 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
                 {product.name}
               </p>
               <div className="flex flex-wrap gap-1.5 mt-1">
-                {product.size && (
-                  <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                    Size: {product.size}
-                  </span>
-                )}
                 {product.color && (
                   <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                     {formatColor(product.color)}
+                  </span>
+                )}
+                {product.size && (
+                  <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    Size: {product.size}
                   </span>
                 )}
               </div>
@@ -399,8 +399,9 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.name}</p>
                   <p className="text-[10px] text-gray-400 mt-0.5">
-                    {item.color && <span>{formatColor(item.color)} · </span>}
-                    {item.size && <span>Size {item.size}</span>}
+                    {item.color && <span>{formatColor(item.color)}</span>}
+                    {item.color && item.size && <span> · </span>}
+                    {item.size && <span>Size: {item.size}</span>}
                   </p>
                   <p className="text-xs font-bold text-gray-900 mt-1">
                     ₹{Number(
