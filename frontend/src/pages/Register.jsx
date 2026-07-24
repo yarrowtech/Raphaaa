@@ -22,6 +22,7 @@ const Register = () => {
   const [otp, setOtp] = useState("");
   const [resendIn, setResendIn] = useState(0); // seconds cooldown
   const [otpSent, setOtpSent] = useState(false); // track if clicked once
+  const [sendingOtp, setSendingOtp] = useState(false); // processing state while OTP request is in flight
 
 
   const dispatch = useDispatch();
@@ -84,6 +85,7 @@ const Register = () => {
     e.preventDefault();
     if (!validateBase()) return;
 
+    setSendingOtp(true);
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/send-email-otp`, { email });
       toast.success("OTP sent to your email");
@@ -93,6 +95,8 @@ const Register = () => {
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to send OTP";
       toast.error(msg);
+    } finally {
+      setSendingOtp(false);
     }
   };
 
@@ -223,11 +227,11 @@ const Register = () => {
             </button> */}
             <button
               type="submit"
-              disabled={otpSent}   // ✅ disable after clicked once
+              disabled={otpSent || sendingOtp}   // ✅ disable after clicked once or while sending
               className={`w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold transition duration-300
-    ${otpSent ? "opacity-60 cursor-not-allowed" : "hover:opacity-90"}`}
+    ${otpSent || sendingOtp ? "opacity-60 cursor-not-allowed" : "hover:opacity-90"}`}
             >
-              {otpSent ? "OTP Sent" : loading ? "Registering..." : "Register"}
+              {sendingOtp ? "Processing..." : otpSent ? "OTP Sent" : "Register"}
             </button>
 
 

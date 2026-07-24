@@ -1728,6 +1728,7 @@ const ProductDetails = ({ productId }) => {
   const [modalImage, setModalImage] = useState("");
   const [modalIndex, setModalIndex] = useState(0);
   const [modalIsGallery, setModalIsGallery] = useState(false);
+  const [paymentOffers, setPaymentOffers] = useState([]);
   const [modalZoom, setModalZoom] = useState(1);
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -1797,6 +1798,19 @@ const ProductDetails = ({ productId }) => {
       .catch(() => setPublicOffers([]));
   }, []);
 
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/offers/payment`
+        );
+        if (Array.isArray(data)) setPaymentOffers(data);
+      } catch (error) {
+        console.error("Failed to fetch payment offers:", error);
+      }
+    };
+    fetchOffers();
+  }, []);
   // ── Derived variant data (supports both new colorVariants and legacy variants) ──
   const hasColorVariants =
     Array.isArray(selectedProduct?.colorVariants) && selectedProduct.colorVariants.length > 0;
@@ -3181,6 +3195,18 @@ const ProductDetails = ({ productId }) => {
                   )}
                 </div>
 
+                {/* Payment Offers Section */}
+                {paymentOffers.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex flex-wrap gap-3">
+                      {paymentOffers.slice(0, 3).map((offer) => (
+                        <span key={offer.id} className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+                          <span className="text-sky-600">💳</span> {offer.displayText}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {/* Offers strip */}
                 <div className="flex flex-wrap gap-3 py-3">
                   {(() => {
