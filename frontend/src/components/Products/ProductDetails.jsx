@@ -2103,8 +2103,9 @@ const ProductDetails = ({ productId }) => {
 
   useEffect(() => {
     const fetchWishlist = async () => {
+      const token = localStorage.getItem("userToken");
+      if (!token) return;
       try {
-        const token = localStorage.getItem("userToken");
         const { data } = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/wishlist`,
           {

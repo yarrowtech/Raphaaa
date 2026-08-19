@@ -183,7 +183,7 @@ export default function Profile() {
 
   useEffect(() => {
     const isProfileRoute = location.pathname === "/profile";
-    const isMobileOrTablet = typeof window !== "undefined" ? window.innerWidth < 1024 : false;
+    const isMobileOrTablet = typeof window !== "undefined" ? window.innerWidth < 768 : false;
     const hide = isProfileRoute && isMobileOrTablet && !mobileShowMenu;
     window.dispatchEvent(new CustomEvent("profile-mobile-submenu", { detail: { hide } }));
     return () => {

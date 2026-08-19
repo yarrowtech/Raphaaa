@@ -47,8 +47,15 @@ const AutoLogout = () => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error?.response?.status === 401 && localStorage.getItem("userToken")) {
-          forceLogout(true);
+        if (error?.response?.status === 401) {
+          const storedToken = localStorage.getItem("userToken");
+          // Only force a global logout if the stored token is actually expired/missing.
+          // A 401 from a single request (e.g. a background wishlist check) doesn't mean
+          // the whole session is invalid — don't punish the user for an unrelated failure.
+          const expiryMs = getTokenExpiryMs(storedToken);
+          if (!storedToken || (expiryMs && expiryMs <= Date.now())) {
+            forceLogout(true);
+          }
         }
         return Promise.reject(error);
       }

@@ -1,6 +1,7 @@
 const express = require("express");
 const ShippingConfig = require("../models/ShippingConfig");
 const { protect, admin } = require("../middleware/authMiddleware");
+const { invalidateShippingConfigCache } = require("../services/pricingService");
 
 const router = express.Router();
 
@@ -40,6 +41,7 @@ router.put("/", protect, admin, async (req, res) => {
     if (Array.isArray(zoneRates))            cfg.zoneRates             = zoneRates;
 
     await cfg.save();
+    invalidateShippingConfigCache();
     res.json({ success: true, config: cfg });
   } catch (err) {
     console.error("shipping config update error:", err);

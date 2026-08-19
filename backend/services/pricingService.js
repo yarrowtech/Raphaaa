@@ -64,6 +64,13 @@ async function getShippingConfig() {
   return cfg;
 }
 
+// Called by the admin shipping-config update route so checkout quotes reflect
+// the new price immediately instead of waiting out the 5-minute cache window.
+function invalidateShippingConfigCache() {
+  _shippingConfigCache = null;
+  _shippingConfigCachedAt = 0;
+}
+
 function computeZoneCharge(cfg, pincode) {
   if (!pincode || !/^\d{6}$/.test(String(pincode))) return 0;
   const prefix = String(pincode).slice(0, 2);
@@ -426,4 +433,5 @@ async function priceQuote({
 
 module.exports = {
   priceQuote,
+  invalidateShippingConfigCache,
 };

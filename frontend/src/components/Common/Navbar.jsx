@@ -114,7 +114,7 @@ const Navbar = () => {
     );
   }
 
-  const hideNavbarClass = hideOnMobileProfileSubmenu ? "hidden lg:block" : "";
+  const hideNavbarClass = hideOnMobileProfileSubmenu ? "hidden md:block" : "";
 
   return (
     <>
@@ -133,7 +133,7 @@ const Navbar = () => {
         </Link>
 
         {/* Center Navigation */}
-        <div className="hidden lg:flex space-x-5 xl:space-x-6 items-center">
+        <div className="hidden md:flex space-x-5 xl:space-x-6 items-center">
           {/* ✅ Show Exclusive Drop only when collab is active */}
           {collabActive && (
             <Link
@@ -191,7 +191,7 @@ const Navbar = () => {
 
           {user ? (
             user.role === "customer" && (
-              <div className="relative hidden lg:block" ref={dropdownRef}>
+              <div className="relative hidden md:block" ref={dropdownRef}>
                 <button
                   onClick={() => setProfileOpen((prev) => !prev)}
                   className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 transition-all"
@@ -208,7 +208,7 @@ const Navbar = () => {
                     </div>
                   )}
 
-                  <span className="text-sm font-medium text-gray-800 hidden lg:inline">
+                  <span className="text-sm font-medium text-gray-800 hidden md:inline">
                     {user.name}
                   </span>
                   <HiChevronDown className="h-4 w-4 text-gray-500" />
@@ -280,7 +280,7 @@ const Navbar = () => {
             <SearchBar />
           </div>
 
-          <button onClick={toggleNavDrawer} className="lg:hidden transition-transform hover:scale-110">
+          <button onClick={toggleNavDrawer} className="md:hidden transition-transform hover:scale-110">
             <HiMiniBars3BottomRight className="h-6 w-6 text-gray-700" />
           </button>
         </div>
