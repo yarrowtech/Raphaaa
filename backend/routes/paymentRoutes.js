@@ -335,6 +335,8 @@ const { sendPushToUser } = require("../utils/push");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
 const { deleteJson } = require("../utils/redisCache");
 const { fulfillPrebookingsForOrder } = require("../utils/prebooking");
+const { buildAttribution } = require("../utils/attribution");
+const { registerCampaignConversion } = require("../utils/campaignTracking");
 
 const applyVariantStockDeduction = (product, item) => {
   const qty = Number(item?.quantity || 0);
@@ -445,7 +447,7 @@ router.post("/create-order", protect, async (req, res) => {
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
-      const { amount, currency = "INR", receipt, orderItems, shippingAddress, idempotencyKey, couponCodes, walletRedeem } = req.body;
+      const { amount, currency = "INR", receipt, orderItems, shippingAddress, idempotencyKey, couponCodes, walletRedeem, trackingInfo } = req.body;
 
       console.log("Creating order for user:", req.user._id);
       console.log("Order amount:", amount);
@@ -561,6 +563,11 @@ router.post("/create-order", protect, async (req, res) => {
       // Create MongoDB Order
       const order = new Order({
         user: req.user._id,
+        attribution: buildAttribution(trackingInfo, {
+          customerName: req.user?.name || "",
+          customerEmail: req.user?.email || "",
+          customerPhone: shippingAddress?.phone || "",
+        }),
         orderItems: orderItems.map((item) => ({
           productId: item.productId,
           name: item.name,
@@ -795,6 +802,12 @@ router.post("/verify-payment", protect, async (req, res) => {
         email_address: req.user.email,
       };
       await order.save({ session });
+      if (order?.attribution?.campaignClickId) {
+        await registerCampaignConversion({
+          campaignClickId: order.attribution.campaignClickId,
+          orderId: order._id,
+        });
+      }
       await Promise.all([
         deleteJson("users", `user:${req.user._id}:my-coupon`),
         deleteJson("users", `user:${req.user._id}:my-coupons`),

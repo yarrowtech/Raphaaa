@@ -292,6 +292,7 @@ const AdminSidebar = () => {
               <>
                 <NavItem to="/admin/subscribed-users"  icon={GiLetterBomb}    label="Subscribers" />
                 <NavItem to="/admin/email-scheduler"   icon={SiMinutemailer}  label="Email Scheduler" />
+                <NavItem to="/admin/campaigns"         icon={MdCampaign}      label="Campaign Tracker" />
               </>
             )}
             {isAdmin && (

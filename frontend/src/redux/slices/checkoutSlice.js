@@ -248,6 +248,7 @@ export const createRazorpayOrder = createAsyncThunk(
           idempotencyKey: orderData.idempotencyKey, // Include idempotency key
           couponCodes: orderData.couponCodes,
           walletRedeem: orderData.walletRedeem,
+          trackingInfo: orderData.trackingInfo,
         },
         config
       );

@@ -1679,6 +1679,7 @@ import { FaCartShopping, FaRuler, FaRulerHorizontal } from "react-icons/fa6";
 import { flyToCart } from "../../utils/flyToCart";
 import { FiShare2 } from "react-icons/fi";
 import { FiCopy } from "react-icons/fi";
+import { buildTrackedProductUrl } from "../../utils/attribution";
 import ProductQA from "./ProductQA";
 import { Helmet } from "react-helmet-async";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
@@ -2921,7 +2922,7 @@ const ProductDetails = ({ productId }) => {
 
   const handleShare = async () => {
     try {
-      const productUrl = window.location.href;
+      const productUrl = buildTrackedProductUrl("share");
 
       if (navigator.share) {
         await navigator.share({
@@ -4266,9 +4267,9 @@ const ProductDetails = ({ productId }) => {
               ×
             </button>
             <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">Share this Product</h2>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-2 gap-3 text-center">
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(window.location.href)}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(buildTrackedProductUrl("whatsapp"))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1 hover:opacity-80 transition"
@@ -4277,7 +4278,7 @@ const ProductDetails = ({ productId }) => {
                 <span className="text-xs text-gray-600">WhatsApp</span>
               </a>
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(buildTrackedProductUrl("facebook"))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1 hover:opacity-80 transition"
@@ -4285,17 +4286,20 @@ const ProductDetails = ({ productId }) => {
                 <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" className="w-10 h-10" />
                 <span className="text-xs text-gray-600">Facebook</span>
               </a>
-              <a
-                href="https://www.instagram.com/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(buildTrackedProductUrl("instagram"));
+                  setCopied(true);
+                  toast.success("Instagram link copied!");
+                  setTimeout(() => setCopied(false), 1000);
+                }}
                 className="flex flex-col items-center gap-1 hover:opacity-80 transition"
               >
                 <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" className="w-10 h-10" />
                 <span className="text-xs text-gray-600">Instagram</span>
-              </a>
+              </button>
               <a
-                href={`https://t.me/share/url?url=${window.location.href}`}
+                href={`https://t.me/share/url?url=${encodeURIComponent(buildTrackedProductUrl("telegram"))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1 hover:opacity-80 transition"
@@ -4304,7 +4308,7 @@ const ProductDetails = ({ productId }) => {
                 <span className="text-xs text-gray-600">Telegram</span>
               </a>
               <a
-                href={`https://twitter.com/intent/tweet?url=${window.location.href}`}
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(buildTrackedProductUrl("twitter"))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1 hover:opacity-80 transition"
@@ -4314,7 +4318,7 @@ const ProductDetails = ({ productId }) => {
               </a>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+                  navigator.clipboard.writeText(buildTrackedProductUrl("copy"));
                   setCopied(true);
                   toast.success("Link Copied!");
                   setTimeout(() => setCopied(false), 1000);

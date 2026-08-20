@@ -2,13 +2,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
+import { Link } from "react-router-dom";
 
 const CampaignTracker = () => {
     const [campaigns, setCampaigns] = useState([]);
+    const [sourceReport, setSourceReport] = useState({ rows: [], recentOrders: [] });
     const [form, setForm] = useState({
         name: "",
         platform: "Google",
-        utmLink: "",
+        productUrl: "",
         startDate: "",
         endDate: "",
         budget: "",
@@ -17,11 +19,13 @@ const CampaignTracker = () => {
     const [isPublished, setIsPublished] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [savedCampaign, setSavedCampaign] = useState(null);
     const token = localStorage.getItem("userToken");
     console.log(token);
 
     useEffect(() => {
         fetchCampaigns();
+        fetchSourceReport();
     }, []);
 
     const fetchCampaigns = async () => {
@@ -37,26 +41,44 @@ const CampaignTracker = () => {
         }
     };
 
+    const fetchSourceReport = async () => {
+        try {
+            const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/analytics/source-report`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("userToken")}`
+                }
+            });
+            setSourceReport({
+                rows: Array.isArray(data.rows) ? data.rows : [],
+                recentOrders: Array.isArray(data.recentOrders) ? data.recentOrders : [],
+            });
+        } catch {
+            setSourceReport({ rows: [], recentOrders: [] });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             if (editingId) {
-                await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${editingId}`, { ...form }, {
+                const { data } = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/${editingId}`, { ...form }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
+                setSavedCampaign(data?.data || null);
                 toast.success("Campaign updated");
             } else {
-                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, { ...form }, {
+                const { data } = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns`, { ...form }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
+                setSavedCampaign(data?.data || null);
                 toast.success("Campaign added");
             }
-            resetForm();
+            resetForm({ keepSaved: true });
             fetchCampaigns();
         } catch {
             toast.error("Failed to save campaign");
@@ -69,7 +91,7 @@ const CampaignTracker = () => {
         setForm({
             name: campaign.name,
             platform: campaign.platform,
-            utmLink: campaign.utmLink,
+            productUrl: campaign.productUrl || campaign.utmLink || "",
             startDate: campaign.startDate?.split("T")[0] || "",
             endDate: campaign.endDate?.split("T")[0] || "",
             budget: campaign.budget,
@@ -77,6 +99,7 @@ const CampaignTracker = () => {
         });
         setEditingId(campaign._id);
         setIsPublished(campaign.status === "Active");
+        setSavedCampaign(campaign);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
@@ -94,11 +117,11 @@ const CampaignTracker = () => {
         }
     };
 
-    const resetForm = () => {
+    const resetForm = ({ keepSaved = false } = {}) => {
         setForm({
             name: "",
             platform: "Google",
-            utmLink: "",
+            productUrl: "",
             startDate: "",
             endDate: "",
             budget: "",
@@ -106,6 +129,7 @@ const CampaignTracker = () => {
         });
         setEditingId(null);
         setIsPublished(false);
+        if (!keepSaved) setSavedCampaign(null);
     };
 
     return (
@@ -181,15 +205,26 @@ const CampaignTracker = () => {
                         </div>
                     </div>
 
-                    {/* UTM Link */}
+                    {/* Product URL */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">UTM Link</label>
+                        <label className="text-sm font-medium">Product URL</label>
                         <input
                             type="text"
-                            value={form.utmLink}
-                            onChange={(e) => setForm({ ...form, utmLink: e.target.value })}
-                            placeholder="https://yourwebsite.com/?utm_source=..."
+                            value={form.productUrl}
+                            onChange={(e) => setForm({ ...form, productUrl: e.target.value })}
+                            placeholder="/product/t-shirt or https://www.raphaaa.com/product/t-shirt"
                             className="w-full rounded-xl bg-gray-50 border border-gray-300 px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-sky-400 outline-none"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Generated Landing URL</label>
+                        <input
+                            type="text"
+                            readOnly
+                            value={savedCampaign?.utmLink || ""}
+                            placeholder="Save the campaign to generate the tracked URL"
+                            className="w-full rounded-xl bg-gray-100 border border-gray-200 px-4 py-2.5 text-gray-500 outline-none"
                         />
                     </div>
 
@@ -245,6 +280,66 @@ const CampaignTracker = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800">Source Report</h3>
+                        <p className="text-xs text-gray-500">Orders captured from Facebook, Instagram, and other tracked links</p>
+                    </div>
+                    <button
+                        onClick={fetchSourceReport}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50"
+                    >
+                        Refresh
+                    </button>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {sourceReport.rows.length > 0 ? sourceReport.rows.map((row) => (
+                        <div key={row.source} className="rounded-xl border border-gray-200 p-4 bg-gray-50">
+                            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">{row.source}</p>
+                            <p className="text-2xl font-extrabold text-gray-900 mt-2">{row.orders}</p>
+                            <p className="text-sm text-gray-500 mt-1">₹{Number(row.revenue || 0).toLocaleString("en-IN")} revenue</p>
+                        </div>
+                    )) : (
+                        <p className="text-sm text-gray-500">No source data yet.</p>
+                    )}
+                </div>
+                <div className="px-6 pb-6">
+                    <div className="rounded-xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
+                                <tr>
+                                    <th className="p-3">Order</th>
+                                    <th className="p-3">Customer</th>
+                                    <th className="p-3">Source</th>
+                                    <th className="p-3">Total</th>
+                                    <th className="p-3">Landing</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sourceReport.recentOrders.length > 0 ? sourceReport.recentOrders.map((order) => (
+                                    <tr key={order._id} className="border-t">
+                                        <td className="p-3 text-sm font-mono text-gray-700">
+                                            <Link to={`/order/${order._id}`} className="text-sky-600 hover:underline">
+                                                {order.orderId || order._id.slice(-8)}
+                                            </Link>
+                                        </td>
+                                        <td className="p-3 text-sm text-gray-700">{order.customerName}<div className="text-xs text-gray-400">{order.customerEmail}</div></td>
+                                        <td className="p-3 text-sm text-gray-700 capitalize">{order.source}</td>
+                                        <td className="p-3 text-sm text-gray-700">₹{Number(order.totalPrice || 0).toLocaleString("en-IN")}</td>
+                                        <td className="p-3 text-xs text-gray-500 break-all">{order.landingPage || "—"}</td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="5" className="p-6 text-center text-gray-500">No tracked orders yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             {/* Campaign Table */}

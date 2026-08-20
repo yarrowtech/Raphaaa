@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const campaignSchema = new mongoose.Schema({
   name: { type: String, required: true },
   platform: { type: String, enum: ["Google", "Instagram", "Facebook"], required: true },
+  productUrl: { type: String, default: "" },
   utmLink: { type: String },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },

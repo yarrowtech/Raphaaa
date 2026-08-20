@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { FaLock, FaTruck, FaUndo } from "react-icons/fa";
+import { buildOrderAttribution } from "../../utils/attribution";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL;
 
@@ -113,6 +114,11 @@ const GuestCheckout = () => {
         totalPrice: total,
         guestEmail: form.guestEmail,
         guestName: form.guestName,
+        trackingInfo: buildOrderAttribution({
+          customerName: form.guestName,
+          customerEmail: form.guestEmail,
+          customerPhone: form.phone,
+        }),
       });
 
       navigate("/order-confirmation", {

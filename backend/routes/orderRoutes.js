@@ -65,6 +65,8 @@ const sendWhatsApp = require("../utils/sendWhatsApp");
 const { sendPushToUser } = require("../utils/push");
 const Collab = require("../models/Collab");
 const { buildInvoicePDF } = require("../utils/invoice");
+const { buildAttribution } = require("../utils/attribution");
+const { registerCampaignConversion } = require("../utils/campaignTracking");
 const { getJson, setJson, deleteJson } = require("../utils/redisCache");
 const { priceQuote } = require("../services/pricingService");
 const { getAvailableCredits, redeem } = require("../services/walletService");
@@ -176,7 +178,15 @@ const applyStockDeduction = (product, item) => {
 // @access  Private
 router.post("/cod", protect, async (req, res) => {
   try {
-    const { orderItems, shippingAddress, couponCodes, walletRedeem, idempotencyKey, orderNote } = req.body;
+    const {
+      orderItems,
+      shippingAddress,
+      couponCodes,
+      walletRedeem,
+      idempotencyKey,
+      orderNote,
+      trackingInfo,
+    } = req.body;
 
     if (idempotencyKey) {
       const existingOrder = await Order.findOne({
@@ -243,6 +253,11 @@ router.post("/cod", protect, async (req, res) => {
 
     const order = new Order({
       user: req.user._id,
+      attribution: buildAttribution(trackingInfo, {
+        customerName: req.user?.name || "",
+        customerEmail: req.user?.email || "",
+        customerPhone: shippingAddress?.phone || "",
+      }),
       orderItems: orderItems.map((item) => ({
         productId: item.productId,
         name: item.name,
@@ -294,6 +309,12 @@ router.post("/cod", protect, async (req, res) => {
     };
 
     const createdOrder = await order.save();
+    if (createdOrder?.attribution?.campaignClickId) {
+      await registerCampaignConversion({
+        campaignClickId: createdOrder.attribution.campaignClickId,
+        orderId: createdOrder._id,
+      });
+    }
     await Promise.all([
       deleteJson("users", `user:${req.user._id}:my-coupon`),
       deleteJson("users", `user:${req.user._id}:my-coupons`),

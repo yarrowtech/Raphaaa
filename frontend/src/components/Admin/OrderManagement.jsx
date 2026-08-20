@@ -799,6 +799,10 @@ const OrderManagement = () => {
                   {[
                     { label: "Customer",   value: selectedOrder.user?.name || "Unknown" },
                     { label: "Email",      value: selectedOrder.user?.email || "N/A" },
+                    {
+                      label: "Source",
+                      value: selectedOrder.attribution?.source || "direct",
+                    },
                     { label: "Payment",    value: selectedOrder.paymentMethod },
                     { label: "Ordered On", value: new Date(selectedOrder.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) },
                     {
@@ -828,6 +832,16 @@ const OrderManagement = () => {
                         ? `${selectedOrder.shippingAddress.address}, ${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.postalCode}, ${selectedOrder.shippingAddress.country}`
                         : "N/A"}
                     </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-400 mb-1">Attribution Snapshot</p>
+                    <div className="text-xs text-gray-700 space-y-1">
+                      <p><span className="text-gray-400">Landing:</span> {selectedOrder.attribution?.landingPage || "N/A"}</p>
+                      <p><span className="text-gray-400">Referrer:</span> {selectedOrder.attribution?.referrer || "N/A"}</p>
+                      <p><span className="text-gray-400">Customer:</span> {selectedOrder.attribution?.customerName || selectedOrder.user?.name || selectedOrder.guestName || "N/A"}</p>
+                      <p><span className="text-gray-400">Contact:</span> {selectedOrder.attribution?.customerEmail || selectedOrder.user?.email || selectedOrder.guestEmail || "N/A"}</p>
+                    </div>
                   </div>
 
                   <div className="pt-2 border-t border-gray-100">

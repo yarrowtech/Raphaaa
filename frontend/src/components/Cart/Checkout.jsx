@@ -18,6 +18,7 @@ import {
   fetchProductDetails,
   fetchSimilarProducts,
 } from "../../redux/slices/productsSlice";
+import { buildOrderAttribution } from "../../utils/attribution";
 import AddressForm from "./AddressForm";
 import {
   FaPlus, FaLock, FaTruck, FaUndo, FaMapMarkerAlt,
@@ -554,6 +555,11 @@ const Checkout = () => {
         walletRedeem,
         orderNote:     orderNote.trim() || undefined,
         idempotencyKey: uuidv4(),
+        trackingInfo: buildOrderAttribution({
+          customerName: user?.name || fullUser?.name || "",
+          customerEmail: user?.email || fullUser?.email || "",
+          customerPhone: shippingAddress.phone || "",
+        }),
       };
 
       try {

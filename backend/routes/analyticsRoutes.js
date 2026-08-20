@@ -217,5 +217,67 @@ router.get("/retention-cohorts", protect, adminOrMerchantise, async (req, res) =
   }
 });
 
-module.exports = router;
+// @route GET /api/admin/analytics/source-report?from&to
+router.get("/source-report", protect, async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "admin" && role !== "marketing") {
+    return res.status(403).json({ success: false, message: "Not authorized" });
+  }
 
+  const to = parseDate(req.query.to, new Date());
+  const from = parseDate(req.query.from, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+  try {
+    const match = { createdAt: { $gte: from, $lte: to } };
+    const rows = await Order.aggregate([
+      { $match: match },
+      {
+        $addFields: {
+          source: { $ifNull: ["$attribution.source", "direct"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$source",
+          orders: { $sum: 1 },
+          revenue: { $sum: { $ifNull: ["$totalPrice", 0] } },
+          lastOrderAt: { $max: "$createdAt" },
+        },
+      },
+      { $sort: { orders: -1, revenue: -1 } },
+    ]);
+
+    const recentOrders = await Order.find(match)
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .select("orderId totalPrice createdAt attribution user guestName guestEmail paymentStatus status")
+      .populate("user", "name email")
+      .lean();
+
+    res.json({
+      success: true,
+      from,
+      to,
+      rows: rows.map((row) => ({
+        source: row._id || "direct",
+        orders: row.orders || 0,
+        revenue: Math.round(Number(row.revenue || 0) * 100) / 100,
+        lastOrderAt: row.lastOrderAt || null,
+      })),
+      recentOrders: recentOrders.map((order) => ({
+        _id: order._id,
+        orderId: order.orderId,
+        totalPrice: order.totalPrice,
+        createdAt: order.createdAt,
+        source: order.attribution?.source || "direct",
+        customerName: order.attribution?.customerName || order.user?.name || order.guestName || "N/A",
+        customerEmail: order.attribution?.customerEmail || order.user?.email || order.guestEmail || "N/A",
+        landingPage: order.attribution?.landingPage || "",
+      })),
+    });
+  } catch (e) {
+    console.error("analytics source report error:", e);
+    res.status(500).json({ success: false, message: "Failed to load source report" });
+  }
+});
+
+module.exports = router;

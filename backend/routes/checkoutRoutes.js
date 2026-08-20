@@ -6,6 +6,8 @@ const Order = require("../models/Order");
 const { protect, optionalAuth } = require("../middleware/authMiddleware");
 const { priceQuote } = require("../services/pricingService");
 const { getAvailableCredits, redeem } = require("../services/walletService");
+const { buildAttribution } = require("../utils/attribution");
+const { registerCampaignConversion } = require("../utils/campaignTracking");
 
 const router = express.Router();
 
@@ -53,7 +55,7 @@ router.post("/quote", protect, async (req, res) => {
 // @desc Create a new checkout session
 // @access Private
 router.post("/", protect, async (req, res) => {
-    const { checkoutItems, shippingAddress, paymentMethod, couponCodes, walletRedeem } =
+    const { checkoutItems, shippingAddress, paymentMethod, couponCodes, walletRedeem, trackingInfo } =
         req.body;
 
         if(!checkoutItems || checkoutItems.length === 0){
@@ -81,6 +83,10 @@ router.post("/", protect, async (req, res) => {
                 shippingAddress,
                 paymentMethod,
                 totalPrice: totalAfterWallet,
+                attribution: buildAttribution(trackingInfo, {
+                  customerName: req.user?.name || "",
+                  customerEmail: req.user?.email || "",
+                }),
                 pricing: {
                   ...quote,
                   wallet: { balance: walletBalance, requested, applied: walletApplied },
@@ -144,12 +150,19 @@ router.post("/:id/finalize", protect, async(req, res) => {
                 shippingAddress: checkout.shippingAddress,
                 paymentMethod: checkout.paymentMethod,
                 totalPrice: checkout.totalPrice,
+                attribution: checkout.attribution || undefined,
                 isPaid: true,
                 paidAt: checkout.paidAt,
                 isDelivered: false,
                 paymentStatus: "paid",
                 paymentDetails: checkout.paymentDetails,
             });
+            if (finalOrder?.attribution?.campaignClickId) {
+              await registerCampaignConversion({
+                campaignClickId: finalOrder.attribution.campaignClickId,
+                orderId: finalOrder._id,
+              });
+            }
 
             // Wallet redemption is applied at finalize to prevent double-spend on abandoned checkouts.
             const walletApplied = Number(checkout?.pricing?.wallet?.applied || 0);
@@ -204,7 +217,7 @@ router.post("/guest-quote", async (req, res) => {
 // @access Public
 router.post("/guest-order", async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod, totalPrice, guestEmail, guestName } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, totalPrice, guestEmail, guestName, trackingInfo } = req.body;
 
     if (!Array.isArray(orderItems) || orderItems.length === 0)
       return res.status(400).json({ message: "no items in order" });
@@ -217,6 +230,11 @@ router.post("/guest-order", async (req, res) => {
       user: null,
       guestEmail,
       guestName: guestName || guestEmail,
+      attribution: buildAttribution(trackingInfo, {
+        customerName: guestName || guestEmail || "",
+        customerEmail: guestEmail || "",
+        customerPhone: shippingAddress?.phone || "",
+      }),
       orderItems,
       shippingAddress,
       paymentMethod,
@@ -224,6 +242,12 @@ router.post("/guest-order", async (req, res) => {
       isPaid: paymentMethod === "cash_on_delivery" ? false : false,
       paymentStatus: "Pending",
     });
+    if (order?.attribution?.campaignClickId) {
+      await registerCampaignConversion({
+        campaignClickId: order.attribution.campaignClickId,
+        orderId: order._id,
+      });
+    }
 
     res.status(201).json({ success: true, order });
   } catch (error) {

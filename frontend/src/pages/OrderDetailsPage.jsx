@@ -681,6 +681,43 @@ const OrderDetailsPage = () => {
             </div>
           </div>
 
+          {/* Attribution */}
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-3">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Attribution</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-gray-500">Source</span>
+                <span className="font-semibold text-gray-800 capitalize">
+                  {orderDetails.attribution?.source || "direct"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-gray-500">Customer</span>
+                <span className="text-right text-gray-700">
+                  {orderDetails.attribution?.customerName || orderDetails.user?.name || orderDetails.guestName || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-gray-500">Email</span>
+                <span className="text-right text-gray-700 break-all">
+                  {orderDetails.attribution?.customerEmail || orderDetails.user?.email || orderDetails.guestEmail || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-gray-500">Referrer</span>
+                <span className="text-right text-gray-700 break-all">
+                  {orderDetails.attribution?.referrer || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-gray-500">Landing</span>
+                <span className="text-right text-gray-700 break-all">
+                  {orderDetails.attribution?.landingPage || "N/A"}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Payment */}
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-3">
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Payment</p>

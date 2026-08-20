@@ -50,10 +50,26 @@
 
 // backend/controller/campaignController.js
 const Campaign = require("../models/campaignModel");
+const {
+  registerCampaignClick,
+  registerCampaignConversion,
+  buildCampaignLandingUrl,
+} = require("../utils/campaignTracking");
 
 // CRUD (you already reference these in routes)
 exports.createCampaign = async (req, res) => {
-  const doc = await Campaign.create({ ...req.body, createdBy: req.user._id });
+  const productUrl = req.body?.productUrl || req.body?.utmLink || "";
+  const utmLink = buildCampaignLandingUrl({
+    productUrl,
+    platform: req.body?.platform,
+    name: req.body?.name,
+  });
+  const doc = await Campaign.create({
+    ...req.body,
+    productUrl,
+    utmLink,
+    createdBy: req.user._id,
+  });
   res.status(201).json({ data: doc });
 };
 exports.getCampaigns = async (req, res) => {
@@ -61,7 +77,18 @@ exports.getCampaigns = async (req, res) => {
   res.json({ data: docs });
 };
 exports.updateCampaign = async (req, res) => {
-  const doc = await Campaign.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const existing = await Campaign.findById(req.params.id);
+  const productUrl = req.body?.productUrl ?? existing?.productUrl ?? req.body?.utmLink ?? existing?.utmLink ?? "";
+  const utmLink = buildCampaignLandingUrl({
+    productUrl,
+    platform: req.body?.platform ?? existing?.platform,
+    name: req.body?.name ?? existing?.name,
+  });
+  const doc = await Campaign.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, productUrl, utmLink },
+    { new: true }
+  );
   res.json({ data: doc });
 };
 exports.deleteCampaign = async (req, res) => {
@@ -71,13 +98,17 @@ exports.deleteCampaign = async (req, res) => {
 
 // Tracking: redirect -> +1 click, then go to UTM link
 exports.redirectAndTrack = async (req, res) => {
-  const c = await Campaign.findByIdAndUpdate(
-    req.params.id,
-    { $inc: { clicks: 1 } },
-    { new: true }
-  );
+  const c = await Campaign.findById(req.params.id);
   if (!c || !c.utmLink) return res.status(404).send("Campaign not found");
-  return res.redirect(c.utmLink);
+
+  const tracked = await registerCampaignClick(req, c);
+  res.cookie?.("raphaaa_campaign_click_id", tracked.clickId, {
+    httpOnly: false,
+    sameSite: "Lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 * 24 * 30,
+  });
+  return res.redirect(tracked.targetUrl);
 };
 
 // Tracking: impression pixel (use GET for <img/> beacons)
@@ -95,6 +126,11 @@ exports.pixel = async (req, res) => {
 
 // Tracking: conversion (call from order success)
 exports.trackConversion = async (req, res) => {
-  await Campaign.findByIdAndUpdate(req.params.id, { $inc: { conversions: 1 } });
+  const clickId = req.body?.campaignClickId || req.query?.campaignClickId || req.query?.campaign_click_id;
+  if (clickId) {
+    await registerCampaignConversion({ campaignClickId: clickId, orderId: req.body?.orderId });
+  } else {
+    await Campaign.findByIdAndUpdate(req.params.id, { $inc: { conversions: 1 } });
+  }
   res.json({ success: true });
 };
