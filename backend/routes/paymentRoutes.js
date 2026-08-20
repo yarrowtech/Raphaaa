@@ -334,6 +334,7 @@ const sendWhatsApp = require("../utils/sendWhatsApp");
 const { sendPushToUser } = require("../utils/push");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
 const { deleteJson } = require("../utils/redisCache");
+const { fulfillPrebookingsForOrder } = require("../utils/prebooking");
 
 const applyVariantStockDeduction = (product, item) => {
   const qty = Number(item?.quantity || 0);
@@ -844,6 +845,12 @@ router.post("/verify-payment", protect, async (req, res) => {
       }
 
       console.log("Payment verification completed successfully for order:", order._id);
+
+      await fulfillPrebookingsForOrder({
+        userId: order.user,
+        orderItems: order.orderItems,
+        orderId: order._id,
+      });
 
       // Prepare populated order once for post-payment side effects
       let populatedOrder = null;

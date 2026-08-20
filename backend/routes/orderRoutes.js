@@ -69,6 +69,7 @@ const { getJson, setJson, deleteJson } = require("../utils/redisCache");
 const { priceQuote } = require("../services/pricingService");
 const { getAvailableCredits, redeem } = require("../services/walletService");
 const { creditReferrerOnFirstOrder } = require("./referralRoutes");
+const { fulfillPrebookingsForOrder } = require("../utils/prebooking");
 
 const USER_CANCELLABLE_STATUSES = new Set(["Processing", "Packed", "Transfer"]);
 const USER_CANCEL_WINDOW_HOURS = Number(process.env.USER_CANCEL_WINDOW_HOURS || 24);
@@ -297,6 +298,12 @@ router.post("/cod", protect, async (req, res) => {
       deleteJson("users", `user:${req.user._id}:my-coupon`),
       deleteJson("users", `user:${req.user._id}:my-coupons`),
     ]);
+
+    await fulfillPrebookingsForOrder({
+      userId: req.user._id,
+      orderItems: createdOrder.orderItems,
+      orderId: createdOrder._id,
+    });
 
     if (walletApplied > 0) {
       await redeem({

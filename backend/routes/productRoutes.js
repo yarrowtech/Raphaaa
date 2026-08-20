@@ -13,9 +13,10 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const { checkDeliveryServiceability } = require("../utils/shiprocket");
 const { triggerBackInStockForProduct, triggerPriceDropForProduct } = require("../services/alertService");
-const { getJson, setJson } = require("../utils/redisCache");
+const { getJson, setJson, deleteByPrefix } = require("../utils/redisCache");
 const { decorateProductWithTimedOffer } = require("../utils/timedOfferPricing");
 const { getCanonicalAudience } = require("../utils/sizeChartAudience");
+const { applyPrebookingConfigUpdate } = require("../utils/prebooking");
 
 const router = express.Router();
 
@@ -239,6 +240,7 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
       sizeChart,
       returnPolicy,
       draftState,
+      prebooking,
     } = req.body;
 
     const normalizeSizeChart = (value) => {
@@ -315,12 +317,20 @@ router.post("/", protect, admin, adminOrMerchantise, async (req, res) => {
         days: Number.isFinite(Number(returnPolicy?.days)) ? Math.max(0, Number(returnPolicy.days)) : 7,
         text: String(returnPolicy?.text || "").trim(),
       },
+      prebooking: prebooking !== undefined
+        ? {
+            enabled: Boolean(prebooking.enabled),
+            limit: Math.max(0, Number(prebooking.limit || 0)),
+          }
+        : undefined,
       draftState: isPublished ? null : (draftState ?? null),
       user: req.user._id,
     });
 
     const createdProduct = await product.save();
     res.status(201).json(createdProduct);
+
+    deleteByPrefix("products").catch(() => {});
 
     // Send notifications after responding. Do not fail product creation if email fails.
     try {
@@ -872,6 +882,7 @@ router.put("/:id", protect, admin, async (req, res) => {
       sizeChart,
       returnPolicy,
       draftState,
+      prebooking,
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -957,6 +968,9 @@ router.put("/:id", protect, admin, async (req, res) => {
       product.offerPercentage = cleanNum(offerPercentage) ?? 0;
       product.sizeChart = sizeChart ? normalizeSizeChart(sizeChart) : product.sizeChart;
       product.draftState = product.isPublished ? null : (draftState ?? product.draftState ?? null);
+      if (prebooking !== undefined) {
+        applyPrebookingConfigUpdate(product, { enabled: prebooking.enabled, limit: prebooking.limit });
+      }
       if (returnPolicy !== undefined) {
         product.returnPolicy = {
           eligible: returnPolicy?.eligible !== false,
@@ -967,6 +981,8 @@ router.put("/:id", protect, admin, async (req, res) => {
 
       const updatedProduct = await product.save();
       res.json(updatedProduct);
+
+      deleteByPrefix("products").catch(() => {});
 
       // Non-blocking triggers
       try {
@@ -1003,6 +1019,7 @@ router.delete("/:id", protect, admin, async (req, res) => {
       // Remove the product from the database
       await product.deleteOne();
       res.json({ message: "Product Removed" });
+      deleteByPrefix("products").catch(() => {});
     } else {
       res.status(404).json({ message: "Product not found" }); // Fixed typo: was "re.status" and "Peoduct"
     }

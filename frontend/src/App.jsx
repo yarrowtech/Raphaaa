@@ -18,6 +18,8 @@ import Checkout from "./components/Cart/Checkout";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import MyOrders from "./pages/MyOrdersPage";
+import MyPrebookings from "./pages/MyPrebookings";
+import AdminPrebookings from "./pages/AdminPrebookings";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminHomePage from "./pages/AdminHomePage";
 import UserManagement from "./components/Admin/UserManagement";
@@ -158,6 +160,14 @@ const App = () => {
                 </div>
               </div>
             } />
+            <Route
+              path="/prebookings"
+              element={
+                <ProtectedRoute>
+                  <MyPrebookings />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/about" element={<About />} />
             <Route path="/contact-us" element={<Contact />} />
             <Route path="/refer"               element={<ReferAndEarn />} />
@@ -274,6 +284,14 @@ const App = () => {
               element={
                 <ProtectedRoute role={["admin", "merchantise"]}>
                   <ProductManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="prebookings"
+              element={
+                <ProtectedRoute role={["admin", "merchantise"]}>
+                  <AdminPrebookings />
                 </ProtectedRoute>
               }
             />

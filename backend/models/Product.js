@@ -241,6 +241,17 @@ const productSchema = new mongoose.Schema({
     washCare:            { type: String,  default: "" },
     netQuantity:         { type: String,  default: "" },
     manufacturerInfo:    { type: String,  default: "" },
+    // Prebooking — lets customers reserve a limited-slot product that isn't in stock yet
+    prebooking: {
+        enabled:     { type: Boolean, default: false },
+        limit:       { type: Number,  default: 0, min: 0 }, // max number of prebooking slots
+        bookedCount: { type: Number,  default: 0, min: 0 }, // slots taken so far in the current round
+        status:      { type: String,  enum: ["open", "ready", "closed"], default: "open" },
+        readyAt:     { type: Date,    default: null },
+        // Bumped every time prebooking is re-enabled after being disabled, so each
+        // enable → (ready) → disable cycle is its own distinct, independently-tracked round.
+        round:       { type: Number,  default: 1, min: 1 },
+    },
 },
 {timestamps: true}
 );

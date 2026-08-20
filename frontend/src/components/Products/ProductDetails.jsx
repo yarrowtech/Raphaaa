@@ -1710,6 +1710,10 @@ const ProductDetails = ({ productId }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [reviews, setReviews] = useState([]);
 
+  // Prebooking (products not yet in stock but reservable up to a slot limit)
+  const [myPrebooking, setMyPrebooking] = useState(null); // this user's booking for this product, if any
+  const [prebookSubmitting, setPrebookSubmitting] = useState(false);
+
   // New state for pincode delivery check
   const [pincode, setPincode] = useState("");
   const [deliveryInfo, setDeliveryInfo] = useState(null);
@@ -1912,6 +1916,12 @@ const ProductDetails = ({ productId }) => {
     : overallStock;
 
   const isOutOfStock = overallStock <= 0 || (selectedSize ? selectedVariantStock <= 0 : false);
+
+  // Prebooking products are expected to have 0 stock while "in the making" — size/color
+  // selection must still work so the customer can tell us what they want reserved.
+  const isPrebookOpenMode = Boolean(
+    selectedProduct?.prebooking?.enabled && selectedProduct?.prebooking?.status === "open"
+  );
   const resolveTimedOffer = (product) => {
     const timed = product?.timedOffer || null;
     if (timed) return timed;
@@ -2123,6 +2133,53 @@ const ProductDetails = ({ productId }) => {
 
   const isInWishlist = (productId) => {
     return wishlistItems.some((item) => item._id === productId);
+  };
+
+  // Prebooking: load this user's booking status for the current product
+  useEffect(() => {
+    const productId = selectedProduct?._id;
+    if (!productId || !selectedProduct?.prebooking?.enabled) {
+      setMyPrebooking(null);
+      return;
+    }
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      setMyPrebooking(null);
+      return;
+    }
+    axios
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/prebookings/mine/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(({ data }) => setMyPrebooking(data))
+      .catch(() => setMyPrebooking(null));
+  }, [selectedProduct?._id, selectedProduct?.prebooking?.enabled]);
+
+  const handlePrebook = async () => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      toast.warning("Please login to prebook this product");
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (hasColorVariants && (!selectedColor || !selectedSize)) {
+      toast.warning("Please select a color and size before prebooking");
+      return;
+    }
+    setPrebookSubmitting(true);
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/prebookings/${selectedProduct._id}`,
+        { size: selectedSize, color: selectedColor },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMyPrebooking(data);
+      toast.success("You're in! We'll email you the moment this product is ready.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to reserve a prebooking slot");
+    } finally {
+      setPrebookSubmitting(false);
+    }
   };
 
   const handleRemoveFromWishlist = async (productId) => {
@@ -3332,7 +3389,7 @@ const ProductDetails = ({ productId }) => {
                     <div className="flex flex-wrap gap-3">
                       {effectiveSizes.map((size) => {
                         const sizeStock = getSizeStock(size);
-                        const outOfStock = sizeStock <= 0;
+                        const outOfStock = !isPrebookOpenMode && sizeStock <= 0;
                         const isLow     = !outOfStock && sizeStock <= 5;
 
                         return (
@@ -3410,8 +3467,47 @@ const ProductDetails = ({ productId }) => {
                   </div>
                 </div>
 
+                {/* Prebooking banner — only shown while still open, or to the specific
+                    user who prebooked it (once ready, everyone else sees a normal product page) */}
+                {selectedProduct?.prebooking?.enabled && selectedProduct.prebooking.status === "open" && (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3.5 text-sm text-violet-800 space-y-2.5">
+                    <p className="font-semibold">You can prebook it here.</p>
+                    {myPrebooking && myPrebooking.status === "booked" ? (
+                      <p className="text-xs font-semibold text-emerald-700">
+                        🎉 You've reserved a spot
+                        {(myPrebooking.color || myPrebooking.size) && (
+                          <> — {[myPrebooking.color, myPrebooking.size].filter(Boolean).join(", ")}</>
+                        )}
+                        ! You will be notified when it's ready.
+                      </p>
+                    ) : Number(selectedProduct.prebooking.bookedCount) >= Number(selectedProduct.prebooking.limit) ? (
+                      <p className="text-xs font-semibold text-red-600">All prebooking slots are full.</p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handlePrebook}
+                        disabled={prebookSubmitting}
+                        className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition disabled:opacity-50"
+                      >
+                        {prebookSubmitting ? "Reserving…" : "Prebook Now"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {selectedProduct?.prebooking?.enabled &&
+                  selectedProduct.prebooking.status === "ready" &&
+                  myPrebooking &&
+                  ["ready", "fulfilled"].includes(myPrebooking.status) && (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm text-emerald-800">
+                      <p className="font-semibold">
+                        ✅ Your prebooked item is ready — proceed to buy it below.
+                      </p>
+                    </div>
+                  )}
+
                 {/* CTA Buttons */}
-                {!isOutOfStock ? (
+                {selectedProduct?.prebooking?.enabled && selectedProduct.prebooking.status === "open" ? null : !isOutOfStock ? (
                   <div className="flex gap-3 flex-col sm:flex-row">
                     <button
                       onClick={handleAddToCart}

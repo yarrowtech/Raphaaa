@@ -94,6 +94,8 @@ const getInitialProductData = () => ({
   netQuantity: "1 Piece",
   manufacturerInfo: "",
   images: [],
+  prebookingEnabled: false,
+  prebookingLimit: "",
 });
 
 const normalizeDraftProductData = (data = {}) => ({
@@ -221,6 +223,12 @@ const AddProduct = () => {
       washCare: normalizedProductData.washCare || undefined,
       netQuantity: normalizedProductData.netQuantity || undefined,
       manufacturerInfo: normalizedProductData.manufacturerInfo || undefined,
+      prebooking: {
+        enabled: Boolean(normalizedProductData.prebookingEnabled),
+        limit: normalizedProductData.prebookingLimit === "" || normalizedProductData.prebookingLimit == null
+          ? 0
+          : Number(normalizedProductData.prebookingLimit),
+      },
       isPublished: false,
       draftState: buildDraftState(nextProductData, nextColorVariants),
     };
@@ -276,6 +284,12 @@ const AddProduct = () => {
       washCare: normalizedProductData.washCare || undefined,
       netQuantity: normalizedProductData.netQuantity || undefined,
       manufacturerInfo: normalizedProductData.manufacturerInfo || undefined,
+      prebooking: {
+        enabled: Boolean(normalizedProductData.prebookingEnabled),
+        limit: normalizedProductData.prebookingLimit === "" || normalizedProductData.prebookingLimit == null
+          ? 0
+          : Number(normalizedProductData.prebookingLimit),
+      },
       tags: normalizedProductData.tags
         ? normalizedProductData.tags.split(",").map((t) => t.trim()).filter(Boolean)
         : [],
@@ -378,6 +392,8 @@ const AddProduct = () => {
             sizeChart: data.sizeChart || { imageUrl: "", title: "Size Chart" },
             isFeatured: data.isFeatured || false,
             isPublished: data.isPublished || false,
+            prebookingEnabled: data.prebooking?.enabled || false,
+            prebookingLimit: data.prebooking?.limit || "",
             tags: Array.isArray(data.tags) ? data.tags.join(", ") : (data.tags || ""),
             dimensions: data.dimensions || { length: "", width: "", height: "" },
             weight: data.weight ?? "",
@@ -894,6 +910,37 @@ const AddProduct = () => {
                 </div>
               </label>
             ))}
+          </div>
+        </SectionCard>
+
+        {/* Prebooking */}
+        <SectionCard title="Prebooking" subtitle="Let customers reserve this product before it's in stock, up to a slot limit">
+          <div className="flex flex-wrap items-start gap-6">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="relative mt-0.5">
+                <input type="checkbox" name="prebookingEnabled"
+                  checked={productData.prebookingEnabled} onChange={handleProductChange}
+                  className="sr-only peer" />
+                <div className="w-10 h-5 rounded-full bg-gray-200 peer-checked:bg-violet-600 transition-colors" />
+                <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Enable Prebooking</p>
+                <p className="text-xs text-gray-400">Shows a "Prebook Now" option instead of Add to Cart</p>
+              </div>
+            </label>
+
+            {productData.prebookingEnabled && (
+              <Field label="Slot Limit">
+                <input
+                  type="number" name="prebookingLimit" min="1"
+                  value={productData.prebookingLimit}
+                  onChange={handleProductChange}
+                  placeholder="e.g. 100"
+                  className={inputCls}
+                />
+              </Field>
+            )}
           </div>
         </SectionCard>
 

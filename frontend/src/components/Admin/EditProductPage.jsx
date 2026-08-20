@@ -101,6 +101,7 @@ const EditProductPage = () => {
     offerPercentage: 0, discountPrice: 0,
     isFeatured: false, isPublished: false, tags: "",
     dimensions: { length: "", width: "", height: "" }, weight: "",
+    prebookingEnabled: false, prebookingLimit: "",
   });
 
   const [colorVariants, setColorVariants] = useState([]);
@@ -181,6 +182,8 @@ const EditProductPage = () => {
       discountPrice:  savedProductData.discountPrice ?? selectedProduct.discountPrice ?? 0,
       isFeatured:     savedProductData.isFeatured ?? selectedProduct.isFeatured ?? false,
       isPublished:    savedProductData.isPublished ?? selectedProduct.isPublished ?? false,
+      prebookingEnabled: savedProductData.prebookingEnabled ?? selectedProduct.prebooking?.enabled ?? false,
+      prebookingLimit:   savedProductData.prebookingLimit ?? selectedProduct.prebooking?.limit ?? "",
       tags:           Array.isArray(savedProductData.tags)
                         ? savedProductData.tags.join(", ")
                         : (savedProductData.tags ?? (Array.isArray(selectedProduct.tags) ? selectedProduct.tags.join(", ") : (selectedProduct.tags || ""))),
@@ -448,6 +451,12 @@ const EditProductPage = () => {
         title: productData.sizeChart?.title || "Size Chart",
         audience: productData.sizeChart?.audience || "Unisex",
       },
+      prebooking: {
+        enabled: Boolean(productData.prebookingEnabled),
+        limit: productData.prebookingLimit === "" || productData.prebookingLimit == null
+          ? 0
+          : Number(productData.prebookingLimit),
+      },
       draftState: null,
     };
 
@@ -684,6 +693,47 @@ const EditProductPage = () => {
                 </div>
               </label>
             ))}
+          </div>
+        </SectionCard>
+
+        {/* ── Prebooking ── */}
+        <SectionCard title="Prebooking" subtitle="Let customers reserve this product before it's in stock, up to a slot limit">
+          <div className="flex flex-wrap items-start gap-6">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="relative mt-0.5">
+                <input type="checkbox" name="prebookingEnabled" checked={productData.prebookingEnabled}
+                  onChange={handleChange} className="sr-only peer" />
+                <div className="w-10 h-5 rounded-full bg-gray-200 peer-checked:bg-violet-600 transition-colors" />
+                <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Enable Prebooking</p>
+                <p className="text-xs text-gray-400">Shows a "Prebook Now" option instead of Add to Cart</p>
+              </div>
+            </label>
+
+            {productData.prebookingEnabled && (
+              <Field label="Slot Limit">
+                <input
+                  type="number" name="prebookingLimit" min="1"
+                  value={productData.prebookingLimit}
+                  onChange={handleChange}
+                  placeholder="e.g. 100"
+                  className={inputCls}
+                />
+              </Field>
+            )}
+
+            {selectedProduct?.prebooking?.enabled && (
+              <div className="text-xs text-gray-500">
+                <p><span className="font-semibold text-gray-700">{selectedProduct.prebooking.bookedCount || 0}</span> booked so far</p>
+                <p className="mt-0.5">
+                  Status: <span className="font-semibold text-gray-700 capitalize">{selectedProduct.prebooking.status}</span>
+                  {" · "}manage readiness &amp; notify bookers from{" "}
+                  <Link to="/admin/prebookings" className="text-violet-600 hover:underline">Admin → Prebookings</Link>
+                </p>
+              </div>
+            )}
           </div>
         </SectionCard>
 

@@ -49,12 +49,16 @@ const AutoLogout = () => {
       (error) => {
         if (error?.response?.status === 401) {
           const storedToken = localStorage.getItem("userToken");
-          // Only force a global logout if the stored token is actually expired/missing.
-          // A 401 from a single request (e.g. a background wishlist check) doesn't mean
-          // the whole session is invalid — don't punish the user for an unrelated failure.
-          const expiryMs = getTokenExpiryMs(storedToken);
-          if (!storedToken || (expiryMs && expiryMs <= Date.now())) {
-            forceLogout(true);
+          // No token at all means a guest — there's no session to have expired, so a 401
+          // from some unauthenticated background request is expected; don't show the dialog.
+          if (storedToken) {
+            // Only force a global logout if the stored token is actually expired/invalid.
+            // A 401 from a single request (e.g. a background wishlist check) doesn't mean
+            // the whole session is invalid — don't punish the user for an unrelated failure.
+            const expiryMs = getTokenExpiryMs(storedToken);
+            if (!expiryMs || expiryMs <= Date.now()) {
+              forceLogout(true);
+            }
           }
         }
         return Promise.reject(error);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { IoFlash } from "react-icons/io5";
-import { BsImageAlt } from "react-icons/bs";
+import { BsImageAlt, BsHourglassSplit } from "react-icons/bs";
 import { HiSparkles } from "react-icons/hi2";
 
 const ProductCard = ({ product, badge }) => {
@@ -38,6 +38,9 @@ const ProductCard = ({ product, badge }) => {
   const isNew =
     product?.createdAt &&
     new Date() - new Date(product.createdAt) < 2 * 24 * 60 * 60 * 1000;
+
+  const isPrebooking =
+    product?.prebooking?.enabled && product.prebooking.status === "open";
 
   return (
     <Link
@@ -79,6 +82,20 @@ const ProductCard = ({ product, badge }) => {
                 New
               </span>
               <span className="absolute -bottom-1.25 left-0 w-0 h-0 border-t-[5px] border-t-sky-800 border-r-[5px] border-r-transparent" />
+            </div>
+          )}
+
+          {/* "Prebooking" ribbon badge */}
+          {isPrebooking && (
+            <div className="absolute bottom-7 left-0 z-10 drop-shadow-md">
+              <span
+                className="flex items-center gap-1 bg-violet-600 text-white text-[10px] font-bold pl-2.5 pr-4 py-1"
+                style={{ clipPath: "polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%)" }}
+              >
+                <BsHourglassSplit className="text-[10px] shrink-0" />
+                Prebook
+              </span>
+              <span className="absolute -top-1.25 left-0 w-0 h-0 border-b-[5px] border-b-violet-800 border-r-[5px] border-r-transparent" />
             </div>
           )}
 

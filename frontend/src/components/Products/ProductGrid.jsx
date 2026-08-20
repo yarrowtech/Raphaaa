@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import demoImg from "../../assets/login.jpg";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { HiChevronLeft, HiChevronRight, HiSparkles } from "react-icons/hi2";
+import { BsHourglassSplit } from "react-icons/bs";
 import axios from "axios";
 import { toast } from "sonner";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
@@ -209,6 +210,7 @@ const ProductGrid = ({ products = [], loading, error }) => {
         {list.map((product) => {
           const img        = product.colorVariants?.[0]?.images?.[0]?.url || product.images?.[0]?.url || demoImg;
           const isNew      = Date.now() - new Date(product.createdAt).getTime() < 2 * 24 * 60 * 60 * 1000;
+          const isPrebooking = product?.prebooking?.enabled && product.prebooking.status === "open";
           const productColors     = getProductColors(product);
           const timedOffer = resolveOfferForProduct(product);
           const saleLive   = isSaleLive(timedOffer);
@@ -297,6 +299,20 @@ const ProductGrid = ({ products = [], loading, error }) => {
                       </span>
                     )}
                   </div>
+
+                  {/* "Prebook" ribbon badge — bottom-left corner */}
+                  {isPrebooking && (
+                    <div className="absolute bottom-3 left-0 z-10 drop-shadow-md">
+                      <span
+                        className="flex items-center gap-1 bg-violet-600 text-white text-[10px] font-bold pl-2.5 pr-4 py-1"
+                        style={{ clipPath: "polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%)" }}
+                      >
+                        <BsHourglassSplit className="text-[10px] shrink-0" />
+                        Prebook
+                      </span>
+                      <span className="absolute -top-1.25 left-0 w-0 h-0 border-b-[5px] border-b-violet-800 border-r-[5px] border-r-transparent" />
+                    </div>
+                  )}
 
                   {/* Color swatches — tight white pill in bottom-right corner */}
                   {productColors.length > 0 && (

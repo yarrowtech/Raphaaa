@@ -52,9 +52,9 @@ const UserLayout = () => {
     <>
       <div
         className={
-          isCollectionsPage
+          isCollectionsPage || isCheckoutPage
             ? "hidden lg:block"
-            : isCheckoutPage || isWishlistPage || isRecentlyViewedPage || isMyActivityPage
+            : isWishlistPage || isRecentlyViewedPage || isMyActivityPage
               ? "hidden"
               : ""
         }

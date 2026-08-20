@@ -245,6 +245,7 @@ const AdminSidebar = () => {
               <SubItem to="/admin/add-product" icon={HiPlusCircle}  label="Add Product" />
               <SubItem to="/admin/products"    icon={FaShoppingBag} label="All Products" />
               <SubItem to="/admin/size-charts" icon={FaRulerCombined} label="Size Charts" />
+              <SubItem to="/admin/prebookings" icon={FaBoxOpen}     label="Prebookings" />
             </AccordionGroup>
             {(isAdmin) && (
               <AccordionGroup icon={BiSolidOffer} label="Offers">

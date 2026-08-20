@@ -76,8 +76,27 @@ const deleteJson = async (scope, key) => {
   }
 };
 
+// Wipes every cached key under a scope — needed where keys are built from a variable
+// request (e.g. the product list's cache key includes the full query string), so a
+// single mutation (create/update/delete) can't be invalidated by one exact key.
+const deleteByPrefix = async (scope) => {
+  try {
+    const c = await getClient();
+    if (!c) return false;
+    const prefix = buildKey(scope, "");
+    for await (const key of c.scanIterator({ MATCH: `${prefix}*`, COUNT: 100 })) {
+      await c.del(key);
+    }
+    return true;
+  } catch (err) {
+    console.error("Redis deleteByPrefix failed:", err.message);
+    return false;
+  }
+};
+
 module.exports = {
   getJson,
   setJson,
   deleteJson,
+  deleteByPrefix,
 };
