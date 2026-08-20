@@ -86,7 +86,10 @@ const AdminHeader = () => {
     if (!isAdmin) return;
     const fetchContacts = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/contact`);
+        const token = localStorage.getItem("userToken");
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/contact`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setContacts(res.data);
         setUnreadCount(res.data.length);
       } catch {

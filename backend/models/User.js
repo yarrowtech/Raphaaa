@@ -77,6 +77,21 @@ resetTokenExpire: Date,
         viewedAt: { type: Date, default: Date.now },
       },
     ],
+
+    // Search bar history — either a typed search term, or a product the user
+    // clicked straight from the search suggestions.
+    searchHistory: [
+      {
+        type: { type: String, enum: ["term", "product"], required: true },
+        term: { type: String, trim: true, default: "" },
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          default: null,
+        },
+        searchedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

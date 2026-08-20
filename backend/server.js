@@ -197,6 +197,7 @@ app.use("/api/admin/analytics", analyticsRoutes);
 app.use("/api/qa", require("./routes/productQARoutes"));
 app.use("/api/shipping-config", require("./routes/shippingConfigRoutes"));
 app.use("/api/prebookings", require("./routes/prebookingRoutes"));
+app.use("/api/search-history", require("./routes/searchHistoryRoutes"));
 app.use("/api/legal", require("./routes/legalRoutes"));
 app.use("/api/referral", require("./routes/referralRoutes"));
 app.use("/sitemap.xml",  require("./routes/sitemapRoutes"));

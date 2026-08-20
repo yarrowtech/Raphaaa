@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const ContactSetting = require("../models/ContactSetting");
+const { protect, adminOrMerchantise } = require("../middleware/authMiddleware");
 
 // @desc Get contact settings
 // @route GET /api/settings/contact
@@ -18,7 +19,7 @@ router.get("/", async (req, res) => {
 // @desc Update contact settings
 // @route PUT /api/settings/contact
 // @access Admin
-router.put("/", async (req, res) => {
+router.put("/", protect, adminOrMerchantise, async (req, res) => {
   try {
     const data = req.body;
     let setting = await ContactSetting.findOne();

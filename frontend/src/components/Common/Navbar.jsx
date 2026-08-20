@@ -19,6 +19,7 @@ const Navbar = () => {
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const [isNavbarFixed, setIsNavbarFixed] = useState(false);
   const [hideOnMobileProfileSubmenu, setHideOnMobileProfileSubmenu] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { cart } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
   const location = useLocation();
@@ -133,7 +134,7 @@ const Navbar = () => {
         </Link>
 
         {/* Center Navigation */}
-        <div className="hidden md:flex space-x-5 xl:space-x-6 items-center">
+        <div className={`${searchOpen ? "hidden" : "hidden md:flex"} space-x-5 xl:space-x-6 items-center`}>
           {/* ✅ Show Exclusive Drop only when collab is active */}
           {collabActive && (
             <Link
@@ -177,7 +178,7 @@ const Navbar = () => {
               user.role === "delivery_boy") && (
               <Link
                 to={user.role === "delivery_boy" ? "/admin/orders" : "/admin"}
-                className="hidden sm:inline-flex px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:shadow-md hover:from-sky-600 hover:to-blue-700 transition-all duration-300 whitespace-nowrap"
+                className={`${searchOpen ? "hidden" : "hidden sm:inline-flex"} px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:shadow-md hover:from-sky-600 hover:to-blue-700 transition-all duration-300 whitespace-nowrap`}
               >
                 {user.role === "admin"
                   ? "Admin Panel"
@@ -191,7 +192,7 @@ const Navbar = () => {
 
           {user ? (
             user.role === "customer" && (
-              <div className="relative hidden md:block" ref={dropdownRef}>
+              <div className={`relative ${searchOpen ? "hidden" : "hidden md:block"}`} ref={dropdownRef}>
                 <button
                   onClick={() => setProfileOpen((prev) => !prev)}
                   className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 transition-all"
@@ -253,7 +254,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/login"
-              className="hidden sm:inline-flex px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:from-sky-600 hover:to-blue-700 transition duration-300 whitespace-nowrap"
+              className={`${searchOpen ? "hidden" : "hidden sm:inline-flex"} px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:from-sky-600 hover:to-blue-700 transition duration-300 whitespace-nowrap`}
               title="Login"
             >
               Login
@@ -282,8 +283,8 @@ const Navbar = () => {
   )}
 </button>
 
-          <div className="block overflow-hidden max-w-[44px] md:max-w-[170px] lg:max-w-[220px]" title="Search">
-            <SearchBar />
+          <div className="block" title="Search">
+            <SearchBar onOpenChange={setSearchOpen} />
           </div>
 
           <button onClick={toggleNavDrawer} className="md:hidden transition-transform hover:scale-110">

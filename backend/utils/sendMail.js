@@ -1,4 +1,74 @@
 const nodemailer = require("nodemailer");
+const ContactSetting = require("../models/ContactSetting");
+
+// Same fallback fields the frontend's socialLinks util reads when the newer
+// `socialLinks` array hasn't been filled in yet.
+const LEGACY_SOCIAL_FIELDS = [
+  { platform: "facebook", label: "Facebook", enabledKey: "showFacebook", urlKey: "facebookUrl" },
+  { platform: "instagram", label: "Instagram", enabledKey: "showInstagram", urlKey: "instagramUrl" },
+  { platform: "x", label: "X / Twitter", enabledKey: "showTwitter", urlKey: "twitterUrl" },
+];
+
+// Verified working brand icon PNGs (icons8 CDN) — checked to resolve with a 200 before use.
+const SOCIAL_ICON_URL = {
+  facebook: "https://img.icons8.com/color/96/facebook-new.png",
+  instagram: "https://img.icons8.com/color/96/instagram-new.png",
+  youtube: "https://img.icons8.com/color/96/youtube-play.png",
+  pinterest: "https://img.icons8.com/color/96/pinterest.png",
+  x: "https://img.icons8.com/color/96/twitterx--v1.png",
+  twitter: "https://img.icons8.com/color/96/twitterx--v1.png",
+  linkedin: "https://img.icons8.com/color/96/linkedin.png",
+  tiktok: "https://img.icons8.com/color/96/tiktok--v1.png",
+  whatsapp: "https://img.icons8.com/color/96/whatsapp--v1.png",
+  threads: "https://img.icons8.com/ios-filled/96/threads.png",
+};
+
+// Reads the admin-configured social links straight from the DB so email
+// templates always point at whatever URLs are set in Website Settings.
+const getActiveSocialLinksForEmail = async () => {
+  try {
+    const setting = await ContactSetting.findOne().lean();
+    if (!setting) return [];
+
+    if (Array.isArray(setting.socialLinks) && setting.socialLinks.length > 0) {
+      return setting.socialLinks
+        .filter((l) => l.enabled !== false && String(l.url || "").trim())
+        .map((l) => ({
+          platform: String(l.platform || "").toLowerCase().trim(),
+          label: String(l.label || l.platform || "Link").trim(),
+          url: String(l.url).trim(),
+        }));
+    }
+
+    return LEGACY_SOCIAL_FIELDS
+      .filter(({ enabledKey, urlKey }) => setting[enabledKey] && String(setting[urlKey] || "").trim())
+      .map(({ platform, label, urlKey }) => ({ platform, label, url: String(setting[urlKey]).trim() }));
+  } catch (err) {
+    console.error("Failed to load social links for email:", err.message);
+    return [];
+  }
+};
+
+// Renders the "Follow us on" row from whatever links are actually configured,
+// using the real platform logo where we have a verified icon; platforms without
+// one (e.g. a "custom" link) fall back to a plain text pill instead of a broken image.
+const buildSocialLinksHtml = (links) => {
+  if (!links.length) return "";
+  const icons = links
+    .map((l) => {
+      const iconUrl = SOCIAL_ICON_URL[l.platform];
+      return iconUrl
+        ? `<a href="${l.url}" target="_blank" style="margin: 0 8px; display: inline-block;">
+             <img src="${iconUrl}" alt="${l.label}" width="24" height="24" style="display: block; border-radius: 6px;" />
+           </a>`
+        : `<a href="${l.url}" target="_blank" style="margin: 0 8px; display: inline-block; text-decoration: none; color: #0f172a; font-size: 13px; font-weight: 600;">${l.label}</a>`;
+    })
+    .join("");
+  return `
+    <p style="font-size: 14px; color: #64748b; margin-bottom: 10px;">Follow us on</p>
+    <div>${icons}</div>
+  `;
+};
 
 const normalizePassword = (value) => (value ? value.replace(/\s+/g, "") : value);
 const stripHtml = (value) =>
@@ -41,6 +111,7 @@ const resolveFromAddress = () =>
 const sendMail = async ({ to, subject, message, attachments = [] }) => {
   const transporter = createTransporter();
   const fromAddress = resolveFromAddress();
+  const socialLinksHtml = buildSocialLinksHtml(await getActiveSocialLinksForEmail());
 
   const mailOptions = {
     from: fromAddress ? `"Raphaaa Support" <${fromAddress}>` : "Raphaaa Support <no-reply@localhost>",
@@ -67,21 +138,7 @@ const sendMail = async ({ to, subject, message, attachments = [] }) => {
 
       <!-- FOOTER -->
       <div style="text-align: center; padding: 20px; background: #e3e7ec;">
-        <p style="font-size: 14px; color: #64748b; margin-bottom: 10px;">Follow us on</p>
-        <div>
-          <a href="https://facebook.com/raphaaa" target="_blank" style="margin: 0 8px; display: inline-block;">
-            <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" width="24" />
-          </a>
-          <a href="https://instagram.com/raphaaa" target="_blank" style="margin: 0 8px; display: inline-block;">
-            <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="24" />
-          </a>
-          <!--- <a href="https://twitter.com/raphaaa" target="_blank" style="margin: 0 8px; display: inline-block;">
-            <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter" width="24" />
-          </a> -->
-          <!-- <a href="https://www.linkedin.com/company/raphaaa" target="_blank" style="margin: 0 8px; display: inline-block;">
-            <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" width="24" />
-          </a> -->
-        </div>
+        ${socialLinksHtml}
 
         <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">
           © ${new Date().getFullYear()} Raphaaa. All rights reserved.<br/>
@@ -107,6 +164,7 @@ const sendMail = async ({ to, subject, message, attachments = [] }) => {
 const sendNewArrivalNotification = async (emails, products) => {
   const transporter = createTransporter();
   const fromAddress = resolveFromAddress();
+  const socialLinksHtml = buildSocialLinksHtml(await getActiveSocialLinksForEmail());
   const htmlBody = `
     <div style="background: linear-gradient(to bottom right, #e0f2fe, #0284c7); padding: 32px; font-family: 'Segoe UI', sans-serif; color: #0f172a;">
       <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
@@ -132,6 +190,7 @@ const sendNewArrivalNotification = async (emails, products) => {
           <a href="https://raphaaa.onrender.com/collections/all" style="color:#0284c7; font-weight:bold;">🛒 Shop Now</a>
         </p>
         <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;" />
+        <div style="text-align: center;">${socialLinksHtml}</div>
         <p style="font-size: 13px; color: #64748b; text-align: center;">This is an automated message. Please do not reply.</p>
       </div>
     </div>

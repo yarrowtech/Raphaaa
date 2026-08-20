@@ -33,8 +33,10 @@ const ViewContacts = () => {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
+        const token = localStorage.getItem("userToken");
         const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/contact`
+          `${import.meta.env.VITE_BACKEND_URL}/api/contact`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setContacts(res.data);
       } catch (error) {
@@ -48,8 +50,10 @@ const ViewContacts = () => {
 
   const handleDelete = async (id) => {
     try {
+      const token = localStorage.getItem("userToken");
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/contact/${id}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/contact/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setContacts((prev) => prev.filter((msg) => msg._id !== id));
       toast.success("Message deleted");
@@ -102,13 +106,17 @@ const ViewContacts = () => {
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("userToken");
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/contact/reply`,
         {
           to: replyTo.email,
           subject: replyContent.subject,
           message: replyContent.message,
-        }
+          audience: "reply",
+          relatedContactId: replyTo._id,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Email sent to ${replyTo.email}`);
       setShowReplyForm(false);

@@ -12,10 +12,31 @@ import { GoArrowUpRight } from "react-icons/go";
 
 const MAX_HISTORY = 6;
 const STORAGE_KEY = "searchHistory";
+const getToken = () => localStorage.getItem("userToken");
 
-const SearchBar = ({ inline = false, className = "", inputClassName = "", placeholder = "Search for products..." }) => {
+// Guests keep history in localStorage only; older versions stored plain strings —
+// upgrade those in place to the {type, term} shape so old data doesn't break.
+const loadGuestHistory = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item) =>
+      typeof item === "string" ? { type: "term", term: item } : item
+    );
+  } catch {
+    return [];
+  }
+};
+const saveGuestHistory = (items) => localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+const SearchBar = ({ inline = false, className = "", inputClassName = "", placeholder = "Search for products...", onOpenChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
   const [suggestions, setSuggestions] = useState([]);
   const [facets, setFacets] = useState({ brands: [], categories: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -42,7 +63,7 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     e.preventDefault();
     if (searchTerm.trim() === "") return;
 
-    updateHistory(searchTerm);
+    addHistory({ type: "term", term: searchTerm.trim() });
     dispatch(setFilters({ search: searchTerm }));
     dispatch(fetchProductsByFilters({ search: searchTerm }));
     navigate(`/collections/all?search=${encodeURIComponent(searchTerm.trim())}`);
@@ -52,8 +73,10 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     setShowSuggestions(false);
   };
 
-  // Click on product suggestion
+  // Click on product suggestion — also records the product (name + image) in history
   const handleSuggestionClick = (product) => {
+    addHistory({ type: "product", product });
+
     const slug = product.name.toLowerCase().replace(/\s+/g, "-");
     const productId = product._id || product.productId || product.id;
     navigate(
@@ -66,16 +89,56 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     setSuggestions([]);
   };
 
-  // Update localStorage history
-  const updateHistory = (term) => {
-    let newHistory = [term, ...history.filter((item) => item !== term)];
-    if (newHistory.length > MAX_HISTORY)
-      newHistory = newHistory.slice(0, MAX_HISTORY);
-    setHistory(newHistory);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+  // Load history — from the DB for logged-in users, localStorage for guests
+  const loadHistory = async () => {
+    const token = getToken();
+    if (!token) {
+      setHistory(loadGuestHistory());
+      return;
+    }
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/search-history`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistory(Array.isArray(data) ? data : []);
+    } catch {
+      setHistory([]);
+    }
   };
 
-  const handleHistoryClick = (term) => {
+  // Add an entry — {type:'term', term} or {type:'product', product}
+  const addHistory = async (entry) => {
+    const token = getToken();
+    if (token) {
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/search-history`,
+          entry.type === "term"
+            ? { type: "term", term: entry.term }
+            : { type: "product", productId: entry.product._id || entry.product.productId || entry.product.id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        loadHistory();
+      } catch {
+        // ignore — history is a nice-to-have, never block search itself
+      }
+      return;
+    }
+
+    setHistory((prev) => {
+      const filtered = prev.filter((h) =>
+        entry.type === "term"
+          ? !(h.type === "term" && h.term === entry.term)
+          : !(h.type === "product" && h.product?._id === entry.product._id)
+      );
+      const next = [entry, ...filtered].slice(0, MAX_HISTORY);
+      saveGuestHistory(next);
+      return next;
+    });
+  };
+
+  const handleHistoryTermClick = (term) => {
     setSearchTerm(""); // prevent suggestion trigger
     setSuggestions([]);
     setShowSuggestions(false);
@@ -85,13 +148,45 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     navigate(`/collections/all?search=${encodeURIComponent(term)}`);
   };
 
-  const handleDeleteHistoryItem = (termToDelete) => {
-    const updated = history.filter((term) => term !== termToDelete);
-    setHistory(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const handleDeleteHistoryItem = async (item) => {
+    const token = getToken();
+    if (token && item._id) {
+      try {
+        await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/api/search-history/${item._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch {
+        // ignore
+      }
+      setHistory((prev) => prev.filter((h) => h._id !== item._id));
+      return;
+    }
+
+    setHistory((prev) => {
+      const next = prev.filter((h) =>
+        item.type === "term"
+          ? !(h.type === "term" && h.term === item.term)
+          : !(h.type === "product" && h.product?._id === item.product?._id)
+      );
+      saveGuestHistory(next);
+      return next;
+    });
   };
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
+    const token = getToken();
+    if (token) {
+      try {
+        await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/search-history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // ignore
+      }
+      setHistory([]);
+      return;
+    }
     localStorage.removeItem(STORAGE_KEY);
     setHistory([]);
   };
@@ -108,10 +203,9 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Load history
+  // Load history on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setHistory(JSON.parse(stored));
+    loadHistory();
   }, []);
 
   // Fetch suggestions when user types
@@ -167,16 +261,18 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
   return (
     <div
       ref={searchRef}
-      className={`relative flex items-center justify-center w-full transition-all duration-300 ease-in-out ${className} ${
-        inline ? "min-w-0" : shouldRenderInline ? "absolute top-0 left-0 w-full bg-white h-28 z-50" : "w-auto"
+      className={`flex items-center justify-center w-full transition-all duration-300 ease-in-out ${className} ${
+        inline ? "relative min-w-0" : shouldRenderInline ? "absolute top-0 left-0 w-full bg-white h-18 z-50" : "relative w-auto"
       }`}
     >
       {shouldRenderInline ? (
         <form
           onSubmit={handleSearch}
-          className="relative flex items-center justify-center gap-3 md:gap-0 md:justify-center w-full"
+          className={`relative flex items-center justify-center gap-3 md:gap-0 md:justify-center w-full ${
+            inline ? "" : "px-4 sm:px-8 md:px-12 lg:px-20"
+          }`}
         >
-          <div className={`relative w-full ${inline ? "min-w-0" : "w-4/5 md:w-1/2 lg:w-1/2"}`}>
+          <div className={`relative w-full ${inline ? "min-w-0" : ""}`}>
             <input
               ref={searchInputRef}
               type="text"
@@ -225,18 +321,35 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
                 ) : (
                   history.map((item, index) => (
                     <li
-                      key={index}
+                      key={item._id || `${item.type}-${item.term || item.product?._id}-${index}`}
                       className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center"
                     >
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleHistoryClick(item);
-                        }}
-                        className="flex-1 text-left flex items-center gap-2"
-                      >
-                        <MdHistory className="inline" /> {item}
-                      </button>
+                      {item.type === "product" && item.product ? (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSuggestionClick(item.product);
+                          }}
+                          className="flex-1 text-left flex items-center gap-3"
+                        >
+                          <img
+                            src={item.product.images?.[0]?.url || "/no-image.png"}
+                            alt={item.product.name}
+                            className="w-8 h-8 object-cover rounded-md shrink-0"
+                          />
+                          <span className="truncate">{item.product.name}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleHistoryTermClick(item.term);
+                          }}
+                          className="flex-1 text-left flex items-center gap-2"
+                        >
+                          <MdHistory className="inline" /> {item.term}
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

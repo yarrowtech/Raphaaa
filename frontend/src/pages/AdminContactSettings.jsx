@@ -120,9 +120,11 @@ const AdminContactSettings = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const token = localStorage.getItem("userToken");
       await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/settings/contact`,
-        form
+        form,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Contact settings updated successfully!");
     } catch {

@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Contact = require("../models/Contact");
+const SentEmail = require("../models/SentEmail");
 const { sendMail } = require("../utils/sendMail");
+const { protect, adminOrMerchantise } = require("../middleware/authMiddleware");
 
-// Post the user contact details
+// Post the user contact details — public, customers submit this while logged out
 router.post("/", async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
@@ -17,8 +19,8 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Get all messages to the admin
-router.get("/", async (req, res) => {
+// Get all messages to the admin (Inbox)
+router.get("/", protect, adminOrMerchantise, async (req, res) => {
     try {
         const messages = await Contact.find().sort({ createdAt: -1 });
         res.status(200).json(messages);
@@ -27,8 +29,31 @@ router.get("/", async (req, res) => {
     }
 });
 
+// Everything this admin/marketing team has sent out (Sent)
+router.get("/sent", protect, adminOrMerchantise, async (req, res) => {
+    try {
+        const sent = await SentEmail.find()
+            .populate("sentBy", "name email")
+            .populate("relatedContact", "name email subject")
+            .sort({ createdAt: -1 });
+        res.status(200).json(sent);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch sent emails" });
+    }
+});
+
+// Delete a particular sent email from the Sent log
+router.delete("/sent/:id", protect, adminOrMerchantise, async (req, res) => {
+    try {
+        await SentEmail.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete" });
+    }
+});
+
 // Delete a partcular message
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect, adminOrMerchantise, async (req, res) => {
     try {
         await Contact.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Deleted successfully" });
@@ -38,8 +63,8 @@ router.delete("/:id", async (req, res) => {
 });
 
 
-router.post("/reply", async (req, res) => {
-  const { to, subject, message } = req.body;
+router.post("/reply", protect, adminOrMerchantise, async (req, res) => {
+  const { to, subject, message, audience, relatedContactId } = req.body;
 
   if (!to || !subject || !message) {
     return res.status(400).json({ error: "All fields are required" });
@@ -47,10 +72,27 @@ router.post("/reply", async (req, res) => {
 
   try {
     await sendMail({ to, subject, message });
-    res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Email sending failed:", error);
-    res.status(500).json({ error: "Failed to send email" });
+    return res.status(500).json({ error: "Failed to send email" });
+  }
+
+  res.status(200).json({ message: "Email sent successfully" });
+
+  // Log after responding — a logging failure must never make an already-sent email look failed.
+  try {
+    const recipientCount = String(to).split(",").map((e) => e.trim()).filter(Boolean).length;
+    await SentEmail.create({
+      to,
+      subject,
+      message,
+      recipientCount,
+      audience: audience || "",
+      sentBy: req.user._id,
+      relatedContact: relatedContactId || null,
+    });
+  } catch (logErr) {
+    console.error("Failed to log sent email:", logErr.message);
   }
 });
 
