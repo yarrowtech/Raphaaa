@@ -132,11 +132,20 @@ const pickPreviewImage = (product) => {
   );
 };
 
-const buildCampaignPreviewHtml = ({ title, description, imageUrl, redirectUrl }) => {
+const buildCampaignPreviewHtml = ({
+  title,
+  description,
+  imageUrl,
+  redirectUrl,
+  pixelUrl = "",
+  redirectDelayMs = 0,
+}) => {
   const safeTitle = escapeHtml(title || "Raphaaa");
   const safeDescription = escapeHtml(description || "Raphaaa product preview");
   const safeImage = escapeHtml(imageUrl || "https://www.raphaaa.com/favicon-512x512.png");
   const safeRedirect = escapeHtml(redirectUrl || "https://www.raphaaa.com");
+  const safePixel = escapeHtml(pixelUrl || "");
+  const delayMs = Number.isFinite(Number(redirectDelayMs)) ? Math.max(0, Number(redirectDelayMs)) : 0;
 
   return `<!doctype html>
 <html lang="en">
@@ -151,15 +160,47 @@ const buildCampaignPreviewHtml = ({ title, description, imageUrl, redirectUrl })
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
   <meta name="twitter:image" content="${safeImage}" />
-  <meta http-equiv="refresh" content="0; url=${safeRedirect}" />
+  ${delayMs > 0 ? `<meta http-equiv="refresh" content="${Math.ceil(delayMs / 1000)}; url=${safeRedirect}" />` : ""}
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${safeTitle}</title>
 </head>
 <body>
   <p>Redirecting to product...</p>
-  <script>window.location.replace(${JSON.stringify(redirectUrl || "https://www.raphaaa.com")});</script>
+  ${safePixel ? `<img src="${safePixel}" alt="" width="1" height="1" style="position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none" />` : ""}
+  <script>
+    const target = ${JSON.stringify(redirectUrl || "https://www.raphaaa.com")};
+    const delay = ${JSON.stringify(delayMs)};
+    if (delay > 0) {
+      setTimeout(() => window.location.replace(target), delay);
+    } else {
+      window.location.replace(target);
+    }
+  </script>
 </body>
 </html>`;
+};
+
+const buildProductSharePreviewResponse = async (productUrl = "") => {
+  const product = await resolveProductFromCampaignUrl(productUrl);
+  const title = product?.name || "Raphaaa";
+  const description = product?.description || `Shop ${title} on Raphaaa`;
+  const imageUrl = pickPreviewImage(product);
+  const redirectUrl = buildCampaignLandingUrl({
+    productUrl,
+    platform: "social",
+    name: title,
+  }) || productUrl;
+
+  return {
+    html: buildCampaignPreviewHtml({
+      title,
+      description,
+      imageUrl,
+      redirectUrl,
+    }),
+    product,
+    redirectUrl,
+  };
 };
 
 async function registerCampaignClick(req, campaign) {
@@ -243,6 +284,7 @@ module.exports = {
   registerCampaignConversion,
   buildCampaignLandingUrl,
   buildCampaignPreviewResponse,
+  buildProductSharePreviewResponse,
   isPreviewBot,
   buildCampaignPreviewHtml,
 };

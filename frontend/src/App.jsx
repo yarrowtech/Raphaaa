@@ -75,7 +75,12 @@ import AdminShippingSettings from "./pages/AdminShippingSettings";
 import AdminLegalSettings from "./pages/AdminLegalSettings";
 import ReferAndEarn from "./pages/ReferAndEarn";
 import AdminReturnsManagement from "./pages/AdminReturnsManagement";
-import { captureAttribution, rememberCampaignClick } from "./utils/attribution";
+import {
+  captureAttribution,
+  rememberCampaignClick,
+  trackCampaignLanding,
+  trackCampaignImpression,
+} from "./utils/attribution";
 // import AdminAboutSettings from "./pages/AdminAboutSettings";
 
 const App = () => {
@@ -94,6 +99,8 @@ const App = () => {
 
     captureAttribution();
     rememberCampaignClick();
+    trackCampaignLanding().catch(() => {});
+    trackCampaignImpression();
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);

@@ -1679,7 +1679,9 @@ import { FaCartShopping, FaRuler, FaRulerHorizontal } from "react-icons/fa6";
 import { flyToCart } from "../../utils/flyToCart";
 import { FiShare2 } from "react-icons/fi";
 import { FiCopy } from "react-icons/fi";
-import { buildTrackedProductUrl } from "../../utils/attribution";
+import {
+  buildTrackedProductUrl,
+} from "../../utils/attribution";
 import ProductQA from "./ProductQA";
 import { Helmet } from "react-helmet-async";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";

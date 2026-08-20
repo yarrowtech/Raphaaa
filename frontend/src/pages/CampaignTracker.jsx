@@ -32,6 +32,16 @@ const CampaignTracker = () => {
     const [savedCampaign, setSavedCampaign] = useState(null);
     const token = localStorage.getItem("userToken");
     console.log(token);
+    const buildPublicCampaignUrl = (campaign) => {
+        if (!campaign?.utmLink || !campaign?._id) return campaign?.utmLink || "";
+        try {
+            const url = new URL(campaign.utmLink);
+            url.searchParams.set("campaign_id", campaign._id);
+            return url.toString();
+        } catch {
+            return campaign.utmLink;
+        }
+    };
     const sourceChartData = sourceReport.rows.map((row) => ({
         source: row.source || "direct",
         orders: Number(row.orders || 0),
@@ -237,7 +247,7 @@ const CampaignTracker = () => {
                         <input
                             type="text"
                             readOnly
-                            value={savedCampaign?.utmLink || ""}
+                            value={buildPublicCampaignUrl(savedCampaign)}
                             placeholder="Save the campaign to generate the tracked URL"
                             className="w-full rounded-xl bg-gray-100 border border-gray-200 px-4 py-2.5 text-gray-500 outline-none"
                         />
@@ -383,7 +393,8 @@ const CampaignTracker = () => {
 
             {/* Campaign Table */}
             <div className="mt-8 rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden">
-                <table className="w-full text-left">
+                <div className="overflow-x-auto">
+                <table className="min-w-[1200px] w-full text-left">
                     <thead className="bg-sky-500 text-white">
                         <tr>
                             <th className="p-4">Name</th>
@@ -434,18 +445,19 @@ const CampaignTracker = () => {
                                         <div className="flex items-center gap-2">
                                             <input
                                                 readOnly
-                                                value={`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/r/${c._id}`}
+                                                value={buildPublicCampaignUrl(c)}
                                                 className="w-56 rounded border px-2 py-1 text-xs"
                                             />
                                             <button
-                                                onClick={() => navigator.clipboard.writeText(`${import.meta.env.VITE_BACKEND_URL}/api/campaigns/r/${c._id}`)}
+                                                onClick={() => navigator.clipboard.writeText(buildPublicCampaignUrl(c))}
                                                 className="text-xs bg-gray-800 text-white px-2 py-1 rounded"
                                             >
                                                 Copy
                                             </button>
                                         </div>
                                     </td>
-                                    <td className="p-4 flex justify-center gap-3">
+                                    <td className="p-4">
+                                      <div className="flex justify-center gap-3 whitespace-nowrap">
                                         <button
                                             onClick={() => handleEdit(c)}
                                             className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded transition"
@@ -458,6 +470,7 @@ const CampaignTracker = () => {
                                         >
                                             Delete
                                         </button>
+                                      </div>
                                     </td>
                                 </tr>
                             ))
@@ -470,6 +483,7 @@ const CampaignTracker = () => {
                         )}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     );

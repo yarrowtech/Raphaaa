@@ -56,6 +56,7 @@ const {
   buildCampaignLandingUrl,
   buildCampaignPreviewResponse,
   buildCampaignPreviewHtml,
+  buildProductSharePreviewResponse,
   isPreviewBot,
 } = require("../utils/campaignTracking");
 
@@ -111,6 +112,8 @@ exports.redirectAndTrack = async (req, res) => {
   }
 
   const tracked = await registerCampaignClick(req, c);
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const pixelUrl = `${baseUrl}/api/campaigns/${c._id}/pixel.gif`;
   const html = buildCampaignPreviewHtml({
     title: preview.product?.name || c.name || "Raphaaa",
     description: preview.product?.description || `Shop ${preview.product?.name || c.name || "Raphaaa"} on Raphaaa`,
@@ -119,9 +122,47 @@ exports.redirectAndTrack = async (req, res) => {
         preview.product?.images?.[0]?.url)
       : "https://www.raphaaa.com/favicon-512x512.png",
     redirectUrl: tracked.targetUrl,
+    pixelUrl,
+    redirectDelayMs: 500,
   });
   res.set("Content-Type", "text/html; charset=utf-8");
   return res.send(html);
+};
+
+exports.sharePreview = async (req, res) => {
+  const productUrl = req.query?.url || "";
+  const preview = await buildProductSharePreviewResponse(productUrl);
+  res.set("Content-Type", "text/html; charset=utf-8");
+  return res.send(preview.html);
+};
+
+exports.trackOpen = async (req, res) => {
+  const c = await Campaign.findById(req.params.id);
+  if (!c || !c.utmLink) return res.status(404).json({ success: false, message: "Campaign not found" });
+
+  const tracked = await registerCampaignClick(
+    {
+      ...req,
+      query: {
+        ...req.query,
+        utm_source: req.body?.utm_source || req.query?.utm_source,
+      },
+      get: (header) => {
+        if (header === "referer" || header === "referrer") return req.body?.referrer || req.get("referer") || req.get("referrer") || "";
+        if (header === "user-agent") return req.get("user-agent") || "";
+        return req.get(header);
+      },
+      headers: req.headers,
+      socket: req.socket,
+    },
+    c
+  );
+
+  res.json({
+    success: true,
+    clickId: tracked.clickId,
+    targetUrl: tracked.targetUrl,
+  });
 };
 
 // Tracking: impression pixel (use GET for <img/> beacons)

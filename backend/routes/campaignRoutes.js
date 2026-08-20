@@ -22,7 +22,7 @@
 const express = require("express");
 const {
   createCampaign, getCampaigns, updateCampaign, deleteCampaign,
-  redirectAndTrack, pixel, trackConversion
+  redirectAndTrack, pixel, trackConversion, sharePreview, trackOpen
 } = require("../controller/campaignController");
 const { protect, roleCheck } = require("../middleware/authMiddleware");
 
@@ -35,6 +35,8 @@ router.put("/:id", protect, roleCheck("marketing"), updateCampaign);
 router.delete("/:id", protect, roleCheck("marketing"), deleteCampaign);
 
 // Public tracking
+router.get("/share", sharePreview);
+router.post("/:id/open", trackOpen);
 router.get("/r/:id", redirectAndTrack);            // click tracker + redirect
 router.get("/:id/pixel.gif", pixel);              // impression tracker
 router.post("/:id/conversion", trackConversion);  // mark conversion
