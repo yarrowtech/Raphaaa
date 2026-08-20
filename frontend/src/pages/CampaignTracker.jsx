@@ -3,6 +3,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
 import { Link } from "react-router-dom";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+    Legend,
+} from "recharts";
 
 const CampaignTracker = () => {
     const [campaigns, setCampaigns] = useState([]);
@@ -22,6 +32,11 @@ const CampaignTracker = () => {
     const [savedCampaign, setSavedCampaign] = useState(null);
     const token = localStorage.getItem("userToken");
     console.log(token);
+    const sourceChartData = sourceReport.rows.map((row) => ({
+        source: row.source || "direct",
+        orders: Number(row.orders || 0),
+        revenue: Number(row.revenue || 0),
+    }));
 
     useEffect(() => {
         fetchCampaigns();
@@ -307,6 +322,30 @@ const CampaignTracker = () => {
                     )}
                 </div>
                 <div className="px-6 pb-6">
+                    <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <p className="text-sm font-bold text-gray-800">Source Performance</p>
+                                <p className="text-xs text-gray-500">Orders and revenue by traffic source</p>
+                            </div>
+                        </div>
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={sourceChartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis dataKey="source" stroke="#6b7280" />
+                                    <YAxis yAxisId="left" stroke="#6b7280" />
+                                    <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar yAxisId="left" dataKey="orders" name="Orders" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                                    <Bar yAxisId="right" dataKey="revenue" name="Revenue" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+                <div className="px-6 pb-6">
                     <div className="rounded-xl border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-xs uppercase tracking-widest text-gray-500">
@@ -367,6 +406,25 @@ const CampaignTracker = () => {
                                     key={c._id}
                                     className="border-b hover:bg-gray-50 transition"
                                 >
+                                    <td className="p-4">
+                                        <div className="font-semibold text-gray-800">{c.name}</div>
+                                        <div className="text-xs text-gray-400">{c.productUrl || "No product URL"}</div>
+                                    </td>
+                                    <td className="p-4">{c.platform}</td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded-full text-[11px] font-bold ${
+                                            c.status === "Active"
+                                                ? "bg-emerald-100 text-emerald-700"
+                                                : c.status === "Paused"
+                                                ? "bg-amber-100 text-amber-700"
+                                                : c.status === "Completed"
+                                                ? "bg-gray-200 text-gray-700"
+                                                : "bg-slate-100 text-slate-700"
+                                        }`}>
+                                            {c.status}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">₹{Number(c.budget || 0).toLocaleString("en-IN")}</td>
                                     <td className="p-4">{c.clicks ?? 0}</td>
                                     <td className="p-4">{c.impressions ?? 0}</td>
                                     <td className="p-4">{c.ctr?.toFixed?.(2) ?? ((c.impressions ? (c.clicks / c.impressions * 100) : 0).toFixed(2))}</td>
@@ -405,7 +463,7 @@ const CampaignTracker = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="p-6 text-center text-gray-500">
+                                <td colSpan="11" className="p-6 text-center text-gray-500">
                                     No campaigns found
                                 </td>
                             </tr>

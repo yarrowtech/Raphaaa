@@ -54,6 +54,9 @@ const {
   registerCampaignClick,
   registerCampaignConversion,
   buildCampaignLandingUrl,
+  buildCampaignPreviewResponse,
+  buildCampaignPreviewHtml,
+  isPreviewBot,
 } = require("../utils/campaignTracking");
 
 // CRUD (you already reference these in routes)
@@ -101,14 +104,24 @@ exports.redirectAndTrack = async (req, res) => {
   const c = await Campaign.findById(req.params.id);
   if (!c || !c.utmLink) return res.status(404).send("Campaign not found");
 
+  const preview = await buildCampaignPreviewResponse(req, c);
+  if (preview.isBot) {
+    res.set("Content-Type", "text/html; charset=utf-8");
+    return res.send(preview.html);
+  }
+
   const tracked = await registerCampaignClick(req, c);
-  res.cookie?.("raphaaa_campaign_click_id", tracked.clickId, {
-    httpOnly: false,
-    sameSite: "Lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 1000 * 60 * 60 * 24 * 30,
+  const html = buildCampaignPreviewHtml({
+    title: preview.product?.name || c.name || "Raphaaa",
+    description: preview.product?.description || `Shop ${preview.product?.name || c.name || "Raphaaa"} on Raphaaa`,
+    imageUrl: preview.product
+      ? (preview.product?.colorVariants?.find((cv) => Array.isArray(cv?.images) && cv.images.length > 0)?.images?.[0]?.url ||
+        preview.product?.images?.[0]?.url)
+      : "https://www.raphaaa.com/favicon-512x512.png",
+    redirectUrl: tracked.targetUrl,
   });
-  return res.redirect(tracked.targetUrl);
+  res.set("Content-Type", "text/html; charset=utf-8");
+  return res.send(html);
 };
 
 // Tracking: impression pixel (use GET for <img/> beacons)
