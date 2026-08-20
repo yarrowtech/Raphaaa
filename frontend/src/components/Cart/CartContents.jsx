@@ -44,6 +44,23 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
   const [savedItems, setSavedItems] = useState(loadSaved);
   const [stockByItem, setStockByItem] = useState({});
   const [productMetaByItem, setProductMetaByItem] = useState({});
+  const [shippingConfig, setShippingConfig] = useState({ baseShippingFee: 99, freeShippingThreshold: 999 });
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/shipping-config`)
+      .then(({ data }) => {
+        if (data) {
+          setShippingConfig({
+            baseShippingFee: Number(data.baseShippingFee ?? 99),
+            freeShippingThreshold: Number(data.freeShippingThreshold ?? 999),
+          });
+        }
+      })
+      .catch(() => {
+        // keep the fallback defaults if the config can't be loaded
+      });
+  }, []);
 
   const products = cart?.products || [];
 
@@ -330,16 +347,16 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500 flex items-center gap-1.5">
                 Delivery
-                {totalAmount < 999 && (
+                {totalAmount < shippingConfig.freeShippingThreshold && (
                   <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full">
-                    Free above ₹999
+                    Free above ₹{shippingConfig.freeShippingThreshold.toLocaleString("en-IN")}
                   </span>
                 )}
               </span>
-              {totalAmount >= 999 ? (
+              {totalAmount >= shippingConfig.freeShippingThreshold ? (
                 <span className="font-semibold text-emerald-600">Free</span>
               ) : (
-                <span className="font-semibold text-gray-700">₹99</span>
+                <span className="font-semibold text-gray-700">₹{shippingConfig.baseShippingFee}</span>
               )}
             </div>
 
@@ -348,7 +365,7 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-gray-900">Total Amount</span>
                 <span className="text-lg font-extrabold text-sky-700">
-                  ₹{(totalAmount + (totalAmount >= 999 ? 0 : 99)).toLocaleString("en-IN")}
+                  ₹{(totalAmount + (totalAmount >= shippingConfig.freeShippingThreshold ? 0 : shippingConfig.baseShippingFee)).toLocaleString("en-IN")}
                 </span>
               </div>
               {totalSavings > 0 && (
@@ -356,9 +373,9 @@ const CartContents = ({ cart, userId, guestId, onContinueShopping }) => {
                   You save ₹{totalSavings.toLocaleString("en-IN")} 🎉
                 </p>
               )}
-              {totalAmount < 999 && (
+              {totalAmount < shippingConfig.freeShippingThreshold && (
                 <p className="text-[11px] text-amber-600 mt-1 text-right">
-                  Add ₹{(999 - totalAmount).toLocaleString("en-IN")} more for free shipping
+                  Add ₹{(shippingConfig.freeShippingThreshold - totalAmount).toLocaleString("en-IN")} more for free shipping
                 </p>
               )}
             </div>
