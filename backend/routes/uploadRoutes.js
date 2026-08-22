@@ -73,7 +73,8 @@ cloudinary.config({
 
 // Multer setup using memory storage
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
+const upload = multer({ storage, limits: { fileSize: MAX_UPLOAD_BYTES } });
 
 // Helper function to extract public_id from Cloudinary URL
 const getPublicIdFromUrl = (url) => {
@@ -96,7 +97,17 @@ const getPublicIdFromUrl = (url) => {
 };
 
 // Upload image route
-router.post("/", protect, admin, upload.single("image"), async(req, res) => {
+router.post("/", protect, admin, (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+        if (err) {
+            if (err.code === "LIMIT_FILE_SIZE") {
+                return res.status(400).json({ message: "Image is larger than 5MB. Please upload a smaller file." });
+            }
+            return res.status(400).json({ message: err.message || "Upload failed" });
+        }
+        next();
+    });
+}, async(req, res) => {
     try {
         if(!req.file){
             return res.status(400).json({ message: "no file Uploaded" });
