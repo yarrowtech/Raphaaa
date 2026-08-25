@@ -113,14 +113,14 @@ const Hero = () => {
           // Map DB fields → component shape
           setSlides(data.map((s) => ({
             image:       s.image,
-            badge:       s.badge       || "Trending",
+            badge:       s.badge       || "",
             title:       s.title,
             subtitle:    s.subtitle    || "",
             desc:        s.description || "",
-            cta:         s.ctaText          || "Shop Now",
-            ctaLink:     s.ctaLink          || "/collections/all",
+            cta:         s.ctaText          || "",
+            ctaLink:     s.ctaLink          || "",
             ctaSub:      s.ctaSecondaryText || "",
-            ctaSubLink:  s.ctaSecondaryLink || "/collections/all",
+            ctaSubLink:  s.ctaSecondaryLink || "",
             align:       s.textAlign   || "left",
             position:    s.contentPosition || "bottom",
             overlay:     getOverlayClass(s),
@@ -172,30 +172,38 @@ const Hero = () => {
                     : "justify-start text-left"
               }`}>
                 <div className="max-w-lg space-y-2 sm:space-y-3">
-                  <span className="inline-block bg-sky-500/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                    {slide.badge}
-                  </span>
+                  {slide.badge?.trim() && (
+                    <span className="inline-block bg-sky-500/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                      {slide.badge}
+                    </span>
+                  )}
                   <h1 className="text-white font-extrabold leading-[1.05] text-2xl sm:text-4xl md:text-5xl lg:text-6xl drop-shadow-lg whitespace-pre-line">
                     {slide.title}
                   </h1>
                   <p className="text-sky-200 text-xs sm:text-sm font-semibold tracking-wide">{slide.subtitle}</p>
                   <p className="text-white/75 text-xs sm:text-sm hidden sm:block leading-relaxed">{slide.desc}</p>
-                  <div className={`flex flex-wrap items-center gap-2 sm:gap-3 pt-1 ${
-                    slide.align === "right"
-                      ? "justify-end"
-                      : slide.align === "center"
-                        ? "justify-center"
-                        : "justify-start"
-                  }`}>
-                    <Link to={slide.ctaLink}
-                      className="px-5 sm:px-7 py-2.5 bg-white text-sky-700 font-bold text-sm sm:text-[15px] rounded-full hover:bg-sky-50 active:scale-95 transition-all shadow-lg">
-                      {slide.cta}
-                    </Link>
-                    <Link to={slide.ctaSubLink}
-                      className="px-4 sm:px-6 py-2.5 border-2 border-white/60 text-white font-semibold text-sm sm:text-[15px] rounded-full hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm">
-                      {slide.ctaSub}
-                    </Link>
-                  </div>
+                  {(slide.cta?.trim() && slide.ctaLink?.trim()) || (slide.ctaSub?.trim() && slide.ctaSubLink?.trim()) ? (
+                    <div className={`flex flex-wrap items-center gap-2 sm:gap-3 pt-1 ${
+                      slide.align === "right"
+                        ? "justify-end"
+                        : slide.align === "center"
+                          ? "justify-center"
+                          : "justify-start"
+                    }`}>
+                      {slide.cta?.trim() && slide.ctaLink?.trim() ? (
+                        <Link to={slide.ctaLink}
+                          className="px-5 sm:px-7 py-2.5 bg-white text-sky-700 font-bold text-sm sm:text-[15px] rounded-full hover:bg-sky-50 active:scale-95 transition-all shadow-lg">
+                          {slide.cta}
+                        </Link>
+                      ) : null}
+                      {slide.ctaSub?.trim() && slide.ctaSubLink?.trim() ? (
+                        <Link to={slide.ctaSubLink}
+                          className="px-4 sm:px-6 py-2.5 border-2 border-white/60 text-white font-semibold text-sm sm:text-[15px] rounded-full hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm">
+                          {slide.ctaSub}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </SwiperSlide>

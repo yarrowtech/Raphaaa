@@ -386,16 +386,20 @@ export default function HeroSettings() {
                       {slide.title?.replace(/\\n/g, " ")}
                     </p>
                     {slide.subtitle && <p className="text-xs text-gray-400 mt-0.5 truncate">{slide.subtitle}</p>}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">
-                        [{slide.ctaText || "Shop Now"}] → {slide.ctaLink}
-                      </span>
-                      {slide.ctaSecondaryText && (
+                    {(slide.ctaText?.trim() && slide.ctaLink?.trim()) || (slide.ctaSecondaryText?.trim() && slide.ctaSecondaryLink?.trim()) ? (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                      {slide.ctaText?.trim() && slide.ctaLink?.trim() ? (
+                        <span className="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">
+                          [{slide.ctaText}] → {slide.ctaLink}
+                        </span>
+                      ) : null}
+                      {slide.ctaSecondaryText?.trim() && slide.ctaSecondaryLink?.trim() ? (
                         <span className="text-[10px] bg-gray-50 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
                           [{slide.ctaSecondaryText}] → {slide.ctaSecondaryLink}
                         </span>
-                      )}
-                    </div>
+                      ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex items-center gap-2 mt-3">

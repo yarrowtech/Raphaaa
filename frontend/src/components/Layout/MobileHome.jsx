@@ -66,8 +66,8 @@ const normalizeHeroSlide = (slide) => ({
   image: slide.image,
   title: slide.title,
   badge: slide.badge,
-  ctaText: slide.ctaText || "Shop Now",
-  ctaLink: slide.ctaLink || "/collections/all",
+  ctaText: slide.ctaText || "",
+  ctaLink: slide.ctaLink || "",
   ctaSecondaryText: slide.ctaSecondaryText || "",
   ctaSecondaryLink: slide.ctaSecondaryLink || "",
   textAlign: slide.textAlign || slide.align || "left",
@@ -266,6 +266,7 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
       title: activeOffer.title,
       pct: activeOffer.offerPercentage,
       badge: "Big Sale",
+      ctaText: "Shop Now",
       ctaLink: "/offers",
       textAlign: activeOffer.textAlign || "left",
       contentPosition: activeOffer.contentPosition || "center",
@@ -358,12 +359,13 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                     Boolean(activeOffer) &&
                     slide.image === activeOffer.bannerImage &&
                     slide.title === activeOffer.title;
-                  const slideLink = slide.ctaLink || (isOfferBanner ? "/offers" : "/collections/all");
+                  const slideLink = slide.ctaLink || (isOfferBanner ? "/offers" : "");
+                  const BannerContainer = slideLink ? Link : "div";
 
                   return (
-                <Link
-                  to={slideLink}
-                  className="relative block cursor-pointer"
+                <BannerContainer
+                  {...(slideLink ? { to: slideLink } : {})}
+                  className={`relative block ${slideLink ? "cursor-pointer" : ""}`}
                   style={{ aspectRatio: "16/7" }}
                   aria-label={slide.title || slide.badge || "Banner"}
                 >
@@ -384,9 +386,11 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                               ? "items-center self-center text-center"
                               : "items-start self-start text-left"
                         }`}>
-                          <p className="text-orange-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">
-                            {slide.badge || "Big Sale"}
-                          </p>
+                          {slide.badge?.trim() ? (
+                            <p className="text-orange-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">
+                              {slide.badge}
+                            </p>
+                          ) : null}
                           <p className="text-white text-xl font-black leading-tight drop-shadow">
                             {slide.title || activeOffer?.title || "Exclusive Deal"}
                           </p>
@@ -395,10 +399,12 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                               Up to {slide.pct}% OFF
                             </p>
                           )}
-                          <span className="mt-2 w-fit bg-white text-black text-[11px] font-bold px-3 py-1 rounded-full">
-                            {slide.ctaText || (isOfferBanner ? "Shop Now" : "View Now")}
-                          </span>
-                          {slide.ctaSecondaryText ? (
+                          {slide.ctaText?.trim() && slide.ctaLink?.trim() ? (
+                            <span className="mt-2 w-fit bg-white text-black text-[11px] font-bold px-3 py-1 rounded-full">
+                              {slide.ctaText}
+                            </span>
+                          ) : null}
+                          {slide.ctaSecondaryText?.trim() && slide.ctaSecondaryLink?.trim() ? (
                             <span className="mt-1 text-[10px] font-semibold text-orange-100/90">
                               {slide.ctaSecondaryText}
                             </span>
@@ -411,7 +417,7 @@ export default function MobileHome({ activeOffer, isOfferLive }) {
                       <p className="text-white text-xl font-black">{slide.title || "Big Sale"}</p>
                     </div>
                   )}
-                </Link>
+                </BannerContainer>
                   );
                 })()}
               </SwiperSlide>
