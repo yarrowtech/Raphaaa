@@ -97,9 +97,27 @@ const PROMO = [
   { image: classic, label: "Classic Fits",      sub: "Timeless Pieces",  link: "/collections/all",              badge: "Editor's Pick" },
 ];
 
+// Turn a live Offer (created from /admin/create-offers) into a hero slide.
+// Coupons (offers with a couponCode) are never included here — they don't
+// have banner art and belong on the product page's Apply list instead.
+const offerToSlide = (offer) => ({
+  image: offer.bannerImage || offer.images?.[0]?.url,
+  badge: offer.offerPercentage > 0 ? `${offer.offerPercentage}% OFF` : "Limited Time Offer",
+  title: offer.title || "Special Offer",
+  subtitle: offer.endDate ? `Ends ${new Date(offer.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "",
+  desc: offer.description || "",
+  cta: "View Offer",         ctaLink: "/offers",
+  ctaSub: "Shop Now",        ctaSubLink: "/collections/all",
+  align: "left",
+  position: "bottom",
+  overlay: OVERLAY_CLASS_BY_DIRECTION.left,
+  isOffer: true,
+});
+
 const Hero = () => {
   const [collabActive, setCollabActive] = useState(false);
   const [slides, setSlides] = useState(DEFAULT_SLIDES);
+  const [offerSlides, setOfferSlides] = useState([]);
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/collabs/active`)
@@ -128,7 +146,26 @@ const Hero = () => {
         }
       })
       .catch(() => {}); // silently fall back to DEFAULT_SLIDES
+
+    // Offers created from /admin/create-offers — shown as extra hero slides
+    // while they're live. Coupons (couponCode set) are excluded.
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`)
+      .then(({ data }) => {
+        if (!Array.isArray(data)) return;
+        const now = Date.now();
+        const live = data.filter((o) =>
+          !o.couponCode &&
+          (o.bannerImage || o.images?.[0]?.url) &&
+          new Date(o.startDate).getTime() <= now &&
+          new Date(o.endDate).getTime() >= now
+        );
+        setOfferSlides(live.map(offerToSlide));
+      })
+      .catch(() => setOfferSlides([]));
   }, []);
+
+  // Live offers lead the carousel, admin/default slides follow.
+  const displaySlides = offerSlides.length > 0 ? [...offerSlides, ...slides] : slides;
 
   if (collabActive) return null;
 
@@ -145,7 +182,7 @@ const Hero = () => {
           modules={[Autoplay, Pagination, Navigation]}
           className="w-full h-full hero-swiper"
         >
-          {slides.map((slide, idx) => (
+          {displaySlides.map((slide, idx) => (
             <SwiperSlide key={idx} className="relative overflow-hidden">
               <img
                 src={slide.image}

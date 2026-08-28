@@ -1687,6 +1687,12 @@ import { Helmet } from "react-helmet-async";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
 import { cachedGet } from "../../utils/httpCache";
 import { HiScale } from "react-icons/hi2";
+import {
+  getPendingCoupons,
+  addPendingCoupon,
+  removePendingCoupon,
+  onPendingCouponsChange,
+} from "../../utils/pendingCoupons";
 
 // Local CSS for the size-chart drawer animation (kept here to avoid global CSS churn)
 const _sizeChartDrawerAnim = `
@@ -1736,6 +1742,9 @@ const ProductDetails = ({ productId }) => {
   const [modalIndex, setModalIndex] = useState(0);
   const [modalIsGallery, setModalIsGallery] = useState(false);
   const [paymentOffers, setPaymentOffers] = useState([]);
+  const [bankOffersOpen, setBankOffersOpen] = useState(false);
+  const [productOffers, setProductOffers] = useState([]);
+  const [appliedCoupons, setAppliedCoupons] = useState(() => getPendingCoupons());
   const [modalZoom, setModalZoom] = useState(1);
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -1818,6 +1827,31 @@ const ProductDetails = ({ productId }) => {
     };
     fetchOffers();
   }, []);
+
+  // Store coupons / offers applicable to this specific product
+  useEffect(() => {
+    const pid = selectedProduct?._id;
+    if (!pid) {
+      setProductOffers([]);
+      return;
+    }
+    let cancelled = false;
+    axios
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/for-product/${pid}`)
+      .then(({ data }) => {
+        if (!cancelled && Array.isArray(data)) setProductOffers(data);
+      })
+      .catch(() => {
+        if (!cancelled) setProductOffers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProduct?._id]);
+
+  // Keep applied coupons in sync with what other tabs / components change
+  useEffect(() => onPendingCouponsChange(setAppliedCoupons), []);
+
   // ── Derived variant data (supports both new colorVariants and legacy variants) ──
   const hasColorVariants =
     Array.isArray(selectedProduct?.colorVariants) && selectedProduct.colorVariants.length > 0;
@@ -2024,6 +2058,50 @@ const ProductDetails = ({ productId }) => {
     : originalPrice;
   const showDiscount = displayPrice > 0 && displayPrice < originalPrice;
   const timedOfferBadge = saleLabel;
+
+  // ── Store coupons / offers for this product ────────────────────────────────
+  const PM_LABELS = {
+    Razorpay: "prepaid / cards / UPI",
+    cash_on_delivery: "Cash on Delivery",
+    PayPal: "PayPal",
+  };
+
+  // Best-effort estimate of what an offer saves on a single unit of this product.
+  // Checkout re-computes the real number server-side.
+  const estimateOfferSaving = (offer) => {
+    const unit = Number(displayPrice) || 0;
+    if (unit <= 0 || offer.scope === "shipping") return 0;
+    let saving = 0;
+    if (offer.benefitType === "flat") {
+      saving = Math.min(unit, Number(offer.amount) || 0);
+    } else {
+      saving = (unit * (Number(offer.percent) || 0)) / 100;
+      if (offer.maxDiscount != null) saving = Math.min(saving, Number(offer.maxDiscount));
+    }
+    return Math.round(saving);
+  };
+
+  const couponOffers = productOffers.filter((o) => o.couponCode);
+  const autoOffers = productOffers.filter((o) => !o.couponCode);
+
+  const isCouponApplied = (code) =>
+    appliedCoupons.includes(String(code || "").trim().toUpperCase());
+
+  const handleApplyCouponOffer = (offer) => {
+    if (!offer?.couponCode) return;
+    if (isCouponApplied(offer.couponCode)) {
+      setAppliedCoupons(removePendingCoupon(offer.couponCode));
+      toast.success(`Removed ${offer.couponCode}`);
+      return;
+    }
+    setAppliedCoupons(addPendingCoupon(offer.couponCode));
+    const saved = estimateOfferSaving(offer);
+    toast.success(
+      saved > 0
+        ? `${offer.couponCode} applied — save about ₹${saved.toLocaleString("en-IN")} at checkout`
+        : `${offer.couponCode} applied — savings shown at checkout`
+    );
+  };
 
   const getCardTimedOffer = (product) => {
     const timed = product?.timedOffer || null;
@@ -3163,7 +3241,9 @@ const ProductDetails = ({ productId }) => {
 
               {/* RIGHT: Product Info + Buy Box */}
               {/* isolate creates a new stacking context so nothing here leaks above the fixed zoom panel */}
-              <div className="lg:col-span-7 p-2 sm:p-3 md:p-4 lg:p-8 space-y-4 md:space-y-5 isolate">
+              <div className="lg:col-span-7 p-2 sm:p-3 md:p-4 lg:p-8 isolate lg:grid lg:grid-cols-7 lg:gap-8 lg:items-start">
+                {/* ── MIDDLE COLUMN — product info ── */}
+                <div className="lg:col-span-4 min-w-0 space-y-4 md:space-y-5">
                 {/* Brand + Title */}
                 <div>
                   {selectedProduct.brand && (
@@ -3256,18 +3336,6 @@ const ProductDetails = ({ productId }) => {
                   )}
                 </div>
 
-                {/* Payment Offers Section */}
-                {paymentOffers.length > 0 && (
-                  <div className="mt-4">
-                    <div className="flex flex-wrap gap-3">
-                      {paymentOffers.slice(0, 3).map((offer) => (
-                        <span key={offer.id} className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-                          <span className="text-sky-600">💳</span> {offer.displayText}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {/* Offers strip */}
                 <div className="flex flex-wrap gap-3 py-3">
                   {(() => {
@@ -3664,6 +3732,137 @@ const ProductDetails = ({ productId }) => {
                     SKU: <span className="font-mono">{selectedVariantSku}</span>
                   </p>
                 )} */}
+                </div>
+                {/* ── end MIDDLE COLUMN ── */}
+
+                {/* ── RIGHT COLUMN — offers ── */}
+                <div className="lg:col-span-3 min-w-0 space-y-3 mt-6 lg:mt-0 lg:sticky lg:top-20">
+                {/* Available Offers (store coupons + auto offers) */}
+                {(couponOffers.length > 0 || autoOffers.length > 0) && (
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-emerald-600">🏷️</span>
+                      <h4 className="text-sm font-bold text-gray-800">Available Offers</h4>
+                    </div>
+                    <ul className="space-y-2.5">
+                      {couponOffers.map((offer) => {
+                        const applied = isCouponApplied(offer.couponCode);
+                        const saving = estimateOfferSaving(offer);
+                        return (
+                          <li key={offer._id} className="flex items-start gap-3">
+                            <span className="text-emerald-500 mt-0.5 shrink-0">%</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] text-gray-700 leading-snug">
+                                <span className="font-semibold">{offer.title}</span>
+                                {offer.description ? ` — ${offer.description}` : ""}
+                              </p>
+                              <p className="text-[11px] text-gray-500 mt-0.5">
+                                Code{" "}
+                                <span className="font-mono font-semibold text-gray-700">
+                                  {offer.couponCode}
+                                </span>
+                                {offer.paymentMethods?.length > 0 && (
+                                  <>
+                                    {" "}· on{" "}
+                                    {offer.paymentMethods
+                                      .map((pm) => PM_LABELS[pm] || pm)
+                                      .join(", ")}
+                                  </>
+                                )}
+                                {offer.minCartSubtotal
+                                  ? ` · min cart ₹${Number(offer.minCartSubtotal).toLocaleString("en-IN")}`
+                                  : ""}
+                                {applied && saving > 0
+                                  ? ` · saves ~₹${saving.toLocaleString("en-IN")}`
+                                  : ""}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleApplyCouponOffer(offer)}
+                              className={`shrink-0 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg transition ${
+                                applied
+                                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                  : "border border-emerald-500 text-emerald-700 hover:bg-emerald-100"
+                              }`}
+                            >
+                              {applied ? "Applied ✓" : "Apply"}
+                            </button>
+                          </li>
+                        );
+                      })}
+                      {autoOffers.map((offer) => (
+                        <li key={offer._id} className="flex items-start gap-3">
+                          <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] text-gray-700 leading-snug">
+                              <span className="font-semibold">{offer.title}</span>
+                              {offer.description ? ` — ${offer.description}` : ""}
+                            </p>
+                            <p className="text-[11px] text-emerald-600 font-medium mt-0.5">
+                              Applied automatically at checkout
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {couponOffers.some((o) => isCouponApplied(o.couponCode)) && (
+                      <p className="text-[11px] text-gray-500 mt-3">
+                        Applied coupons are carried to checkout. Final savings depend on
+                        your cart and payment method.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Bank / Payment Offers (display-only) */}
+                {paymentOffers.length > 0 && (
+                  <div className="rounded-xl border border-sky-100 bg-sky-50/50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {/* <span className="text-sky-600">💳</span> */}
+                      <h4 className="text-sm font-bold text-gray-800">Bank Offers</h4>
+                    </div>
+                    <ul className="space-y-2">
+                      {paymentOffers.slice(0, 2).map((offer) => (
+                        <li key={offer.id} className="text-[12px] text-gray-600 leading-snug flex items-center gap-2">
+                          {offer.logo ? (
+                            <img
+                              src={offer.logo}
+                              alt=""
+                              className="h-6 w-9 object-contain shrink-0 bg-white rounded border border-sky-100 p-0.5"
+                            />
+                          ) : (
+                            <span className="text-sky-400 shrink-0">•</span>
+                          )}
+                          <span>
+                            {offer.displayText}
+                            {offer.tncUrl && (
+                              <a
+                                href={offer.tncUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-1 text-sky-600 underline"
+                              >
+                                T&amp;C
+                              </a>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {paymentOffers.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => setBankOffersOpen(true)}
+                        className="mt-2 text-xs font-semibold text-sky-700 hover:text-sky-900"
+                      >
+                        View all {paymentOffers.length} offers →
+                      </button>
+                    )}
+                  </div>
+                )}
+                </div>
+                {/* ── end RIGHT COLUMN ── */}
               </div>
             </div>
           </div>
@@ -4253,6 +4452,57 @@ const ProductDetails = ({ productId }) => {
       )}
 
       {/* SHARE MODAL */}
+      {bankOffersOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setBankOffersOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 relative max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setBankOffersOpen(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl transition"
+            >
+              ×
+            </button>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Bank &amp; Payment Offers</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              Applied by the bank / payment provider at the time of payment.
+            </p>
+            <ul className="space-y-3">
+              {paymentOffers.map((offer) => (
+                <li key={offer.id} className="flex items-center gap-3 text-[13px] text-gray-700 leading-snug">
+                  {offer.logo ? (
+                    <img
+                      src={offer.logo}
+                      alt=""
+                      className="h-8 w-11 object-contain shrink-0 bg-white rounded border border-gray-200 p-0.5"
+                    />
+                  ) : (
+                    <span className="text-sky-500 shrink-0">💳</span>
+                  )}
+                  <span>
+                    {offer.displayText}
+                    {offer.tncUrl && (
+                      <a
+                        href={offer.tncUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1 text-sky-600 underline"
+                      >
+                        T&amp;C
+                      </a>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {shareOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"

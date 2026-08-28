@@ -58,6 +58,8 @@ import AdminAboutSettings from "./pages/AdminAboutSettings";
 import PrivacyPolicySettings from "./pages/PrivacyPolicySettings";
 import AddEditOffer from "./pages/AddEditOffer";
 import AdminOffersList from "./pages/AdminOffersList";
+import AddEditCoupon from "./pages/AddEditCoupon";
+import AdminCouponsList from "./pages/AdminCouponsList";
 import OffersShowcase from "./pages/OffersShowcase";
 import VerifyMobile from "./pages/VerifyMobile";
 import AutoLogout from "./components/Common/AutoLogout";
@@ -383,6 +385,30 @@ const App = () => {
               element={
                 <ProtectedRoute role={["admin", "merchantise"]}>
                   <AddEditOffer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="create-coupon"
+              element={
+                <ProtectedRoute role={["admin", "merchantise"]}>
+                  <AddEditCoupon />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="coupons"
+              element={
+                <ProtectedRoute role={["admin", "merchantise"]}>
+                  <AdminCouponsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="edit-coupon/:id"
+              element={
+                <ProtectedRoute role={["admin", "merchantise"]}>
+                  <AddEditCoupon />
                 </ProtectedRoute>
               }
             />

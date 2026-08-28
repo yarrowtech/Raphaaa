@@ -105,7 +105,12 @@ const Home = () => {
         const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/offers/public`);
         const now = new Date();
         const visibleOffers = Array.isArray(data)
-          ? data.filter((offer) => offer?.isActive !== false && new Date(offer.endDate) >= now)
+          ? data.filter(
+              (offer) =>
+                offer?.isActive !== false &&
+                !offer.couponCode &&
+                new Date(offer.endDate) >= now
+            )
           : [];
         setActiveOffer(visibleOffers[0] || null);
       } catch (err) {

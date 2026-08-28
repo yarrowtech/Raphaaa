@@ -32,6 +32,13 @@ const contactSettingSchema = new mongoose.Schema({
   exitIntentCoupon:       { type: String, default: "WELCOME10" },
   exitIntentDiscount:     { type: String, default: "10%" },
   exitIntentEnabled:      { type: Boolean, default: true },
+  // Manual bank / payment offers shown on the product page (display-only)
+  bankOffers: [{
+    text:    { type: String, default: "" },
+    tncUrl:  { type: String, default: "" },
+    logo:    { type: String, default: "" }, // bank/card logo image URL
+    enabled: { type: Boolean, default: true },
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model("ContactSetting", contactSettingSchema);

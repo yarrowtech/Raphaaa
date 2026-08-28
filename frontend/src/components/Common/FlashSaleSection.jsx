@@ -42,7 +42,7 @@ const FlashSaleSection = () => {
         const now = new Date();
         // Pick the soonest-ending active offer
         const active = (Array.isArray(payload) ? payload : [])
-          .filter((o) => o.isActive !== false && new Date(o.endDate) > now)
+          .filter((o) => o.isActive !== false && !o.couponCode && new Date(o.endDate) > now)
           .sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
         setOffer(active[0] || null);
       })

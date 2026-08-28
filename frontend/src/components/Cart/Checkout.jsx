@@ -32,6 +32,11 @@ import { HiX } from "react-icons/hi";
 import { HiTrash } from "react-icons/hi2";
 import { Verified } from "lucide-react";
 import { getOrderGstSummary } from "../../utils/gst";
+import {
+  getPendingCoupons,
+  clearPendingCoupons,
+  removePendingCoupon,
+} from "../../utils/pendingCoupons";
 
 
 
@@ -193,7 +198,7 @@ const Checkout = () => {
   );
 
   const [couponCode, setCouponCode] = useState("");
-  const [couponCodes, setCouponCodes] = useState([]);
+  const [couponCodes, setCouponCodes] = useState(() => getPendingCoupons());
   const [walletRedeem, setWalletRedeem] = useState(0);
   const [orderNote, setOrderNote] = useState("");
   const [quote, setQuote] = useState(null);
@@ -568,6 +573,7 @@ const Checkout = () => {
           if (result.type === "checkout/createCODOrder/fulfilled") {
             dispatch(clearCart());
             dispatch(clearCheckout());
+            clearPendingCoupons();
             setOrderInitiated(false);
             navigate("/order-confirmation", {
               state: { order: result.payload, paymentMethod: "cash_on_delivery" },
@@ -618,6 +624,7 @@ const Checkout = () => {
       if (result.type === "checkout/verifyRazorpayPayment/fulfilled") {
         dispatch(clearCart());
         dispatch(clearCheckout());
+        clearPendingCoupons();
         setOrderInitiated(false);
         navigate("/order-confirmation", {
           state: { order: result.payload.order, paymentMethod: "razorpay" },
@@ -1006,7 +1013,7 @@ const Checkout = () => {
             <div className="flex flex-wrap gap-2 mt-2">
               {couponCodes.map((c) => (
                 <button key={c} type="button"
-                  onClick={() => setCouponCodes((prev) => prev.filter((x) => x !== c))}
+                  onClick={() => { removePendingCoupon(c); setCouponCodes((prev) => prev.filter((x) => x !== c)); }}
                   className="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100"
                   title="Remove"
                 >
@@ -1556,7 +1563,7 @@ const Checkout = () => {
                     <div className="flex flex-wrap gap-2">
                       {couponCodes.map((c) => (
                         <button key={c} type="button"
-                          onClick={() => setCouponCodes((prev) => prev.filter((x) => x !== c))}
+                          onClick={() => { removePendingCoupon(c); setCouponCodes((prev) => prev.filter((x) => x !== c)); }}
                           className="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100"
                           title="Remove"
                         >

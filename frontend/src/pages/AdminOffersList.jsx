@@ -21,7 +21,8 @@ const AdminOffersList = () => {
           },
         }
       );
-      setOffers(data);
+      // Coupons (offers with a couponCode) are managed on the separate Coupons page.
+      setOffers((data || []).filter((o) => !o.couponCode));
     } catch (err) {
       toast.error("Failed to fetch offers");
     } finally {

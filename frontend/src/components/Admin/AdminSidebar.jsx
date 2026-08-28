@@ -17,7 +17,7 @@ import { LuMessageSquareText } from "react-icons/lu";
 import axios from "axios";
 import { toast } from "sonner";
 import { GiLetterBomb } from "react-icons/gi";
-import { BiSolidOffer, BiCategoryAlt } from "react-icons/bi";
+import { BiSolidOffer, BiCategoryAlt, BiSolidCoupon } from "react-icons/bi";
 import { FaPeopleCarryBox } from "react-icons/fa6";
 import { TbHierarchy3 } from "react-icons/tb";
 import { SiMinutemailer } from "react-icons/si";
@@ -251,6 +251,12 @@ const AdminSidebar = () => {
               <AccordionGroup icon={BiSolidOffer} label="Offers">
                 <SubItem to="/admin/create-offers" icon={HiPlusCircle} label="Create Offer" />
                 <SubItem to="/admin/offers"        icon={BiSolidOffer} label="View Offers" />
+              </AccordionGroup>
+            )}
+            {(isAdmin) && (
+              <AccordionGroup icon={BiSolidCoupon} label="Coupons">
+                <SubItem to="/admin/create-coupon" icon={HiPlusCircle}  label="Create Coupon" />
+                <SubItem to="/admin/coupons"        icon={BiSolidCoupon} label="View Coupons" />
               </AccordionGroup>
             )}
           </>

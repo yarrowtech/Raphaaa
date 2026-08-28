@@ -46,9 +46,12 @@ const AdminContactSettings = () => {
     exitIntentEnabled:  true,
     exitIntentCoupon:   "WELCOME10",
     exitIntentDiscount: "10%",
+    // Manual bank / payment offers (product page, display-only)
+    bankOffers: [],
   });
 
   const [loading, setLoading] = useState(false);
+  const [uploadingLogoIndex, setUploadingLogoIndex] = useState(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -61,6 +64,7 @@ const AdminContactSettings = () => {
           ...prev,
           ...data,
           socialLinks: socialLinks.length ? socialLinks : [createSocialLink({ enabled: false })],
+          bankOffers: Array.isArray(data.bankOffers) ? data.bankOffers : [],
         }));
       } catch {
         toast.error("Failed to load contact settings");
@@ -114,6 +118,53 @@ const AdminContactSettings = () => {
         ? prev.socialLinks.filter((_, linkIndex) => linkIndex !== index)
         : [createSocialLink({ enabled: false })],
     }));
+  };
+
+  const addBankOffer = () => {
+    setForm((prev) => ({
+      ...prev,
+      bankOffers: [...(prev.bankOffers || []), { text: "", tncUrl: "", enabled: true }],
+    }));
+  };
+
+  const removeBankOffer = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      bankOffers: (prev.bankOffers || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleBankOfferChange = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      bankOffers: (prev.bankOffers || []).map((offer, i) =>
+        i === index ? { ...offer, [field]: value } : offer
+      ),
+    }));
+  };
+
+  const handleBankOfferLogoUpload = async (index, file) => {
+    if (!file) return;
+    try {
+      setUploadingLogoIndex(index);
+      const imgData = new FormData();
+      imgData.append("image", file);
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/upload`,
+        imgData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        }
+      );
+      handleBankOfferChange(index, "logo", data.imageUrl);
+    } catch {
+      toast.error("Logo upload failed");
+    } finally {
+      setUploadingLogoIndex(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -443,6 +494,122 @@ const AdminContactSettings = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
               />
             </div>
+          </div>
+        </div>
+
+        {/* ── Bank / Payment Offers (Product Page) ── */}
+        <div className="md:col-span-2 border-t border-gray-100 pt-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-gray-700 uppercase tracking-widest">
+                💳 Bank &amp; Payment Offers
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">
+                Shown in the “Bank Offers” box on every product page. Display-only —
+                the discount is applied by the bank / payment provider.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addBankOffer}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100 transition-colors shrink-0"
+            >
+              <FaPlus className="text-xs" />
+              Add Offer
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {(form.bankOffers || []).length === 0 && (
+              <p className="text-sm text-gray-400 italic">No bank offers added.</p>
+            )}
+            {(form.bankOffers || []).map((offer, index) => (
+              <div
+                key={index}
+                className="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <p className="text-sm font-semibold text-gray-800">Offer {index + 1}</p>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                      <input
+                        type="checkbox"
+                        className="accent-sky-500"
+                        checked={offer.enabled !== false}
+                        onChange={(e) => handleBankOfferChange(index, "enabled", e.target.checked)}
+                      />
+                      Active
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeBankOffer(index)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm hover:text-red-600 hover:bg-red-50 transition-colors"
+                      aria-label="Remove bank offer"
+                    >
+                      <FaTrash className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="shrink-0">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Bank / Card Logo
+                    </label>
+                    <label className="flex h-16 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-sky-200 bg-white overflow-hidden hover:bg-sky-50 transition">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleBankOfferLogoUpload(index, e.target.files?.[0])}
+                      />
+                      {uploadingLogoIndex === index ? (
+                        <span className="text-[10px] text-sky-500 animate-pulse">Uploading…</span>
+                      ) : offer.logo ? (
+                        <img src={offer.logo} alt="" className="h-full w-full object-contain p-1" />
+                      ) : (
+                        <span className="text-[10px] text-gray-400 text-center px-1">+ Add logo</span>
+                      )}
+                    </label>
+                    {offer.logo && (
+                      <button
+                        type="button"
+                        onClick={() => handleBankOfferChange(index, "logo", "")}
+                        className="mt-1 text-[10px] text-red-500 hover:text-red-700"
+                      >
+                        Remove logo
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Offer Text
+                      </label>
+                      <input
+                        type="text"
+                        value={offer.text || ""}
+                        onChange={(e) => handleBankOfferChange(index, "text", e.target.value)}
+                        placeholder="Unlimited 1% cashback with Amazon Pay ICICI Bank Credit Card"
+                        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        T&amp;C URL (optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={offer.tncUrl || ""}
+                        onChange={(e) => handleBankOfferChange(index, "tncUrl", e.target.value)}
+                        placeholder="https://..."
+                        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

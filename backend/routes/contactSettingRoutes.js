@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ContactSetting = require("../models/ContactSetting");
 const { protect, adminOrMerchantise } = require("../middleware/authMiddleware");
+const { deleteJson } = require("../utils/redisCache");
 
 // @desc Get contact settings
 // @route GET /api/settings/contact
@@ -29,6 +30,7 @@ router.put("/", protect, adminOrMerchantise, async (req, res) => {
       Object.assign(setting, data);
     }
     await setting.save();
+    try { await deleteJson("offers", "payment"); } catch (_) {}
     res.json({ message: "Settings updated successfully" });
   } catch (err) {
     res.status(500).json({ message: "Failed to update settings" });
