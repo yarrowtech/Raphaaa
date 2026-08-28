@@ -100,17 +100,33 @@ async function userIsNew(userId) {
   return count === 0;
 }
 
-function buildLineTotals(items) {
+// Authoritative unit price for a line — resolved from the DB, never from the
+// client. Uses the lowest legitimate price (base / standing discount / live
+// timed-sale price). Falls back to the client value only if the product is
+// missing (that line will fail validation elsewhere).
+function resolveServerUnitPrice(doc, clientPrice) {
+  const fallback = Number(clientPrice) || 0;
+  if (!doc) return fallback;
+  const candidates = [doc.price, doc.discountPrice, doc.activeSalePrice]
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v) && v > 0);
+  return candidates.length ? Math.min(...candidates) : fallback;
+}
+
+function buildLineTotals(items, priceDocMap = {}) {
   const normalized = (items || []).map((it) => {
+    const pid = String(it.productId || it._id || "");
+    const doc = priceDocMap[pid];
     const quantity = Number(it.quantity || 0);
-    const unitPrice = Number(it.price || 0);
+    const unitPrice = resolveServerUnitPrice(doc, it.price);
     const lineSubtotal = clampMoney(unitPrice * quantity);
     return {
       productId: it.productId || it._id,
       sku: it.sku,
       name: it.name,
-      category: it.category,
-      brand: it.brand,
+      // Prefer DB category/brand so offer targeting can't be gamed client-side.
+      category: doc?.category ?? it.category,
+      brand: doc?.brand ?? it.brand,
       quantity,
       unitPrice: clampMoney(unitPrice),
       lineSubtotal,
@@ -209,7 +225,19 @@ async function priceQuote({
   const now = new Date();
   const pm = normalizePaymentMethod(paymentMethod);
 
-  const { items: normItems, subtotal } = buildLineTotals(items);
+  // Resolve authoritative prices/attributes from the DB up front — the client
+  // is never trusted for unit price, category or brand.
+  const requestedIds = [
+    ...new Set((items || []).map((it) => String(it.productId || it._id || "")).filter(Boolean)),
+  ];
+  const productDocs = requestedIds.length
+    ? await Product.find({ _id: { $in: requestedIds } })
+        .select("price mrp discountPrice offerPercentage activeSaleOfferId activeSalePrice freeShipping extraShippingCharge category brand")
+        .lean()
+    : [];
+  const productMap = Object.fromEntries(productDocs.map((p) => [String(p._id), p]));
+
+  const { items: normItems, subtotal } = buildLineTotals(items, productMap);
 
   // Load admin-controlled shipping config from DB
   const cfg = await getShippingConfig();
@@ -225,14 +253,7 @@ async function priceQuote({
     baseShipping = cfg.baseShippingFee;
   }
 
-  // --- Product-level overrides ---
-  const productIds = normItems.map((it) => it.productId).filter(Boolean);
-  const productDocs = productIds.length
-    ? await Product.find({ _id: { $in: productIds } })
-        .select("price mrp discountPrice offerPercentage activeSaleOfferId activeSalePrice freeShipping extraShippingCharge")
-        .lean()
-    : [];
-  const productMap = Object.fromEntries(productDocs.map((p) => [String(p._id), p]));
+  // --- Product-level overrides (reuses productDocs/productMap resolved above) ---
   const saleProtectedProductIds = new Set(
     productDocs.filter((p) => {
       const mrp = Number(p?.mrp || 0);

@@ -199,6 +199,8 @@ const Checkout = () => {
 
   const [couponCode, setCouponCode] = useState("");
   const [couponCodes, setCouponCodes] = useState(() => getPendingCoupons());
+  const [couponError, setCouponError] = useState("");
+  const [couponChecking, setCouponChecking] = useState(false);
   const [walletRedeem, setWalletRedeem] = useState(0);
   const [orderNote, setOrderNote] = useState("");
   const [quote, setQuote] = useState(null);
@@ -223,8 +225,8 @@ const Checkout = () => {
   useEffect(() => {
     const fetchCollab = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}`);
-        if (data && data.length > 0) setFeaturedCollab(data[0]);
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/collabs`);
+        if (Array.isArray(data) && data.length > 0) setFeaturedCollab(data[0]);
       } catch (err) {
         console.error("Failed to load feature collab", err);
       }
@@ -518,10 +520,58 @@ const Checkout = () => {
     validatePhone(String(address.phone || ""));
   };
 
+  const applyCoupon = async () => {
+    const c = couponCode.trim().toUpperCase();
+    setCouponError("");
+    if (!c) return;
+    if (couponCodes.includes(c)) {
+      setCouponError("This coupon is already applied.");
+      return;
+    }
+    if (couponCodes.length >= 5) {
+      setCouponError("You can apply up to 5 coupons.");
+      return;
+    }
+    try {
+      setCouponChecking(true);
+      const token = localStorage.getItem("userToken");
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/offers/validate`,
+        { code: c },
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      if (data?.valid) {
+        setCouponCodes((prev) => [...prev, c].slice(0, 5));
+        setCouponCode("");
+        setCouponError("");
+        toast.success(`Coupon ${c} applied`);
+      } else {
+        setCouponError(data?.message || "No coupon found for this code");
+      }
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 404) {
+        setCouponError(err.response?.data?.message || "No coupon found for this code");
+      } else {
+        setCouponError("Could not check that coupon. Please try again.");
+      }
+    } finally {
+      setCouponChecking(false);
+    }
+  };
+
   const handleCreateOrder = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (!shippingAddress.address) {
       toast.error("Please select an address first.");
+      return;
+    }
+    if (!shippingAddress.city?.trim() || !shippingAddress.postalCode?.trim()) {
+      toast.error("Address is missing city or PIN code. Please edit and complete it.");
+      return;
+    }
+    if (!/^\d{6}$/.test(String(shippingAddress.postalCode).trim())) {
+      toast.error("Enter a valid 6-digit PIN code.");
       return;
     }
     if (!validatePhone(shippingAddress.phone)) return;
@@ -992,23 +1042,25 @@ const Checkout = () => {
           <div className="flex gap-2">
             <input
               value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
+              onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
               placeholder="Enter coupon code"
-              className="flex-1 px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-lg focus:bg-white focus:outline-none focus:border-sky-400 transition"
+              className={`flex-1 px-3 py-2.5 text-sm border bg-gray-50 rounded-lg focus:bg-white focus:outline-none transition ${
+                couponError ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-sky-400"
+              }`}
             />
             <button
               type="button"
-              onClick={() => {
-                const c = couponCode.trim().toUpperCase();
-                if (!c || couponCodes.includes(c)) return;
-                setCouponCodes((prev) => [...prev, c].slice(0, 5));
-                setCouponCode("");
-              }}
-              className="px-4 rounded-lg text-sm font-bold border-2 border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition"
+              onClick={applyCoupon}
+              disabled={couponChecking}
+              className="px-4 rounded-lg text-sm font-bold border-2 border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition disabled:opacity-50"
             >
-              Apply
+              {couponChecking ? "…" : "Apply"}
             </button>
           </div>
+          {couponError && (
+            <p className="text-xs font-medium text-red-500 mt-2">{couponError}</p>
+          )}
           {couponCodes.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {couponCodes.map((c) => (
@@ -1541,23 +1593,25 @@ const Checkout = () => {
                   <div className="flex gap-2">
                     <input
                       value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
+                      onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
                       placeholder="Coupon code"
-                      className="flex-1 px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-xl focus:bg-white focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition"
+                      className={`flex-1 px-3 py-2.5 text-sm border bg-gray-50 rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition ${
+                        couponError ? "border-red-400 focus:border-red-400 focus:ring-red-100" : "border-gray-200 focus:border-sky-400 focus:ring-sky-100"
+                      }`}
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        const c = couponCode.trim().toUpperCase();
-                        if (!c || couponCodes.includes(c)) return;
-                        setCouponCodes((prev) => [...prev, c].slice(0, 5));
-                        setCouponCode("");
-                      }}
-                      className="px-4 rounded-xl text-sm font-bold border-2 border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition"
+                      onClick={applyCoupon}
+                      disabled={couponChecking}
+                      className="px-4 rounded-xl text-sm font-bold border-2 border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition disabled:opacity-50"
                     >
-                      Apply
+                      {couponChecking ? "…" : "Apply"}
                     </button>
                   </div>
+                  {couponError && (
+                    <p className="text-xs font-medium text-red-500">{couponError}</p>
+                  )}
 
                   {couponCodes.length > 0 && (
                     <div className="flex flex-wrap gap-2">

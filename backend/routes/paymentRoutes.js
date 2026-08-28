@@ -473,7 +473,8 @@ router.post("/create-order", protect, async (req, res) => {
         }
       }
 
-      // Server-side pricing (promos + wallet). We keep item.price as the base unit price.
+      // Server-side pricing (promos + wallet). Unit prices are resolved from the
+      // DB inside priceQuote — the client-sent item.price is ignored.
       const { priceQuote } = require("../services/pricingService");
       const { getAvailableCredits } = require("../services/walletService");
       const quote = await priceQuote({
@@ -488,9 +489,16 @@ router.post("/create-order", protect, async (req, res) => {
       const walletApplied = Math.min(walletBalance, requested, quote.total);
       const calculatedTotal = Math.max(0, Number(quote.total) - walletApplied);
 
+      // The customer is always charged the server-computed total, never the
+      // client-sent `amount` (which is only used for a sanity log).
       if (amount && Math.abs(Number(amount) - calculatedTotal) > 0.01) {
         console.warn("Amount mismatch - Frontend:", amount, "Server:", calculatedTotal);
       }
+
+      // Authoritative unit price per product, from the quote.
+      const unitPriceByProduct = Object.fromEntries(
+        (quote.items || []).map((it) => [String(it.productId), Number(it.unitPrice) || 0])
+      );
 
       // Check for existing pending order with idempotencyKey
       if (idempotencyKey) {
@@ -572,7 +580,7 @@ router.post("/create-order", protect, async (req, res) => {
           productId: item.productId,
           name: item.name,
           image: item.image,
-          price: item.price,
+          price: unitPriceByProduct[String(item.productId)] ?? (Number(item.price) || 0),
           quantity: item.quantity,
           size: item.size || null,
           color: item.color || null,
@@ -606,8 +614,8 @@ router.post("/create-order", protect, async (req, res) => {
       const createdOrder = await order.save({ session });
       console.log("Created Order:", createdOrder._id);
 
-      // Create Razorpay Order
-      const razorpayAmount = Math.round(amount * 100); // Convert to paise
+      // Create Razorpay Order — charge the server-computed total, in paise.
+      const razorpayAmount = Math.round(calculatedTotal * 100);
       const options = {
         amount: razorpayAmount,
         currency,
@@ -631,7 +639,7 @@ router.post("/create-order", protect, async (req, res) => {
         orderId: createdOrder._id,
         userId: req.user._id,
         razorpayOrderId: razorpayOrder.id,
-        amount: amount,
+        amount: calculatedTotal,
         currency,
         status: "created",
         idempotencyKey: idempotencyKey || undefined,

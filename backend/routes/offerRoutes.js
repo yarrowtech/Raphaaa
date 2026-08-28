@@ -3,7 +3,7 @@ const router = express.Router();
 const Offer = require("../models/offer");
 const Product = require("../models/Product");
 const ContactSetting = require("../models/ContactSetting");
-const { protect, admin } = require("../middleware/authMiddleware");
+const { protect, admin, optionalAuth } = require("../middleware/authMiddleware");
 const { sendMail } = require("../utils/sendMail"); // Assuming you already have this utility
 const Subscriber = require("../models/Subscriber");
 const Order = require("../models/Order");
@@ -244,6 +244,57 @@ router.get("/for-product/:productId", async (req, res) => {
   } catch (err) {
     console.error("for-product offers fetch failed:", err.message);
     res.status(200).json([]);
+  }
+});
+
+// Public: check whether a coupon code exists and is live right now.
+// Used by the cart/checkout "Apply" box so a bad code shows "No coupon found".
+// @route POST /api/offers/validate  { code }
+router.post("/validate", optionalAuth, async (req, res) => {
+  try {
+    const code = String(req.body?.code || "").trim().toUpperCase();
+    if (!code) return res.status(400).json({ valid: false, message: "Enter a coupon code" });
+
+    const now = new Date();
+
+    const offer = await Offer.findOne({
+      couponCode: { $regex: `^${code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" },
+      isActive: { $ne: false },
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    }).lean();
+
+    if (offer) {
+      return res.json({
+        valid: true,
+        code,
+        title: offer.title || "",
+        description: offer.description || "",
+        paymentMethods: Array.isArray(offer.conditions?.paymentMethods)
+          ? offer.conditions.paymentMethods.filter(Boolean)
+          : [],
+        minCartSubtotal: offer.conditions?.minCartSubtotal != null
+          ? Number(offer.conditions.minCartSubtotal)
+          : null,
+      });
+    }
+
+    // Personal / welcome coupon on the logged-in user
+    if (req.user?._id) {
+      const user = await User.findById(req.user._id).select("coupon").lean();
+      const personalCode = String(user?.coupon?.code || "").trim().toUpperCase();
+      const notExpired = user?.coupon?.expiresAt
+        ? new Date(user.coupon.expiresAt) > now
+        : true;
+      if (personalCode && personalCode === code && notExpired) {
+        return res.json({ valid: true, code, title: "Personal coupon", personal: true });
+      }
+    }
+
+    return res.status(404).json({ valid: false, code, message: "No coupon found for this code" });
+  } catch (err) {
+    console.error("coupon validate error:", err.message);
+    res.status(500).json({ valid: false, message: "Could not validate coupon right now" });
   }
 });
 

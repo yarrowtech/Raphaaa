@@ -308,6 +308,32 @@ router.post("/cod", protect, async (req, res) => {
       totalDiscount: Number(quote?.totalDiscount || 0),
     };
 
+    // Store the authoritative unit price from the quote (client price ignored).
+    const unitPriceByProduct = Object.fromEntries(
+      (quote.items || []).map((it) => [String(it.productId), Number(it.unitPrice) || 0])
+    );
+    order.orderItems.forEach((oi) => {
+      const resolved = unitPriceByProduct[String(oi.productId)];
+      if (resolved != null) oi.price = resolved;
+    });
+
+    // Reserve stock BEFORE persisting the order or notifying the customer.
+    // Check every line first, then deduct, so we never half-fulfill.
+    // (A DB transaction would be stronger — kept simple here.)
+    const stockProducts = [];
+    for (const item of orderItems) {
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(400).json({ message: `Product not found: ${item.name || item.productId}` });
+      }
+      const check = applyStockDeduction(product, item);
+      if (!check.ok) {
+        return res.status(400).json({ message: check.message });
+      }
+      stockProducts.push(product);
+    }
+    await Promise.all(stockProducts.map((p) => p.save()));
+
     const createdOrder = await order.save();
     if (createdOrder?.attribution?.campaignClickId) {
       await registerCampaignConversion({
@@ -447,17 +473,7 @@ router.post("/cod", protect, async (req, res) => {
       }
     } catch (_) {}
 
-    // 🔻 Decrease stock for each ordered product
-    for (const item of orderItems) {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        const deduction = applyStockDeduction(product, item);
-        if (!deduction.ok) {
-          return res.status(400).json({ message: deduction.message });
-        }
-        await product.save();
-      }
-    }
+    // Stock was already reserved above, before the order was saved.
 
     // Clear cart after placing the order
     await Cart.findOneAndUpdate(
