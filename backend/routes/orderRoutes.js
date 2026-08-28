@@ -335,23 +335,9 @@ router.post("/cod", protect, async (req, res) => {
     await Promise.all(stockProducts.map((p) => p.save()));
 
     const createdOrder = await order.save();
-    if (createdOrder?.attribution?.campaignClickId) {
-      await registerCampaignConversion({
-        campaignClickId: createdOrder.attribution.campaignClickId,
-        orderId: createdOrder._id,
-      });
-    }
-    await Promise.all([
-      deleteJson("users", `user:${req.user._id}:my-coupon`),
-      deleteJson("users", `user:${req.user._id}:my-coupons`),
-    ]);
 
-    await fulfillPrebookingsForOrder({
-      userId: req.user._id,
-      orderItems: createdOrder.orderItems,
-      orderId: createdOrder._id,
-    });
-
+    // Essential writes to finish before responding: wallet redemption, coupon
+    // cache bust and cart clear (so the confirmation page shows an empty cart).
     if (walletApplied > 0) {
       await redeem({
         userId: req.user._id,
@@ -361,6 +347,33 @@ router.post("/cod", protect, async (req, res) => {
         note: `Redeemed for COD order ${createdOrder.orderId}`,
       });
     }
+    await Promise.all([
+      deleteJson("users", `user:${req.user._id}:my-coupon`),
+      deleteJson("users", `user:${req.user._id}:my-coupons`),
+    ]).catch(() => {});
+    await Cart.findOneAndUpdate(
+      { user: req.user._id },
+      { products: [], totalPrice: 0 }
+    );
+
+    // Respond immediately. Invoice PDF, email, WhatsApp and push are slow and
+    // run in the background — they must not delay the confirmation page.
+    res.status(201).json(createdOrder);
+
+    setImmediate(() => {
+      (async () => {
+    if (createdOrder?.attribution?.campaignClickId) {
+      await registerCampaignConversion({
+        campaignClickId: createdOrder.attribution.campaignClickId,
+        orderId: createdOrder._id,
+      });
+    }
+
+    await fulfillPrebookingsForOrder({
+      userId: req.user._id,
+      orderItems: createdOrder.orderItems,
+      orderId: createdOrder._id,
+    });
 
     // Referrer reward on first purchase
     await creditReferrerOnFirstOrder(req.user._id, createdOrder.totalPrice);
@@ -472,25 +485,18 @@ router.post("/cod", protect, async (req, res) => {
         await sendWhatsApp(`+91${String(phone).replace(/^\+91/, "")}`, waMsg);
       }
     } catch (_) {}
-
-    // Stock was already reserved above, before the order was saved.
-
-    // Clear cart after placing the order
-    await Cart.findOneAndUpdate(
-      { user: req.user._id },
-      {
-        products: [],
-        totalPrice: 0,
-      }
-    );
-
-    res.status(201).json(createdOrder);
+      })().catch((bgErr) =>
+        console.error("COD post-order side effects failed:", bgErr?.message || bgErr)
+      );
+    });
   } catch (error) {
     console.error("COD Order creation error:", error);
-    res.status(500).json({
-      message: "Failed to create Cash on Delivery order",
-      error: error.message,
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        message: "Failed to create Cash on Delivery order",
+        error: error.message,
+      });
+    }
   }
 });
 

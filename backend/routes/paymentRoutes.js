@@ -873,6 +873,26 @@ router.post("/verify-payment", protect, async (req, res) => {
         orderId: order._id,
       });
 
+      // Respond to the client NOW. The invoice PDF, email, WhatsApp and push
+      // are slow (seconds) and must never hold up the order-confirmation page.
+      res.json({
+        success: true,
+        message: "Payment verified and order processed successfully",
+        orderId: order._id,
+        paymentId: razorpayPaymentId,
+        order: {
+          id: order._id,
+          status: order.status,
+          paymentStatus: order.paymentStatus,
+          isPaid: order.isPaid,
+          totalPrice: order.totalPrice,
+          paidAt: order.paidAt,
+        },
+      });
+
+      // --- Background: notifications + referral (fire-and-forget) ---
+      setImmediate(() => {
+        (async () => {
       // Prepare populated order once for post-payment side effects
       let populatedOrder = null;
       try {
@@ -990,31 +1010,23 @@ router.post("/verify-payment", protect, async (req, res) => {
           await sendWhatsApp(`+91${String(phone).replace(/^\+91/, "")}`, waMsg);
         }
       } catch (_) {}
-
-      res.json({
-        success: true,
-        message: "Payment verified and order processed successfully",
-        orderId: order._id,
-        paymentId: razorpayPaymentId,
-        order: {
-          id: order._id,
-          status: order.status, // Fixed: Corrected syntax
-          paymentStatus: order.paymentStatus,
-          isPaid: order.isPaid,
-          totalPrice: order.totalPrice,
-          paidAt: order.paidAt,
-        },
+        })().catch((bgErr) =>
+          console.error("post-payment side effects failed:", bgErr?.message || bgErr)
+        );
       });
     });
   } catch (err) {
     console.error("Error verifying payment:", err.message);
     console.error("Stack trace:", err.stack);
-    
-    res.status(err.message.includes("Order ID does not match") ? 400 : 500).json({
-      success: false,
-      message: "Server error during payment verification",
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-    });
+
+    // The success response may already have been sent (background work follows it).
+    if (!res.headersSent) {
+      res.status(err.message.includes("Order ID does not match") ? 400 : 500).json({
+        success: false,
+        message: "Server error during payment verification",
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+      });
+    }
   } finally {
     session.endSession();
   }
