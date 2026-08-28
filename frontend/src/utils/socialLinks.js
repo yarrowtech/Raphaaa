@@ -45,6 +45,25 @@ export const getSocialIcon = (platform) => {
   return ICONS[key] || FaLink;
 };
 
+// Brand colors per platform. Full literal class strings so Tailwind's JIT keeps them.
+const ICON_CLASS_NAMES = {
+  facebook: "text-[#1877F2] hover:text-[#1877F2]",
+  instagram: "text-[#E4405F] hover:text-[#E4405F]",
+  x: "text-[#000000] hover:text-[#000000]",
+  twitter: "text-[#1DA1F2] hover:text-[#1DA1F2]",
+  youtube: "text-[#FF0000] hover:text-[#FF0000]",
+  pinterest: "text-[#BD081C] hover:text-[#BD081C]",
+  linkedin: "text-[#0A66C2] hover:text-[#0A66C2]",
+  tiktok: "text-[#EE1D52] hover:text-[#EE1D52]",
+  whatsapp: "text-[#25D366] hover:text-[#25D366]",
+  threads: "text-[#000000] hover:text-[#000000]",
+};
+
+export const getSocialIconClassName = (platform, fallback = "") => {
+  const key = normalizePlatform(platform);
+  return ICON_CLASS_NAMES[key] || fallback;
+};
+
 export const mapContactToSocialLinks = (contactInfo = {}) => {
   const safeContactInfo = contactInfo || {};
 

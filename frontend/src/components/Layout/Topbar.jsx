@@ -1,7 +1,10 @@
+
 import { RiCustomerServiceFill } from "react-icons/ri";
 import axios from "axios";
+import logo from "../../assets/logo1.png";
 import useSmartLoader from "../../hooks/useSmartLoader";
-import { getActiveSocialLinks, getSocialIcon } from "../../utils/socialLinks";
+import { getActiveSocialLinks, getSocialIcon, getSocialIconClassName } from "../../utils/socialLinks";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Topbar = () => {
   // const [loading, setLoading] = useState(true);
@@ -63,13 +66,13 @@ const Topbar = () => {
               <a
                 key={link.id}
                 href={link.url}
-                className="hover:text-sky-700 transition-transform duration-200 hover:scale-110"
+                className="transition-transform duration-200 hover:scale-110"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={link.label}
                 title={link.label}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 ${getSocialIconClassName(link.platform, "text-sky-600")}`} />
               </a>
             );
           })}
@@ -77,15 +80,17 @@ const Topbar = () => {
 
         {/* Center: Shipping message */}
         <div className="text-sm text-center flex-grow font-medium text-gray-800">
-          <div className="block md:hidden">
-            <marquee behavior="scroll" direction="left" scrollamount="5">
-                {/* We ship worldwide - Fast and reliable shipping!! */}
+          <div className="block flex items-center justify-center space-x-2">
+            {/* <marquee behavior="scroll" direction="left" scrollamount="5">
                 {contactInfo?.showTopText && (
                   <span className="font-semibold">
                     {contactInfo.topText}
                   </span>
                 )}
-            </marquee>
+            </marquee> */}
+            {/* <Link to="/" className="flex items-center space-x-2 group shrink-0" title="Raphaaa">
+              <img src={logo} alt="Logo" className="h-8 sm:h-9 md:h-10 w-auto transition-transform duration-300 group-hover:scale-105" />
+            </Link> */}
           </div>
           <div className="hidden md:block">
             {contactInfo?.showTopText && (
