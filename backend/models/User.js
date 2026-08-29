@@ -49,7 +49,9 @@ const userSchema = new mongoose.Schema(
       discount: { type: Number }, // e.g., 10 for 10%
       expiresAt: { type: Date },
     },
-    mobile: { type: String },
+    // Primary login identifier when set (10-digit, normalised). Email is the
+    // fallback for users without a mobile number.
+    mobile: { type: String, trim: true, index: true },
     mobileVerified: { type: Boolean, default: false },
     pushSubscription: {
       endpoint: { type: String, default: "" },

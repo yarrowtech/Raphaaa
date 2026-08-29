@@ -318,43 +318,57 @@ router.post("/cod", protect, async (req, res) => {
     });
 
     // Reserve stock BEFORE persisting the order or notifying the customer.
-    // Check every line first, then deduct, so we never half-fulfill.
-    // (A DB transaction would be stronger — kept simple here.)
-    const stockProducts = [];
+    // Each product is loaded once and every matching line is deducted from that
+    // same in-memory doc, so a cart with two variants of one product can't lose
+    // a deduction on save. (A DB transaction would be stronger — kept simple.)
+    const stockDocByProduct = new Map();
     for (const item of orderItems) {
-      const product = await Product.findById(item.productId);
+      const pid = String(item.productId);
+      let product = stockDocByProduct.get(pid);
       if (!product) {
-        return res.status(400).json({ message: `Product not found: ${item.name || item.productId}` });
+        product = await Product.findById(item.productId);
+        if (!product) {
+          return res.status(400).json({ message: `Product not found: ${item.name || item.productId}` });
+        }
+        stockDocByProduct.set(pid, product);
       }
       const check = applyStockDeduction(product, item);
       if (!check.ok) {
         return res.status(400).json({ message: check.message });
       }
-      stockProducts.push(product);
     }
-    await Promise.all(stockProducts.map((p) => p.save()));
+    await Promise.all([...stockDocByProduct.values()].map((p) => p.save()));
 
     const createdOrder = await order.save();
 
     // Essential writes to finish before responding: wallet redemption, coupon
     // cache bust and cart clear (so the confirmation page shows an empty cart).
+    // None of these should fail the order if they hiccup.
     if (walletApplied > 0) {
-      await redeem({
-        userId: req.user._id,
-        amount: walletApplied,
-        refType: "order_cod",
-        refId: String(createdOrder._id),
-        note: `Redeemed for COD order ${createdOrder.orderId}`,
-      });
+      try {
+        await redeem({
+          userId: req.user._id,
+          amount: walletApplied,
+          refType: "order_cod",
+          refId: String(createdOrder._id),
+          note: `Redeemed for COD order ${createdOrder.orderId}`,
+        });
+      } catch (walletErr) {
+        console.error("COD wallet redeem failed:", walletErr?.message || walletErr);
+      }
     }
     await Promise.all([
       deleteJson("users", `user:${req.user._id}:my-coupon`),
       deleteJson("users", `user:${req.user._id}:my-coupons`),
     ]).catch(() => {});
-    await Cart.findOneAndUpdate(
-      { user: req.user._id },
-      { products: [], totalPrice: 0 }
-    );
+    try {
+      await Cart.findOneAndUpdate(
+        { user: req.user._id },
+        { products: [], totalPrice: 0 }
+      );
+    } catch (cartErr) {
+      console.error("COD cart clear failed:", cartErr?.message || cartErr);
+    }
 
     // Respond immediately. Invoice PDF, email, WhatsApp and push are slow and
     // run in the background — they must not delay the confirmation page.

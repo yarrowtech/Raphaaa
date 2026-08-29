@@ -129,6 +129,12 @@ const Login = () => {
   }, [captchaQuestion, requiresCaptcha]);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Login identifier can be an email OR a 10-digit mobile number.
+  const isPhoneLike = (value) => /^\+?\d[\d\s-]{8,}$/.test(String(value).trim());
+  const validateIdentifier = (value) => {
+    const v = String(value).trim();
+    return validateEmail(v.toLowerCase()) || String(v).replace(/\D/g, "").length === 10;
+  };
 
   const refreshCaptcha = () => {
     const a = Math.floor(Math.random() * 10) + 1;
@@ -145,8 +151,8 @@ const Login = () => {
       return;
     }
 
-    if (!validateEmail(email)) {
-      toast.error("Please enter a valid email address");
+    if (!validateIdentifier(email)) {
+      toast.error("Enter a valid email address or 10-digit phone number");
       return;
     }
 
@@ -162,7 +168,11 @@ const Login = () => {
       }
     }
 
-    dispatch(loginUser({ email, password }));
+    const rawId = email.trim();
+    const identifier = isPhoneLike(rawId)
+      ? rawId.replace(/\D/g, "").slice(-10)
+      : rawId.toLowerCase();
+    dispatch(loginUser({ identifier, email: identifier, password }));
   };
 
   return (
@@ -178,11 +188,12 @@ const Login = () => {
 
           <div className="mb-5">
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              placeholder="Enter your email address"
+              placeholder="Phone number or email"
+              autoComplete="username"
             />
           </div>
 

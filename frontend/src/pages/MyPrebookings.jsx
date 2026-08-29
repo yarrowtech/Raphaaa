@@ -113,7 +113,7 @@ const MyPrebookings = () => {
             return (
               <div
                 key={b._id}
-                className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-gray-200 rounded-2xl shadow-sm"
+                className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm"
               >
                 <img
                   src={image || "/placeholder.png"}

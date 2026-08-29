@@ -135,18 +135,33 @@ router.post("/check-email", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+  // The login field accepts either a mobile number (primary) or an email.
+  const identifier = String(req.body.identifier ?? email ?? "").trim();
 
   // ── Validate input ──────────────────────────────────────────────
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required." });
+  if (!identifier || !password) {
+    return res.status(400).json({ message: "Email/phone and password are required." });
   }
 
   try {
-    // Find the user by email (case-insensitive)
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const digits = identifier.replace(/\D/g, "");
+    const looksLikePhone = !identifier.includes("@") && digits.length >= 10;
 
-    if (!user) {
-      return res.status(400).json({ message: "No account found with this email." });
+    let user = null;
+    if (looksLikePhone) {
+      const d10 = digits.slice(-10);
+      // Tolerate legacy stored formats (with/without +91 / 0 prefix).
+      user = await User.findOne({
+        mobile: { $in: [d10, `+91${d10}`, `91${d10}`, `0${d10}`] },
+      });
+      if (!user) {
+        return res.status(400).json({ message: "No account found with this phone number." });
+      }
+    } else {
+      user = await User.findOne({ email: identifier.toLowerCase() });
+      if (!user) {
+        return res.status(400).json({ message: "No account found with this email." });
+      }
     }
 
     // Check password

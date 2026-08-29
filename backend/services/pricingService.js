@@ -254,28 +254,13 @@ async function priceQuote({
   }
 
   // --- Product-level overrides (reuses productDocs/productMap resolved above) ---
+  // A product is "sale protected" (blocks further coupons/offers) ONLY while a
+  // live timed-sale offer is running on it. A standing everyday discount
+  // (discountPrice, or price below mrp) does NOT block coupons.
   const saleProtectedProductIds = new Set(
-    productDocs.filter((p) => {
-      const mrp = Number(p?.mrp || 0);
-      const price = Number(p?.price || 0);
-      const discountPrice = Number(p?.discountPrice || 0);
-      const activeSalePrice = Number(p?.activeSalePrice || 0);
-      const cartLine = normItems.find((it) => String(it.productId) === String(p?._id));
-      const linePrice = Number(cartLine?.unitPrice || 0);
-
-      const livePrice =
-        (activeSalePrice > 0 && activeSalePrice < price ? activeSalePrice : 0) ||
-        (discountPrice > 0 && discountPrice < price ? discountPrice : 0) ||
-        (mrp > 0 && price > 0 && price < mrp ? price : 0) ||
-        (mrp > 0 && linePrice > 0 && linePrice < mrp ? linePrice : 0);
-
-      return livePrice > 0 && (
-        (mrp > 0 && livePrice < mrp) ||
-        (price > 0 && livePrice < price) ||
-        (discountPrice > 0 && livePrice <= discountPrice) ||
-        (activeSalePrice > 0 && livePrice <= activeSalePrice)
-      );
-    }).map((p) => String(p._id))
+    productDocs
+      .filter((p) => p?.activeSaleOfferId != null || Number(p?.activeSalePrice || 0) > 0)
+      .map((p) => String(p._id))
   );
 
   const productExtraShipping = normItems.reduce((sum, it) => {
