@@ -372,7 +372,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setLoginMode("password")}
-                      className="text-sm text-sky-600 hover:underline font-medium text-right"
+                      className="w-full text-sm text-sky-600 hover:underline font-medium flex items-center justify-center gap-1"
                     >
                       Login with Email &amp; Password instead
                     </button>
