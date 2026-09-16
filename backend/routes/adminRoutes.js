@@ -46,6 +46,31 @@ router.get("/", protect, admin, async (req, res) => {
     }
 });
 
+// @route GET /api/admin/users/mobile-logins
+// @desc List users who have a mobile number on file (phone/OTP logins)
+// @access Private/Admin
+router.get("/mobile-logins", protect, admin, async (req, res) => {
+    try {
+        const users = await User.find({ mobile: { $exists: true, $ne: "" } })
+            .select("name mobile mobileVerified createdAt")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.json(
+            users.map((u) => ({
+                _id: u._id,
+                name: u.name || "",
+                mobile: u.mobile,
+                mobileVerified: !!u.mobileVerified,
+                createdAt: u.createdAt,
+            }))
+        );
+    } catch (error) {
+        console.error("mobile-logins error:", error);
+        res.status(500).json({ message: "Failed to load mobile logins" });
+    }
+});
+
 // @route GET /api/admin/users/:id/summary
 // @desc Full profile + order stats + wallet for one user (View modal)
 // @access Private/Admin

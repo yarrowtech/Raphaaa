@@ -13,7 +13,9 @@ const generateEmailOTP = () => Math.floor(100000 + Math.random() * 900000).toStr
 const crypto = require("crypto");
 const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
 // No expiry: token stays valid until the user explicitly logs out.
-const getJwtExpiresIn = () => undefined;
+// (jsonwebtoken rejects an "expiresIn" key whose value is undefined, so the
+// key must be omitted entirely rather than set to undefined.)
+const getJwtSignOptions = () => ({});
 const { getJson, setJson } = require("../utils/redisCache");
 
 // const ALLOWED_EMAILS = new Set([
@@ -72,7 +74,7 @@ router.post("/register", async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: getJwtExpiresIn() },
+      getJwtSignOptions(),
       (err, token) => {
         if (err) throw err;
 
@@ -177,7 +179,7 @@ router.post("/login", async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: getJwtExpiresIn() },
+      getJwtSignOptions(),
       (err, token) => {
         if (err) {
           console.error("JWT sign error:", err);
@@ -236,7 +238,7 @@ router.post("/google-login", async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: getJwtExpiresIn() },
+      getJwtSignOptions(),
       (err, token) => {
         if (err) throw err;
         res.json({
@@ -315,7 +317,7 @@ const respondWithAuth = (res, user, status = 200) => {
   jwt.sign(
     payload,
     process.env.JWT_SECRET,
-    { expiresIn: getJwtExpiresIn() },
+    getJwtSignOptions(),
     (err, token) => {
       if (err) {
         console.error("JWT sign error:", err);
@@ -503,7 +505,7 @@ router.put("/update-profile", protect, async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: getJwtExpiresIn() },
+      getJwtSignOptions(),
       (err, token) => {
         if (err) {
           console.error("JWT Sign Error:", err);

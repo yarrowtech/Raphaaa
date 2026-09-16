@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   FaBoxOpen, FaClipboardList, FaShoppingBag, FaSignOutAlt,
-  FaStore, FaUser, FaCog, FaLock, FaTasks, FaRupeeSign, FaUsers, FaRulerCombined, FaTruck,
+  FaStore, FaUser, FaCog, FaLock, FaTasks, FaRupeeSign, FaUsers, FaRulerCombined, FaTruck, FaWhatsapp,
 } from "react-icons/fa";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { RiDashboardHorizontalFill } from "react-icons/ri";
@@ -279,6 +279,7 @@ const AdminSidebar = () => {
             <SectionLabel>People</SectionLabel>
             <AccordionGroup icon={FaUsers} label="Users">
               <SubItem to="/admin/users"          icon={FaUsers} label="Manage Users" />
+              <SubItem to="/admin/mobile-logins"  icon={FaWhatsapp} label="Mobile Logins" />
               <SubItem to="/admin/reset-password" icon={FaLock}  label="Reset Password" />
             </AccordionGroup>
           </>

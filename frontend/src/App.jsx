@@ -23,6 +23,7 @@ import AdminPrebookings from "./pages/AdminPrebookings";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminHomePage from "./pages/AdminHomePage";
 import UserManagement from "./components/Admin/UserManagement";
+import MobileLogins from "./components/Admin/MobileLogins";
 import ProductManagement from "./components/Admin/ProductManagement";
 import EditProductPage from "./components/Admin/EditProductPage";
 import OrderManagement from "./components/Admin/OrderManagement";
@@ -281,6 +282,14 @@ const App = () => {
               element={
                 <ProtectedRoute role={["admin", "merchantise"]}>
                   <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="mobile-logins"
+              element={
+                <ProtectedRoute role={["admin"]}>
+                  <MobileLogins />
                 </ProtectedRoute>
               }
             />
