@@ -303,6 +303,146 @@ router.post("/verify-otp", async (req, res) => {
   res.json({ message: "Mobile number verified successfully" });
 });
 
+// In-memory store for phone-based OTP login/signup (works for numbers with
+// no account yet, unlike the mobile-verification flow above which needs an
+// existing user). key: 10-digit mobile.
+const mobileOtps = new Map(); // { otp, expires }
+const verifiedMobiles = new Map(); // mobile -> expiresAt (5 min window to complete signup)
+
+const respondWithAuth = (res, user, status = 200) => {
+  const payload = { user: { id: user._id, role: user.role } };
+  jwt.sign(
+    payload,
+    process.env.JWT_SECRET,
+    { expiresIn: getJwtExpiresIn() },
+    (err, token) => {
+      if (err) {
+        console.error("JWT sign error:", err);
+        return res.status(500).json({ message: "Token generation failed." });
+      }
+      res.status(status).json({
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          photo: user.photo || "",
+          mobile: user.mobile || "",
+        },
+        token,
+      });
+    }
+  );
+};
+
+// @route POST /api/users/otp/send
+// @desc Send a WhatsApp OTP to a phone number for login or signup
+// @access Public
+router.post("/otp/send", async (req, res) => {
+  const digits = String(req.body.mobile || "").replace(/\D/g, "");
+  const d10 = digits.slice(-10);
+
+  if (d10.length !== 10) {
+    return res.status(400).json({ message: "Enter a valid 10-digit phone number." });
+  }
+
+  try {
+    const otp = generateOTP();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 mins
+
+    await sendSMS(d10, otp);
+
+    mobileOtps.set(d10, { otp, expires });
+    res.json({ message: "OTP sent to WhatsApp" });
+  } catch (error) {
+    console.error("otp/send error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+});
+
+// @route POST /api/users/otp/verify
+// @desc Verify the OTP. Logs the user in if the number already has an
+// account, otherwise asks the frontend to collect a name for signup.
+// @access Public
+router.post("/otp/verify", async (req, res) => {
+  const digits = String(req.body.mobile || "").replace(/\D/g, "");
+  const d10 = digits.slice(-10);
+  const { otp } = req.body;
+
+  const record = mobileOtps.get(d10);
+  if (!record || record.otp !== otp || Date.now() > record.expires) {
+    return res.status(400).json({ message: "Incorrect or expired OTP" });
+  }
+  mobileOtps.delete(d10);
+
+  try {
+    const user = await User.findOne({
+      mobile: { $in: [d10, `+91${d10}`, `91${d10}`, `0${d10}`] },
+    });
+
+    if (user) {
+      user.mobileVerified = true;
+      await user.save();
+      return respondWithAuth(res, user);
+    }
+
+    // New number — mark it verified for a short window so the frontend can
+    // collect a name and finish signup without re-sending the OTP.
+    verifiedMobiles.set(d10, Date.now() + 5 * 60 * 1000);
+    res.json({ isNewUser: true, message: "New number. Please enter your name to continue." });
+  } catch (error) {
+    console.error("otp/verify error:", error);
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+});
+
+// @route POST /api/users/otp/complete-signup
+// @desc Create the account for a new, OTP-verified phone number
+// @access Public
+router.post("/otp/complete-signup", async (req, res) => {
+  const digits = String(req.body.mobile || "").replace(/\D/g, "");
+  const d10 = digits.slice(-10);
+  const name = String(req.body.name || "").trim();
+
+  const verifiedUntil = verifiedMobiles.get(d10);
+  if (!verifiedUntil || Date.now() > verifiedUntil) {
+    return res.status(400).json({ message: "OTP verification expired. Please verify again." });
+  }
+  if (!name) {
+    return res.status(400).json({ message: "Name is required." });
+  }
+
+  try {
+    const existing = await User.findOne({
+      mobile: { $in: [d10, `+91${d10}`, `91${d10}`, `0${d10}`] },
+    });
+    if (existing) {
+      verifiedMobiles.delete(d10);
+      return respondWithAuth(res, existing);
+    }
+
+    const user = new User({
+      name,
+      email: `${d10}.${Date.now()}@otp.raphaaa.com`,
+      password: crypto.randomBytes(16).toString("hex"),
+      mobile: d10,
+      mobileVerified: true,
+      coupon: {
+        code: `WELCOME${Math.floor(1000 + Math.random() * 9000)}`,
+        discount: 10,
+        expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      },
+    });
+    await user.save();
+    verifiedMobiles.delete(d10);
+
+    respondWithAuth(res, user, 201);
+  } catch (error) {
+    console.error("otp/complete-signup error:", error);
+    res.status(500).json({ message: "Failed to create account" });
+  }
+});
+
 // @route GET /api/users/profile
 // @desc Get the logged-in user's profile (Protected Route)
 // @access Private

@@ -1,28 +1,38 @@
 const axios = require("axios");
 
-// const sendSMS = async (mobile, otp) => {
-//   const apiKey = process.env.FAST2SMS_API_KEY;
-
-//   const payload = {
-//     sender_id: "FSTSMS",
-//     message: `Your verification code is ${otp}`,
-//     language: "english",
-//     route: "p",
-//     numbers: mobile,
-//   };
-
-//   await axios.post("https://www.fast2sms.com/dev/bulkV2", payload, {
-//     headers: {
-//       authorization: apiKey,
-//       "Content-Type": "application/json",
-//     },
-//   });
-// };
-
-// module.exports = sendSMS;
-
+// Sends the OTP via WhatsApp using AiSensy's Campaign API.
+// Requires an approved AUTHENTICATION-category template (see AISENSY_CAMPAIGN_NAME)
+// whose single {{1}} variable is the OTP code, with a "Copy Code" button.
 const sendSMS = async (mobile, otp) => {
-  console.log(`🔐 [Mock SMS] Sending OTP ${otp} to mobile: ${mobile}`);
+  const digits = String(mobile).replace(/\D/g, "");
+  const countryCode = process.env.WHATSAPP_DEFAULT_COUNTRY_CODE || "91";
+  const destination = digits.length === 10 ? `${countryCode}${digits}` : digits;
+
+  try {
+    await axios.post(
+      "https://backend.aisensy.com/campaign/t1/api/v2",
+      {
+        apiKey: process.env.AISENSY_API_KEY,
+        campaignName: process.env.AISENSY_CAMPAIGN_NAME,
+        destination,
+        userName: "Raphaaa",
+        templateParams: [otp],
+        // Copy Code button needs the same OTP value as its parameter.
+        buttons: [
+          {
+            type: "button",
+            sub_type: "url",
+            index: 0,
+            parameters: [{ type: "text", text: otp }],
+          },
+        ],
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("AiSensy WhatsApp OTP send failed:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 module.exports = sendSMS;

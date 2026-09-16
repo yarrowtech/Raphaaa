@@ -10,11 +10,18 @@ import { FiRefreshCcw } from "react-icons/fi";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👁️ Added
+import { FaEye, FaEyeSlash, FaWhatsapp } from "react-icons/fa"; // 👁️ Added
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginMode, setLoginMode] = useState("otp"); // "password" | "otp"
+  const [otpMobileTouched, setOtpMobileTouched] = useState(false);
+  const [otpMobile, setOtpMobile] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpStep, setOtpStep] = useState("mobile"); // "mobile" | "otp" | "name"
+  const [otpName, setOtpName] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [captchaQuestion, setCaptchaQuestion] = useState({});
   const [requiresCaptcha, setRequiresCaptcha] = useState(false);
@@ -175,6 +182,76 @@ const Login = () => {
     dispatch(loginUser({ identifier, email: identifier, password }));
   };
 
+  const handleSendOtp = async () => {
+    const d10 = otpMobile.replace(/\D/g, "").slice(-10);
+    if (d10.length !== 10) {
+      toast.error("Enter a valid 10-digit phone number");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/otp/send`,
+        { mobile: d10 }
+      );
+      toast.success("OTP sent to your WhatsApp");
+      setOtpStep("otp");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode) {
+      toast.error("Enter the OTP");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const d10 = otpMobile.replace(/\D/g, "").slice(-10);
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/otp/verify`,
+        { mobile: d10, otp: otpCode }
+      );
+      if (data.isNewUser) {
+        toast.success("Number verified! Just one more step.");
+        setOtpStep("name");
+      } else {
+        dispatch(googleLoginSuccess({ user: data.user, token: data.token }));
+        toast.success("Login successful!");
+        navigate(redirect);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Incorrect or expired OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleCompleteSignup = async () => {
+    if (!otpName.trim()) {
+      toast.error("Enter your name");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const d10 = otpMobile.replace(/\D/g, "").slice(-10);
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/otp/complete-signup`,
+        { mobile: d10, name: otpName.trim() }
+      );
+      dispatch(googleLoginSuccess({ user: data.user, token: data.token }));
+      toast.success("Account created — you're logged in!");
+      navigate(redirect);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create account");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-[80vh]">
       <div className="w-full md:w-full flex flex-col justify-center items-center p-6 sm:p-12">
@@ -186,89 +263,195 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="mb-5">
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              placeholder="Phone number or email"
-              autoComplete="username"
-            />
-          </div>
+          {loginMode === "password" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setLoginMode("otp")}
+                className="mb-5 text-sm text-sky-600 hover:underline font-medium"
+              >
+                &larr; Login with phone number instead
+              </button>
 
-          {/* <div className="mb-5">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              placeholder="Enter your password"
-            />
-          </div> */}
+              <div className="mb-5">
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  placeholder="Phone number or email"
+                  autoComplete="username"
+                />
+              </div>
 
-          {/* 👁️ Password field with toggle */}
-          <div className="mb-5 relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 pr-10 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              placeholder="Enter your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
-
-
-          {/* ✅ Captcha only for staff accounts */}
-          {requiresCaptcha && (
-            <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch">
-              <div className="flex items-center gap-2 shrink-0">
-                <canvas
-                  ref={canvasRef}
-                  width={140}
-                  height={44}
-                  className="w-[150px] h-11 rounded shadow-sm border border-gray-300 bg-gray-100"
+              {/* 👁️ Password field with toggle */}
+              <div className="mb-5 relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  onClick={refreshCaptcha}
-                  className="h-10 w-10 flex items-center justify-center text-lg bg-blue-600 text-white rounded hover:bg-blue-800 transition"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
                 >
-                  <FiRefreshCcw className="animate-spin-slow" />
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
-              <input
-                type="number"
-                value={captchaAnswer}
-                onChange={(e) => setCaptchaAnswer(e.target.value)}
-                className="flex-1 min-w-0 h-10 px-4 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                placeholder="Answer"
-              />
+
+              {/* ✅ Captcha only for staff accounts */}
+              {requiresCaptcha && (
+                <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <canvas
+                      ref={canvasRef}
+                      width={140}
+                      height={44}
+                      className="w-[150px] h-11 rounded shadow-sm border border-gray-300 bg-gray-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={refreshCaptcha}
+                      className="h-10 w-10 flex items-center justify-center text-lg bg-blue-600 text-white rounded hover:bg-blue-800 transition"
+                    >
+                      <FiRefreshCcw className="animate-spin-slow" />
+                    </button>
+                  </div>
+                  <input
+                    type="number"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    className="flex-1 min-w-0 h-10 px-4 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    placeholder="Answer"
+                  />
+                </div>
+              )}
+              <div className="mb-5 text-sm text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-sky-600 hover:underline font-medium"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300"
+              >
+                {loading ? "Signing..." : "Sign In"}
+              </button>
+            </>
+          ) : (
+            <div className="mb-5">
+              {otpStep === "mobile" && (
+                <>
+                  <div className="mb-1">
+                    <input
+                      type="text"
+                      value={otpMobile}
+                      onChange={(e) =>
+                        setOtpMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
+                      }
+                      onBlur={() => setOtpMobileTouched(true)}
+                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      placeholder="10-digit phone number"
+                      inputMode="numeric"
+                      maxLength={10}
+                    />
+                  </div>
+                  {otpMobileTouched && otpMobile.length > 0 && otpMobile.length !== 10 && (
+                    <p className="mb-3 text-xs text-red-500">
+                      Enter a valid 10-digit phone number
+                    </p>
+                  )}
+                  <div className={otpMobileTouched && otpMobile.length !== 10 ? "mt-0 mb-4" : "mt-3 mb-4"}>
+                    <button
+                      type="button"
+                      onClick={() => setLoginMode("password")}
+                      className="text-sm text-sky-600 hover:underline font-medium text-right"
+                    >
+                      Login with Email &amp; Password instead
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={otpLoading || otpMobile.length !== 10}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                  >
+                    {!otpLoading && <FaWhatsapp className="text-lg" />}
+                    {otpLoading ? "Sending..." : "Send OTP via WhatsApp"}
+                  </button>
+                </>
+              )}
+
+              {otpStep === "otp" && (
+                <>
+                  <p className="mb-3 text-sm text-gray-600">
+                    OTP sent to <span className="font-medium">{otpMobile}</span> on WhatsApp
+                  </p>
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      placeholder="Enter the 6-digit OTP"
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading}
+                    className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                  >
+                    {otpLoading ? "Verifying..." : "Verify OTP"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpStep("mobile");
+                      setOtpCode("");
+                    }}
+                    className="w-full mt-2 text-sm text-sky-600 hover:underline"
+                  >
+                    Change phone number
+                  </button>
+                </>
+              )}
+
+              {otpStep === "name" && (
+                <>
+                  <p className="mb-3 text-sm text-gray-600">
+                    Looks like you're new here! Tell us your name to finish creating your account.
+                  </p>
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={otpName}
+                      onChange={(e) => setOtpName(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      placeholder="Your full name"
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCompleteSignup}
+                    disabled={otpLoading}
+                    className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                  >
+                    {otpLoading ? "Creating account..." : "Continue"}
+                  </button>
+                </>
+              )}
             </div>
           )}
-          <div className="mb-5 text-sm text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sky-600 hover:underline font-medium"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-
-          {/* Existing Login Button */}
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300"
-          >
-            {loading ? "Signing..." : "Sign In"}
-          </button>
 
           {/* Divider */}
           <div className="flex items-center my-4">
@@ -305,7 +488,7 @@ const Login = () => {
             />
           </div>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          {/* <p className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <Link
               to={`/register?redirect=${encodeURIComponent(redirect)}`}
@@ -313,7 +496,7 @@ const Login = () => {
             >
               Register
             </Link>
-          </p>
+          </p> */}
         </form>
       </div>
     </div>
