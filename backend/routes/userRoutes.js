@@ -12,7 +12,8 @@ const emailOtps = new Map(); // key: email, val: { otp, expires: Date }
 const generateEmailOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const crypto = require("crypto");
 const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-const getJwtExpiresIn = () => process.env.JWT_EXPIRES_IN || "40h";
+// No expiry: token stays valid until the user explicitly logs out.
+const getJwtExpiresIn = () => undefined;
 const { getJson, setJson } = require("../utils/redisCache");
 
 // const ALLOWED_EMAILS = new Set([
