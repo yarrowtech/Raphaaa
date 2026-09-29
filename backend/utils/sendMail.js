@@ -81,10 +81,15 @@ const stripHtml = (value) =>
     .trim();
 
 const getSmtpConfig = () => {
-  const user = process.env.EMAIL_USER || process.env.SMTP_EMAIL;
-  const pass = normalizePassword(process.env.EMAIL_PASS || process.env.SMTP_PASSWORD);
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT || 587);
+  const useSes = Boolean(process.env.SES_SMTP_HOST && process.env.SES_SMTP_USER);
+  const user = useSes
+    ? process.env.SES_SMTP_USER
+    : process.env.EMAIL_USER || process.env.SMTP_EMAIL;
+  const pass = normalizePassword(
+    useSes ? process.env.SMTP_PASSWORD : process.env.EMAIL_PASS || process.env.SMTP_PASSWORD
+  );
+  const host = process.env.SES_SMTP_HOST || process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SES_SMTP_PORT || process.env.SMTP_PORT || 587);
   const secure =
     process.env.SMTP_SECURE !== undefined
       ? process.env.SMTP_SECURE === "true"
@@ -106,7 +111,9 @@ const getSmtpConfig = () => {
 const createTransporter = () => nodemailer.createTransport(getSmtpConfig());
 
 const resolveFromAddress = () =>
-  process.env.EMAIL_FROM || process.env.SMTP_EMAIL || process.env.EMAIL_USER;
+  process.env.EMAIL_FROM ||
+  process.env.SMTP_EMAIL ||
+  (process.env.SES_SMTP_HOST ? undefined : process.env.EMAIL_USER);
 
 const sendMail = async ({ to, subject, message, attachments = [] }) => {
   const transporter = createTransporter();
