@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-primary-fixed": "#1c1b1b",
+          "outline": "#747878",
+          "on-secondary-fixed-variant": "#93000d",
+          "inverse-primary": "#c8c6c5",
+          "surface-container": "#efedef",
+          "on-tertiary-fixed": "#00201c",
+          "on-error-container": "#93000a",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-high": "#e9e8ea",
+          "inverse-surface": "#303032",
+          "on-secondary": "#ffffff",
+          "on-error": "#ffffff",
+          "surface-variant": "#e3e2e4",
+          "error": "#ba1a1a",
+          "on-secondary-container": "#fffbff",
+          "surface-dim": "#dbd9dc",
+          "surface-tint": "#5f5e5e",
+          "on-surface-variant": "#444748",
+          "tertiary-fixed": "#94f4e3",
+          "on-tertiary-fixed-variant": "#005048",
+          "surface": "#faf9fb",
+          "tertiary": "#000000",
+          "primary-fixed": "#e5e2e1",
+          "on-primary-fixed-variant": "#474646",
+          "surface-container-low": "#f5f3f5",
+          "on-background": "#1b1c1d",
+          "surface-bright": "#faf9fb",
+          "on-secondary-fixed": "#410002",
+          "inverse-on-surface": "#f2f0f2",
+          "outline-variant": "#c4c7c7",
+          "on-surface": "#1b1c1d",
+          "tertiary-fixed-dim": "#77d7c8",
+          "on-primary-container": "#858383",
+          "primary-container": "#1c1b1b",
+          "error-container": "#ffdad6",
+          "secondary-fixed": "#ffdad6",
+          "primary-fixed-dim": "#c8c6c5",
+          "on-tertiary": "#ffffff",
+          "on-tertiary-container": "#2b9385",
+          "background": "#faf9fb",
+          "secondary-fixed-dim": "#ffb4ab",
+          "on-primary": "#ffffff",
+          "surface-container-highest": "#e3e2e4",
+          "secondary-container": "#e41e24",
+          "primary": "#000000",
+          "secondary": "#bb0013",
+          "tertiary-container": "#00201c"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "space-xl": "1.5rem",
+          "margin": "1rem",
+          "space-2xs": "0.125rem",
+          "space-md": "0.75rem",
+          "gutter": "1rem",
+          "space-2xl": "2.5rem",
+          "space-xs": "0.25rem",
+          "space-sm": "0.5rem",
+          "gutter-desktop": "1.25rem",
+          "margin-desktop": "2rem",
+          "space-lg": "1rem"
+        },
+        "fontFamily": {
+          "price-discount": [
+            "Plus Jakarta Sans"
+          ],
+          "product-desc": [
+            "Plus Jakarta Sans"
+          ],
+          "body-md": [
+            "Plus Jakarta Sans"
+          ],
+          "body-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-md": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "price-strikethrough": [
+            "Plus Jakarta Sans"
+          ],
+          "body-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "brand-title": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-xl": [
+            "Plus Jakarta Sans"
+          ],
+          "price-current": [
+            "Plus Jakarta Sans"
+          ],
+          "label-badge": [
+            "Plus Jakarta Sans"
+          ]
+        },
+        "fontSize": {
+          "price-discount": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "600"
+            }
+          ],
+          "product-desc": [
+            "13px",
+            {
+              "lineHeight": "18px",
+              "fontWeight": "400"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "400"
+            }
+          ],
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-md": [
+            "18px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "700"
+            }
+          ],
+          "price-strikethrough": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "400"
+            }
+          ],
+          "body-lg": [
+            "15px",
+            {
+              "lineHeight": "22px",
+              "fontWeight": "400"
+            }
+          ],
+          "brand-title": [
+            "14px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-xl": [
+            "32px",
+            {
+              "lineHeight": "40px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "price-current": [
+            "14px",
+            {
+              "lineHeight": "18px",
+              "fontWeight": "700"
+            }
+          ],
+          "label-badge": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.03em",
+              "fontWeight": "700"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-primary-container text-on-primary text-center py-space-xs px-margin-desktop font-label-badge text-label-badge tracking-wider uppercase"><span class="text-surface-dim">Free express delivery on orders over ₹1,499</span><span class="mx-space-sm text-outline">|</span><span class="text-surface-dim">Easy 14-day returns &amp; exchanges</span></div><div class="h-20 w-full px-margin-desktop flex items-center justify-between gap-space-xl"><div class="flex items-center gap-space-2xl shrink-0"><a class="font-headline-xl text-headline-xl tracking-tight text-primary uppercase select-none" data-path="home" href="#">RAPHAAA</a><nav class="hidden xl:flex items-center gap-space-xl" data-active-classes="text-primary font-bold"><a aria-current="page" class="uppercase transition-colors text-primary font-bold" data-path="men-collection" href="#">Men</a><a class="font-brand-title text-brand-title uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="women-collection" href="#">Women</a><a class="font-brand-title text-brand-title uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="unisex-collection" href="#">Unisex</a><a class="font-brand-title text-brand-title uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="studio-curated" href="#">Studio</a><a class="font-brand-title text-brand-title uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="footwear" href="#">Footwear</a><a class="font-brand-title text-brand-title uppercase text-on-surface-variant hover:text-on-surface transition-colors" data-path="seasonal-sale" href="#">Sale</a></nav></div><div class="flex-1 max-w-2xl mx-space-lg hidden md:block"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none select-none text-[20px]">search</span><input class="w-full pl-10 pr-space-lg py-space-xs bg-surface-container-low text-on-surface placeholder:text-outline text-body-sm font-body-sm rounded-full outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Search for styles, brands, trends and fabrics..." type="search"/></div></div><div class="flex items-center gap-space-lg shrink-0"><a aria-label="Wishlist" class="relative p-space-xs text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center" data-path="wishlist" href="#"><span class="material-symbols-outlined text-[24px]">favorite</span><span class="absolute -top-1 -right-1 bg-secondary text-on-secondary font-label-badge text-label-badge w-4 h-4 rounded-full flex items-center justify-center">4</span></a><a aria-label="Bag" class="relative p-space-xs text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center" data-path="cart" href="#"><span class="material-symbols-outlined text-[24px]">shopping_bag</span><span class="absolute -top-1 -right-1 bg-primary text-on-primary font-label-badge text-label-badge w-4 h-4 rounded-full flex items-center justify-center">2</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="w-full px-margin-desktop py-space-xs bg-surface-container-low/70 backdrop-blur-sm flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant"><div class="flex items-center gap-space-xs"><a class="hover:text-on-surface transition-colors" data-path="home" href="#">Home</a><span class="text-outline">/</span><a class="hover:text-on-surface transition-colors" data-path="men-collection" href="#">Men's Fashion</a><span class="text-outline">/</span><span class="text-on-surface font-headline-md text-body-sm">Premium T-Shirts &amp; Polos</span></div><div class="font-label-badge text-label-badge tracking-wider uppercase text-on-surface-variant">Showing 1,248 Items</div></div></header><main class="w-full pt-36 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-header & Quick Bar -->
+<div class="w-full px-margin-desktop py-space-md bg-surface-container-lowest shadow-sm">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<!-- Title & Garment Counter -->
+<div>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Men's T-Shirts &amp; Polos</h1>
+<span class="px-space-sm py-space-2xs bg-surface-container text-on-surface-variant font-label-badge text-label-badge rounded uppercase">Curated</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">Showing 1,240 luxury &amp; casual engineered garments</p>
+</div>
+<!-- Controls: Density & Sorting -->
+<div class="flex items-center flex-wrap gap-space-md">
+<!-- Density Switcher -->
+<div class="hidden sm:flex items-center bg-surface-container-low p-space-2xs rounded-lg">
+<button class="p-space-xs text-primary bg-surface-container-lowest rounded shadow-sm hover:text-primary transition-all flex items-center justify-center" id="view-compact-btn" title="4-Column Grid">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+</button>
+<button class="p-space-xs text-on-surface-variant hover:text-primary transition-all flex items-center justify-center" id="view-wide-btn" title="5-Column Expanded">
+<span class="material-symbols-outlined text-[20px]">view_comfy</span>
+</button>
+</div>
+<!-- Sort Dropdown Pill -->
+<div class="relative flex items-center bg-surface-container-lowest rounded-lg shadow-sm">
+<span class="pl-space-md font-body-sm text-body-sm text-on-surface-variant">Sort by:</span>
+<select class="pl-space-xs pr-space-xl py-space-xs bg-transparent font-headline-md text-body-sm text-primary appearance-none cursor-pointer outline-none font-semibold">
+<option value="recommended">Recommended</option>
+<option value="price-low">Price: Low to High</option>
+<option value="price-high">Price: High to Low</option>
+<option value="rating">Customer Rating</option>
+<option value="newest">New Arrivals</option>
+<option value="discount">Biggest Discount</option>
+</select>
+<span class="material-symbols-outlined absolute right-space-sm text-outline pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Quick Pill Sliders / Filters -->
+<div class="flex items-center gap-space-sm overflow-x-auto py-space-sm mt-space-sm scrollbar-none">
+<span class="text-outline font-label-badge text-label-badge uppercase tracking-wider whitespace-nowrap pr-space-xs">Picks:</span>
+<button class="px-space-md py-space-xs bg-primary text-on-primary rounded-full font-label-badge text-label-badge whitespace-nowrap shadow-sm">Oversized Fit</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">100% Pima Cotton</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">Waffle Knit</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">Polo Collars</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">Minimal Graphics</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">Heavyweight (240+ GSM)</button>
+<button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-full font-label-badge text-label-badge whitespace-nowrap transition-colors">Summer Terry</button>
+</div>
+</div>
+<!-- Main Split Layout (Sidebar + Products) -->
+<div class="w-full px-margin-desktop py-space-lg flex flex-col lg:flex-row gap-gutter-desktop">
+<!-- LEFT FACET SIDEBAR -->
+<aside class="w-full lg:w-64 shrink-0 space-y-space-md">
+<!-- Facet Header -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-lowest rounded-lg shadow-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[20px] text-primary">tune</span>
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">Filters</span>
+</div>
+<button class="font-label-badge text-label-badge text-secondary hover:underline uppercase" id="clear-filters-btn">Clear All</button>
+</div>
+<!-- Categories Filter Section -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between font-brand-title text-brand-title uppercase tracking-wider text-primary">
+<span>Categories</span>
+<span class="material-symbols-outlined text-[18px] text-outline">expand_less</span>
+</div>
+<div class="space-y-space-xs pt-space-xs">
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Oversized T-Shirts</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(642)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Polo Collar Shirts</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(380)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Classic Crew Necks</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(186)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Long Sleeve Slubs</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(32)</span>
+</label>
+</div>
+</div>
+<!-- Brands Filter Section with Search -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between font-brand-title text-brand-title uppercase tracking-wider text-primary">
+<span>Brands</span>
+<span class="material-symbols-outlined text-[18px] text-outline">expand_less</span>
+</div>
+<!-- In-facet Search -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-2 text-outline text-[16px]">search</span>
+<input class="w-full bg-surface-container-low pl-8 pr-2 py-1 rounded text-body-sm font-body-sm outline-none text-on-surface" placeholder="Search brands..." type="text"/>
+</div>
+<div class="space-y-space-xs max-h-44 overflow-y-auto scrollbar-none pr-1">
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary font-medium">Raphaaa Studio</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(124)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input checked="" class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">BDSQUARE</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(98)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">ADIDAS ORIGINALS</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(87)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">PUMA SELECT</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(64)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">H&amp;M Premium</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(142)</span>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="flex items-center gap-space-sm">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Roadster Atelier</span>
+</span>
+<span class="font-body-sm text-body-sm text-outline">(59)</span>
+</label>
+</div>
+</div>
+<!-- Price Dual Slider & Presets -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between font-brand-title text-brand-title uppercase tracking-wider text-primary">
+<span>Price Range</span>
+<span class="font-label-badge text-label-badge text-secondary font-bold">₹549 – ₹2,499</span>
+</div>
+<!-- Dual Range Bar Illustration -->
+<div class="relative pt-2 pb-1">
+<div class="h-1.5 w-full bg-surface-container rounded-full relative">
+<div class="absolute left-1/6 right-1/4 h-full bg-primary rounded-full"></div>
+</div>
+<div class="flex justify-between items-center text-outline font-label-badge text-label-badge mt-2">
+<span>₹399</span>
+<span>₹4,999+</span>
+</div>
+</div>
+<!-- Quick Budget Presets -->
+<div class="grid grid-cols-2 gap-space-xs pt-space-xs">
+<button class="py-space-2xs px-space-xs bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-badge text-label-badge rounded text-center">Under ₹799</button>
+<button class="py-space-2xs px-space-xs bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-badge text-label-badge rounded text-center">₹800 - ₹1,499</button>
+<button class="py-space-2xs px-space-xs bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-badge text-label-badge rounded text-center">₹1,500 - ₹2,999</button>
+<button class="py-space-2xs px-space-xs bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-badge text-label-badge rounded text-center">Luxury (₹3,000+)</button>
+</div>
+</div>
+<!-- Color Swatches Filter -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between font-brand-title text-brand-title uppercase tracking-wider text-primary">
+<span>Colors</span>
+<span class="material-symbols-outlined text-[18px] text-outline">palette</span>
+</div>
+<div class="grid grid-cols-2 gap-y-space-xs gap-x-space-sm pt-space-xs">
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-primary shadow-sm inline-block shrink-0 ring-1 ring-outline-variant"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Black</span>
+<span class="text-outline text-body-sm">(410)</span>
+</label>
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-surface-container-lowest shadow-sm inline-block shrink-0 ring-1 ring-outline"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Chalk White</span>
+<span class="text-outline text-body-sm">(385)</span>
+</label>
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-on-tertiary-fixed-variant shadow-sm inline-block shrink-0"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Forest</span>
+<span class="text-outline text-body-sm">(120)</span>
+</label>
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-tertiary-container shadow-sm inline-block shrink-0"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Washed Navy</span>
+<span class="text-outline text-body-sm">(194)</span>
+</label>
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-secondary shadow-sm inline-block shrink-0"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Terracotta</span>
+<span class="text-outline text-body-sm">(78)</span>
+</label>
+<label class="flex items-center gap-space-xs cursor-pointer group">
+<span class="w-4 h-4 rounded-full bg-surface-dim shadow-sm inline-block shrink-0"></span>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Heather Grey</span>
+<span class="text-outline text-body-sm">(105)</span>
+</label>
+</div>
+</div>
+<!-- Size Selector Filter -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between font-brand-title text-brand-title uppercase tracking-wider text-primary">
+<span>Garment Size</span>
+<span class="font-label-badge text-label-badge text-outline underline cursor-pointer">Size Guide</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-space-xs">
+<button class="py-space-xs bg-surface-container-low hover:bg-primary hover:text-on-primary rounded font-label-badge text-label-badge text-on-surface transition-all">XS</button>
+<button class="py-space-xs bg-primary text-on-primary rounded font-label-badge text-label-badge font-bold shadow-sm">S</button>
+<button class="py-space-xs bg-primary text-on-primary rounded font-label-badge text-label-badge font-bold shadow-sm">M</button>
+<button class="py-space-xs bg-surface-container-low hover:bg-primary hover:text-on-primary rounded font-label-badge text-label-badge text-on-surface transition-all">L</button>
+<button class="py-space-xs bg-surface-container-low hover:bg-primary hover:text-on-primary rounded font-label-badge text-label-badge text-on-surface transition-all">XL</button>
+<button class="py-space-xs bg-surface-container-low hover:bg-primary hover:text-on-primary rounded font-label-badge text-label-badge text-on-surface transition-all">XXL</button>
+</div>
+</div>
+<!-- Customer Ratings & Discounts -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm space-y-space-sm">
+<div class="font-brand-title text-brand-title uppercase tracking-wider text-primary">Customer Rating</div>
+<div class="space-y-space-xs">
+<label class="flex items-center gap-space-sm cursor-pointer group">
+<input checked="" class="accent-primary w-4 h-4 cursor-pointer" name="rating" type="radio"/>
+<span class="flex items-center font-body-sm text-body-sm text-on-surface group-hover:text-primary">
+              4.0 ★ &amp; above
+            </span>
+</label>
+<label class="flex items-center gap-space-sm cursor-pointer group">
+<input class="accent-primary w-4 h-4 cursor-pointer" name="rating" type="radio"/>
+<span class="flex items-center font-body-sm text-body-sm text-on-surface group-hover:text-primary">
+              3.5 ★ &amp; above
+            </span>
+</label>
+</div>
+<div class="pt-space-sm font-brand-title text-brand-title uppercase tracking-wider text-primary">Discounts</div>
+<div class="space-y-space-xs">
+<label class="flex items-center gap-space-sm cursor-pointer group">
+<input checked="" class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">30% and above</span>
+</label>
+<label class="flex items-center gap-space-sm cursor-pointer group">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">50% and above</span>
+</label>
+<label class="flex items-center gap-space-sm cursor-pointer group">
+<input class="accent-primary w-4 h-4 rounded cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">70% and above</span>
+</label>
+</div>
+</div>
+<!-- Quick Delivery Filter Toggle -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary-container text-[22px]">local_shipping</span>
+<div>
+<div class="font-brand-title text-brand-title uppercase tracking-wider text-primary">Express Dispatch</div>
+<div class="font-body-sm text-body-sm text-outline">Get it in 24-48 Hours</div>
+</div>
+</div>
+<input class="accent-secondary-container w-5 h-5 rounded cursor-pointer" type="checkbox"/>
+</div>
+</aside>
+<!-- RIGHT MAIN PRODUCT FEED -->
+<section class="flex-1 min-w-0">
+<!-- Grid Container: Responsive 4-Cols desktop -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-gutter-desktop" id="product-grid">
+<!-- CARD 1 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<!-- Image Wrapper with aspect 3:4 -->
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Studio portrait of a handsome male fashion model posing in a premium heavyweight relaxed cotton crewneck t-shirt in deep navy blue. Crisp studio lighting, clean architectural background, high fashion editorial quality, minimalist drape." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfJi_g_Am6NMOCXc91VfzFsmI8eGI045rTFibQcMDQcvxLIJzYM36QzylBhhNcX7rTr5zIM4r2EU5kQbqNu9yUck31t5ZFYjobEkle5uIormBVgsvhlfW_Tba62OeE5DhvgiEcARyp7jHmGljqKS10nHEkCDLs_h25SyPdAwWceT_-KtQyJ8yRoHHw9ia0KzLFw7zzeiUqlWo8o3WB2oaAMvxXCSmYlp-9OvYba44mi03tPYv-4-CqAw"/>
+<!-- Badges & Wishlist -->
+<div class="absolute top-2 left-2">
+<span class="px-space-xs py-space-2xs bg-primary text-on-primary font-label-badge text-label-badge uppercase tracking-wider rounded">Bestseller</span>
+</div>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<!-- Floating Rating Pill -->
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.4</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">1.2k</span>
+</div>
+<!-- Hover Quick Sizes Overlay -->
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">S</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XL</span>
+</div>
+</div>
+<!-- Product Details -->
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">Raphaaa Studio</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container ring-1 ring-outline-variant"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Heavyweight Relaxed Cotton Tee</p>
+</div>
+<!-- Price Structure -->
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹699</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,499</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(53% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 2 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Sophisticated man wearing an earthy olive green knitted polo collar shirt with ribbed accents. Elegant warm soft-box studio setting, natural drape, subtle texture, high-end editorial catalogue fashion aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGQJ_i7apkodAMhzrShoqnZOE3h4jVXhU2q-UH4W1Oss7g_36G0MPbU_Kf5WZj1Ka7HIfrEommhw8IPiozg9umK2tXSLum-tXFaCQrAi6o2guqqs6ihzrqUy-00_88ghbd75TNPzb1Ivps8Lyh_7R8H8j9lDIzkEpGDp9iXtMWrhDl20pJIWcp_DbKljxvJQPlxz-whZ4fAGn_WmmyJCqIgVanutf2sZSN-eoV2fbWK8o3aqEMjXeTEg"/>
+<div class="absolute top-2 left-2">
+<span class="px-space-xs py-space-2xs bg-secondary-container text-on-secondary font-label-badge text-label-badge uppercase tracking-wider rounded">New Season</span>
+</div>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.5</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">840</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XXL</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">HERE&amp;NOW</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-on-tertiary-fixed-variant ring-1 ring-outline-variant"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-dim ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Essential Knitted Polo Collar Shirt</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹899</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,999</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(55% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 3 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Stylish young man wearing a sand beige drop-shoulder oversized tee with back vintage botanical graphic print. Urban street outdoor architecture, soft afternoon sunlight, natural candid posture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyoJB9m32lZvnD67msKYQE2U7D7ZqPvkfs4IcuaTAbvmoUzmYVfwemh4fiTcljS6UEMnuZIksgEEFdmJ7QsHSUk8X4qwUllL461aLSnNFvZhbnzqkzUKQ9Ber0qk28nPHvJiofa1jRALfoA6Dj9USt7HxOzL5Wnnyih5rkbCsRiLZI0T6ou4Dz0Q1JFK2ENk1jiPT69P_dxVjeh368e98QebbhsnXfMyVouv5f0Joo4PBrcbMZsP3KGw"/>
+<div class="absolute top-2 left-2">
+<span class="px-space-xs py-space-2xs bg-surface-container-high text-on-surface font-label-badge text-label-badge uppercase tracking-wider rounded">Trending</span>
+</div>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.2</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">3.1k</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XS</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">S</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">BDSQUARE</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Vintage Botanical Graphic Drop Tee</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹549</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,299</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(57% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 4 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Close-up fashion model showcasing an off-white cream waffle textured boxy fit t-shirt with crew neckline. High-key modern lighting highlighting the rich organic woven fabric texture, editorial clean vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoEyhiUhvud0BG0th2oVGGCCpWmGHSW47VFVNwGPhLgd8s67MFBSymyoNwqZqR2JtgIF4bh9rIOpTmMTS5lX4p1dCzdrwlGsH0dbXbrKuRwHTHfG96eh7MM_ZmhG_ctmncX0z85bfBGpkIr3LarahWHxtyT549xlly9iJ9zTumVKAzXMx9ETxKvpEchT51dL4-NvFGGvGfI-8HbESexlf0jEXL2ReJqVls1R-k8rIPNSaGQ7C_8KO5-g"/>
+<div class="absolute top-2 left-2">
+<span class="px-space-xs py-space-2xs bg-tertiary-fixed text-on-tertiary-fixed font-label-badge text-label-badge uppercase tracking-wider rounded font-bold">Organic Cotton</span>
+</div>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.6</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">2.4k</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">S</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XL</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">H&amp;M Premium</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-container-lowest ring-1 ring-outline"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-dim ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Waffle Textured Boxy Fit T-Shirt</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹799</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,699</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(52% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 5 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Athletic male model in studio lighting wearing a carbon black minimalist typographic heavyweight jersey t-shirt. Clean dark silhouette, dynamic lookbook framing, crisp apparel detailing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgBuR1h_Y8BhTce5EPEJ9p0MG_brlJknORV97u1V_SaYFhEMS1PG3BWyHjhl3bIDYc0YM7FxH90uUx56cNCZwywnaD3BDGl7xHckm1Hs5jLbIRYq8k8uv6vRZKEoZ2XtyCcPVup5RnPVyf8EJb4l0tO9vAcbMhf1XCXjt8MfIbSXjiZwnlu0Hzs7VrbccBuXpsQGI464WpaJnHqOoXMYGVNYhqlAZ5JD3_iXImQsVNn3x-wzZZA_NnRQ"/>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.3</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">4.8k</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XL</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">ADIDAS ORIGINALS</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Minimalist Typographic Heavy Tee</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹599</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,199</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(50% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 6 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Fashion model wearing a sage mist green French Terry oversized streetwear t-shirt. Low-angle brutalist concrete architectural backdrop, cool ambient mood, modern Scandinavian aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYi5xyQphNsUvb4OBfuob6N7lOuBQ7LKzk_gKgMtN3pMv-j2oe-nEhMVhkZmZL1Z_DxRG-LjWmrRJPsIH5sUyW0t7KtyDMvog9udlAJTfeuqQqA-jVJNp9vNgCqa_RrP5lDnzYOejR8YxHGPYJlEhT3eaYPaSqTjj5txEr_2jpLu5UPqwh4owuG3we2uqLJZiGS_CFXosQkxi8u6o4DALG4wHs3QU1voLeGtLhNKR0h_6yYspZHDKrSw"/>
+<div class="absolute top-2 left-2">
+<span class="px-space-xs py-space-2xs bg-surface-container-high text-on-surface font-label-badge text-label-badge uppercase tracking-wider rounded">Heavy Drop</span>
+</div>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.5</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">920</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">S</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">Raphaaa Studio</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-1 ring-outline-variant"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-dim ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">French Terry Streetwear Drop Tee</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹749</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,599</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(53% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 7 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Portrait of an elegant man wearing a rich burgundy pique cotton polo with white contrast collar tipping. Natural sunlit loft studio, sharp sartorial lines, luxurious casual wear presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdkt4yyNuNe0JoyZQh922QORgcn5olIaH770st5xtpDcsK1zWeYZifmMzDEqcOXqmnoapCIut-o3WcGlDtdXCXmak_IchdsSPNFGjGaQUTGUtBiIVkL1IIQi92OsJGus3i0l3KuzXmu4mMdeghLzmwPlXNk55KaL7ORk6k-5QQMcroLXL0wmtwwvPg5rSU1lQvl2ye2u8LInQXaHChnMp7tMcc7twG9LIsRtTOnxlHPX9i5jfyGohTDQ"/>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.1</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">510</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XL</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">XXL</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">Roadster Atelier</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-on-secondary-fixed ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Pique Cotton Contrast Tip Polo</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹949</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,999</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(52% OFF)</span>
+</div>
+</div>
+</div>
+<!-- CARD 8 -->
+<div class="group bg-surface-container-lowest rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative">
+<div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Carefree male model wearing a light sky blue slub linen-blend lightweight summer t-shirt outdoors on a warm sunny day. Breezy soft fabric motion, relaxed seaside aesthetic, bright warm tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsfmG6kPYbSZoQC_ooilgn39mvhse1rrWsVtmFJoE3t4mX23IHTFL6zf_DQQR0yVFn3yIEKS_vzRlupmlmU-j5UJ4gAfEQjn5pbW-VrteAN4CRSRBwtZnIIJYsmwK7sf9Pul7fhPz_TJUPGJjY-b2QnxN5cP-QOsrr6RCJdCL8hOdk4pw8zXvKji-pRHW6CGsPhALCbobk2bxVzTBhesO5qOqGKJL9-ER5c2Gr-nBS_KYhg4cqxG0PeQ"/>
+<button class="wishlist-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-md flex items-center justify-center text-primary hover:bg-surface-container-lowest hover:text-secondary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<div class="absolute bottom-2 left-2 px-space-xs py-space-2xs bg-surface-container-lowest/90 backdrop-blur-md rounded flex items-center gap-space-2xs shadow-sm font-label-badge text-label-badge text-primary">
+<span>4.4</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-outline">|</span>
+<span class="text-outline">1.8k</span>
+</div>
+<div class="absolute inset-x-0 bottom-0 py-space-xs bg-surface-container-lowest/95 backdrop-blur-md flex items-center justify-center gap-space-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm">
+<span class="text-outline font-label-badge text-label-badge uppercase">Sizes:</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">S</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">M</span>
+<span class="font-body-sm text-body-sm font-bold text-primary">L</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-brand-title text-brand-title uppercase tracking-widest text-primary font-bold">PUMA SELECT</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed ring-1 ring-outline-variant"></span>
+</div>
+</div>
+<p class="font-product-desc text-product-desc text-on-surface-variant truncate mt-space-2xs">Slub Linen Lightweight Summer Tee</p>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs flex-wrap">
+<span class="font-price-current text-price-current text-primary">₹649</span>
+<span class="font-price-strikethrough text-price-strikethrough text-outline line-through">₹1,399</span>
+<span class="font-price-discount text-price-discount text-secondary font-bold">(53% OFF)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Discovery & Fit Banner -->
+<div class="mt-space-xl p-space-lg bg-surface-container-high rounded-xl flex flex-col sm:flex-row items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-[24px]">straighten</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-primary">Unsure About Your Exact Fit?</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Our smart 3D sizing algorithm predicts your silhouette with 98% drape accuracy.</p>
+</div>
+</div>
+<button class="px-space-lg py-space-sm bg-primary text-on-primary font-brand-title text-brand-title uppercase tracking-wider rounded hover:bg-inverse-surface transition-colors whitespace-nowrap shadow-sm">Launch Fit Finder</button>
+</div>
+<!-- Modern Numeric Pagination & Progress -->
+<div class="mt-space-2xl pt-space-lg flex flex-col items-center gap-space-md">
+<!-- Progress Bar Indicator -->
+<div class="w-full max-w-xs text-center space-y-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 8 of 1,240 items</span>
+<div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[8%] rounded-full"></div>
+</div>
+</div>
+<!-- Pagination Controls -->
+<div class="flex items-center gap-space-xs">
+<button class="w-9 h-9 rounded bg-surface-container-lowest text-outline hover:text-primary flex items-center justify-center shadow-sm disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-9 h-9 rounded bg-primary text-on-primary font-headline-md text-body-sm flex items-center justify-center shadow-sm">1</button>
+<button class="w-9 h-9 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-headline-md text-body-sm flex items-center justify-center shadow-sm">2</button>
+<button class="w-9 h-9 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-headline-md text-body-sm flex items-center justify-center shadow-sm">3</button>
+<span class="px-space-xs text-outline font-headline-md text-body-sm">...</span>
+<button class="w-9 h-9 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container font-headline-md text-body-sm flex items-center justify-center shadow-sm">24</button>
+<button class="w-9 h-9 rounded bg-surface-container-lowest text-on-surface hover:text-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+<script>
+  // Wishlist toggle interaction
+  document.querySelectorAll('.wishlist-btn').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const icon = button.querySelector('.material-symbols-outlined');
+      const isFilled = icon.style.fontVariationSettings.includes("'FILL' 1");
+      if (isFilled) {
+        icon.style.fontVariationSettings = "'FILL' 0";
+        button.classList.remove('text-secondary');
+        button.classList.add('text-primary');
+      } else {
+        icon.style.fontVariationSettings = "'FILL' 1";
+        button.classList.add('text-secondary');
+        button.classList.remove('text-primary');
+      }
+    });
+  });
+
+  // Grid density switcher toggle
+  const gridContainer = document.getElementById('product-grid');
+  const viewCompactBtn = document.getElementById('view-compact-btn');
+  const viewWideBtn = document.getElementById('view-wide-btn');
+
+  if (viewCompactBtn && viewWideBtn && gridContainer) {
+    viewWideBtn.addEventListener('click', () => {
+      gridContainer.classList.remove('xl:grid-cols-4');
+      gridContainer.classList.add('xl:grid-cols-5');
+      viewWideBtn.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+      viewWideBtn.classList.remove('text-on-surface-variant');
+      viewCompactBtn.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+      viewCompactBtn.classList.add('text-on-surface-variant');
+    });
+
+    viewCompactBtn.addEventListener('click', () => {
+      gridContainer.classList.remove('xl:grid-cols-5');
+      gridContainer.classList.add('xl:grid-cols-4');
+      viewCompactBtn.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+      viewCompactBtn.classList.remove('text-on-surface-variant');
+      viewWideBtn.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+      viewWideBtn.classList.add('text-on-surface-variant');
+    });
+  }
+
+  // Clear filters micro interaction
+  const clearBtn = document.getElementById('clear-filters-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      document.querySelectorAll('aside input[type="checkbox"]').forEach(cb => cb.checked = false);
+    });
+  }
+</script></main><footer class="w-full bg-surface-container-low mt-space-2xl"><div class="w-full px-margin-desktop py-space-2xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-2xl mb-space-2xl"><div><div class="font-brand-title text-brand-title uppercase tracking-widest text-primary mb-space-md">Shop Categories</div><ul class="space-y-space-xs font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Men's Apparel</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Women's Collection</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Footwear &amp; Sneakers</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Curated Studio</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Accessories &amp; Bags</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">End of Season Sale</li></ul></div><div><div class="font-brand-title text-brand-title uppercase tracking-widest text-primary mb-space-md">Customer Service</div><ul class="space-y-space-xs font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Track Order Status</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Returns &amp; Exchanges</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Shipping Policy</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Size &amp; Fit Guide</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Help &amp; Support Desk</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Contact Us</li></ul></div><div><div class="font-brand-title text-brand-title uppercase tracking-widest text-primary mb-space-md">Legal &amp; Policies</div><ul class="space-y-space-xs font-body-sm text-body-sm"><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Terms of Service</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Privacy Policy</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Cookie Preferences</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Security &amp; Fraud</li><li class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Corporate Governance</li></ul></div><div class="lg:col-span-2"><div class="font-brand-title text-brand-title uppercase tracking-widest text-primary mb-space-xs">Stay Ahead of the Curve</div><p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Subscribe to receive early drops, archival releases, and member-exclusive private sale invitations.</p><div class="flex items-center max-w-md"><input class="flex-1 px-space-md py-space-sm bg-surface-container-lowest text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-l-lg outline-none" placeholder="Enter your email address..." type="email"/><button class="bg-primary text-on-primary font-brand-title text-brand-title px-space-lg py-space-sm rounded-r-lg hover:bg-inverse-surface hover:text-inverse-on-surface transition-colors uppercase" type="button">Subscribe</button></div><div class="mt-space-lg"><div class="font-label-badge text-label-badge uppercase tracking-wider text-outline mb-space-xs">Payment Assured</div><div class="flex items-center gap-space-sm"><span class="px-space-sm py-space-2xs bg-surface-container-lowest rounded font-label-badge text-label-badge text-on-surface">VISA</span><span class="px-space-sm py-space-2xs bg-surface-container-lowest rounded font-label-badge text-label-badge text-on-surface">MASTERCARD</span><span class="px-space-sm py-space-2xs bg-surface-container-lowest rounded font-label-badge text-label-badge text-on-surface">AMEX</span><span class="px-space-sm py-space-2xs bg-surface-container-lowest rounded font-label-badge text-label-badge text-on-surface">UPI</span><span class="px-space-sm py-space-2xs bg-surface-container-lowest rounded font-label-badge text-label-badge text-on-surface">NET BANKING</span></div></div></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm text-outline"><div>© 2025 RAPHAAA Commerce Ltd. All editorial apparel rights reserved.</div><div class="flex items-center gap-space-lg"><span class="hover:text-on-surface transition-colors cursor-pointer">Global Shipping (India)</span><span class="hover:text-on-surface transition-colors cursor-pointer">Sitemap</span><span class="hover:text-on-surface transition-colors cursor-pointer">Accessibility</span></div></div></div></footer></body></html>

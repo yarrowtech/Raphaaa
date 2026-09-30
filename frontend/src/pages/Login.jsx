@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import login from "../assets/login.jpg";
-import logo from "../assets/logo1.png";
 import { loginUser, googleLoginSuccess } from "../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { mergecart } from "../redux/slices/cartSlice";
-import { toast } from "sonner"; // ✅ Sonner import
+import { toast } from "sonner";
 import { FiRefreshCcw } from "react-icons/fi";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { FaEye, FaEyeSlash, FaWhatsapp } from "react-icons/fa"; // 👁️ Added
+import { FaEye, FaEyeSlash, FaWhatsapp } from "react-icons/fa";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +29,7 @@ const Login = () => {
   const location = useLocation();
   const { user, guestId, loading } = useSelector((state) => state.auth);
   const { cart } = useSelector((state) => state.cart);
-  const [showPassword, setShowPassword] = useState(false); // 👁️ Added
+  const [showPassword, setShowPassword] = useState(false);
 
   const redirectParam = new URLSearchParams(location.search).get("redirect");
   const redirect =
@@ -39,7 +37,6 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      // ✅ show success toast exactly once per login
       if (!sessionStorage.getItem("loginToastShown")) {
         sessionStorage.setItem("loginToastShown", "1");
         toast.success("Login successful!");
@@ -59,22 +56,6 @@ const Login = () => {
     }
   }, [user, guestId, cart, navigate, redirect, dispatch]);
 
-  //   useEffect(() => {
-  //   if (user) {
-  //     if (!user.mobileVerified) {
-  //       navigate("/verify-mobile");
-  //       return;
-  //     }
-
-  //     if (cart?.products.length > 0 && guestId) {
-  //       dispatch(mergecart({ guestId, user })).then(() => {
-  //         navigate(isCheckoutRedirect ? "/checkout" : "/");
-  //       });
-  //     } else {
-  //       navigate(isCheckoutRedirect ? "/checkout" : "/");
-  //     }
-  //   }
-  // }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch]);
   useEffect(() => {
     sessionStorage.removeItem("loginToastShown");
   }, []);
@@ -119,7 +100,6 @@ const Login = () => {
       ctx.fillStyle = "#f4f4f5";
       ctx.fillRect(0, 0, 140, 44);
 
-      // Add random lines for scratch effect
       for (let i = 0; i < 6; i++) {
         ctx.strokeStyle = "rgba(17,24,39,0.35)";
         ctx.beginPath();
@@ -136,7 +116,6 @@ const Login = () => {
   }, [captchaQuestion, requiresCaptcha]);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  // Login identifier can be an email OR a 10-digit mobile number.
   const isPhoneLike = (value) => /^\+?\d[\d\s-]{8,}$/.test(String(value).trim());
   const validateIdentifier = (value) => {
     const v = String(value).trim();
@@ -147,7 +126,7 @@ const Login = () => {
     const a = Math.floor(Math.random() * 10) + 1;
     const b = Math.floor(Math.random() * 10) + 1;
     setCaptchaQuestion({ a, b, answer: a + b });
-    setCaptchaAnswer(""); // Optionally clear previous answer
+    setCaptchaAnswer("");
   };
 
   const handleSubmit = (e) => {
@@ -252,119 +231,100 @@ const Login = () => {
     }
   };
 
+  // ---- NEW DESIGN FOLLOWS ----
   return (
-    <div className="flex h-[80vh]">
-      <div className="w-full md:w-full flex flex-col justify-center items-center p-6 sm:p-12">
-        <form onSubmit={handleSubmit} className="w-full max-w-md p-8">
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center w-fit">
-              <h2 className="text-3xl font-bold text-gray-800">Login</h2>{" "}
-              <span className="h-1 w-16 ml-3 bg-gradient-to-r from-blue-600 to-sky-400 rounded-full"></span>
-            </div>
+    <div className="flex h-[80vh]" style={{ fontFamily: "Manrope, sans-serif", background: "#F6F1EA" }}>
+      <div
+        className="w-full md:w-full flex flex-col justify-center items-center p-6 sm:p-12"
+        style={{ background: "#D6F1FF" }}
+      >
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md p-8"
+          style={{
+            background: "transparent",
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <h1
+              style={{
+                margin: 0,
+                fontFamily: "Fraunces, serif",
+                fontSize: 40,
+                fontWeight: 600,
+                color: "#1c1a17",
+                textAlign: "center",
+              }}
+            >
+              Welcome Back
+            </h1>
+            <p style={{ margin: 0, fontSize: 15, color: "#5F574F", textAlign: "center" }}>
+              Log in or create an account with your phone number.
+            </p>
           </div>
 
-          {loginMode === "password" ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setLoginMode("otp")}
-                className="mb-5 text-sm text-sky-600 hover:underline font-medium"
-              >
-                &larr; Login with phone number instead
-              </button>
-
-              <div className="mb-5">
-                <input
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  placeholder="Phone number or email"
-                  autoComplete="username"
-                />
-              </div>
-
-              {/* 👁️ Password field with toggle */}
-              <div className="mb-5 relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 pr-10 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-
-              {/* ✅ Captcha only for staff accounts */}
-              {requiresCaptcha && (
-                <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch">
-                  <div className="flex items-center gap-2 shrink-0">
-                    <canvas
-                      ref={canvasRef}
-                      width={140}
-                      height={44}
-                      className="w-[150px] h-11 rounded shadow-sm border border-gray-300 bg-gray-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={refreshCaptcha}
-                      className="h-10 w-10 flex items-center justify-center text-lg bg-blue-600 text-white rounded hover:bg-blue-800 transition"
-                    >
-                      <FiRefreshCcw className="animate-spin-slow" />
-                    </button>
-                  </div>
-                  <input
-                    type="number"
-                    value={captchaAnswer}
-                    onChange={(e) => setCaptchaAnswer(e.target.value)}
-                    className="flex-1 min-w-0 h-10 px-4 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                    placeholder="Answer"
-                  />
-                </div>
-              )}
-              <div className="mb-5 text-sm text-right">
-                <Link
-                  to="/forgot-password"
-                  className="text-sky-600 hover:underline font-medium"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300"
-              >
-                {loading ? "Signing..." : "Sign In"}
-              </button>
-            </>
-          ) : (
-            <div className="mb-5">
+          {/* OTP MODE (default) */}
+          {loginMode === "otp" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {otpStep === "mobile" && (
                 <>
-                  <div className="mb-1">
+                  <label
+                    htmlFor="phone"
+                    style={{ fontSize: 13, fontWeight: 600, color: "#3A342E" }}
+                  >
+                    Phone number
+                  </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      height: 52,
+                      border: "1px solid #7DD3FC",
+                      borderRadius: 12,
+                      background: "#FFFFFF",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "0 16px",
+                        borderRight: "1px solid #E6DDD2",
+                        fontSize: 15,
+                        fontWeight: 600,
+                        color: "#3A342E",
+                      }}
+                    >
+                      +91
+                    </div>
                     <input
-                      type="text"
+                      id="phone"
+                      type="tel"
+                      placeholder="10-digit mobile number"
                       value={otpMobile}
                       onChange={(e) =>
                         setOtpMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
                       }
                       onBlur={() => setOtpMobileTouched(true)}
-                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      placeholder="10-digit phone number"
                       inputMode="numeric"
                       maxLength={10}
+                      style={{
+                        flexGrow: 1,
+                        border: 0,
+                        outline: "none",
+                        padding: "0 16px",
+                        fontFamily: "Manrope, sans-serif",
+                        fontSize: 15,
+                        background: "transparent",
+                      }}
                     />
                   </div>
                   {otpMobileTouched && otpMobile.length > 0 && otpMobile.length !== 10 && (
-                    <p className="mb-3 text-xs text-red-500">
+                    <p style={{ margin: 0, fontSize: 12, color: "#ef4444" }}>
                       Enter a valid 10-digit phone number
                     </p>
                   )}
@@ -372,7 +332,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setLoginMode("password")}
-                      className="w-full text-sm text-sky-600 hover:underline font-medium flex items-center justify-center gap-1"
+                      className="text-sm text-sky-600 hover:underline font-medium text-right"
                     >
                       Login with Email &amp; Password instead
                     </button>
@@ -381,34 +341,98 @@ const Login = () => {
                     type="button"
                     onClick={handleSendOtp}
                     disabled={otpLoading || otpMobile.length !== 10}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                    style={{
+                      height: 52,
+                      border: 0,
+                      borderRadius: 12,
+                      color: "#3a342e",
+                      fontFamily: "Manrope, sans-serif",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      background: "#7DD3FC",
+                      opacity: otpLoading || otpMobile.length !== 10 ? 0.6 : 1,
+                    }}
                   >
-                    {!otpLoading && <FaWhatsapp className="text-lg" />}
-                    {otpLoading ? "Sending..." : "Send OTP via WhatsApp"}
+                    {!otpLoading && <FaWhatsapp style={{ fontSize: 20 }} />}
+                    {otpLoading ? "Sending..." : "Send OTP on WhatsApp"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMode("password")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 14,
+                      color: "#8A4B2A",
+                      textDecoration: "underline",
+                      marginTop: 4,
+                      fontFamily: "Manrope, sans-serif",
+                      alignSelf: "center",
+                    }}
+                  >
+                    Login with Email &amp; Password instead
                   </button>
                 </>
               )}
 
               {otpStep === "otp" && (
                 <>
-                  <p className="mb-3 text-sm text-gray-600">
-                    OTP sent to <span className="font-medium">{otpMobile}</span> on WhatsApp
+                  <p style={{ margin: 0, fontSize: 14, color: "#5F574F" }}>
+                    OTP sent to <span style={{ fontWeight: 600 }}>{otpMobile}</span> on WhatsApp
                   </p>
-                  <div className="mb-4">
+                  <div
+                    style={{
+                      display: "flex",
+                      height: 52,
+                      border: "1px solid #7DD3FC",
+                      borderRadius: 12,
+                      background: "#FFFFFF",
+                      overflow: "hidden",
+                    }}
+                  >
                     <input
                       type="text"
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
                       placeholder="Enter the 6-digit OTP"
                       autoFocus
+                      style={{
+                        flexGrow: 1,
+                        border: 0,
+                        outline: "none",
+                        padding: "0 16px",
+                        fontFamily: "Manrope, sans-serif",
+                        fontSize: 15,
+                        background: "transparent",
+                      }}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleVerifyOtp}
                     disabled={otpLoading}
-                    className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                    style={{
+                      height: 52,
+                      border: 0,
+                      borderRadius: 12,
+                      color: "#3a342e",
+                      fontFamily: "Manrope, sans-serif",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      background: "#7DD3FC",
+                      opacity: otpLoading ? 0.6 : 1,
+                    }}
                   >
                     {otpLoading ? "Verifying..." : "Verify OTP"}
                   </button>
@@ -418,7 +442,17 @@ const Login = () => {
                       setOtpStep("mobile");
                       setOtpCode("");
                     }}
-                    className="w-full mt-2 text-sm text-sky-600 hover:underline"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 14,
+                      color: "#8A4B2A",
+                      textDecoration: "underline",
+                      marginTop: 4,
+                      fontFamily: "Manrope, sans-serif",
+                      alignSelf: "center",
+                    }}
                   >
                     Change phone number
                   </button>
@@ -427,24 +461,56 @@ const Login = () => {
 
               {otpStep === "name" && (
                 <>
-                  <p className="mb-3 text-sm text-gray-600">
+                  <p style={{ margin: 0, fontSize: 14, color: "#5F574F" }}>
                     Looks like you're new here! Tell us your name to finish creating your account.
                   </p>
-                  <div className="mb-4">
+                  <div
+                    style={{
+                      display: "flex",
+                      height: 52,
+                      border: "1px solid #7DD3FC",
+                      borderRadius: 12,
+                      background: "#FFFFFF",
+                      overflow: "hidden",
+                    }}
+                  >
                     <input
                       type="text"
                       value={otpName}
                       onChange={(e) => setOtpName(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
                       placeholder="Your full name"
                       autoFocus
+                      style={{
+                        flexGrow: 1,
+                        border: 0,
+                        outline: "none",
+                        padding: "0 16px",
+                        fontFamily: "Manrope, sans-serif",
+                        fontSize: 15,
+                        background: "transparent",
+                      }}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleCompleteSignup}
                     disabled={otpLoading}
-                    className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white p-2.5 rounded-lg font-semibold hover:opacity-90 transition duration-300 disabled:opacity-60"
+                    style={{
+                      height: 52,
+                      border: 0,
+                      borderRadius: 12,
+                      color: "#3a342e",
+                      fontFamily: "Manrope, sans-serif",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      background: "#7DD3FC",
+                      opacity: otpLoading ? 0.6 : 1,
+                    }}
                   >
                     {otpLoading ? "Creating account..." : "Continue"}
                   </button>
@@ -453,15 +519,247 @@ const Login = () => {
             </div>
           )}
 
+          {/* PASSWORD MODE */}
+          {loginMode === "password" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <button
+                type="button"
+                onClick={() => setLoginMode("otp")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  color: "#8A4B2A",
+                  textDecoration: "underline",
+                  fontFamily: "Manrope, sans-serif",
+                  alignSelf: "flex-start",
+                }}
+              >
+                &larr; Login with phone number instead
+              </button>
+
+              <div>
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Phone number or email"
+                  autoComplete="username"
+                  style={{
+                    width: "100%",
+                    height: 52,
+                    padding: "0 16px",
+                    borderRadius: 12,
+                    border: "1px solid #D8CEC2",
+                    background: "#FFFFFF",
+                    fontFamily: "Manrope, sans-serif",
+                    fontSize: 15,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  style={{
+                    width: "100%",
+                    height: 52,
+                    padding: "0 40px 0 16px",
+                    borderRadius: 12,
+                    border: "1px solid #D8CEC2",
+                    background: "#FFFFFF",
+                    fontFamily: "Manrope, sans-serif",
+                    fontSize: 15,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: 14,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#5F574F",
+                  }}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              {requiresCaptcha && (
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <canvas
+                      ref={canvasRef}
+                      width={140}
+                      height={44}
+                      style={{ borderRadius: 8, border: "1px solid #D8CEC2", background: "#f4f4f5" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={refreshCaptcha}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#7DD3FC",
+                        color: "#1c1a17",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: 18,
+                      }}
+                    >
+                      <FiRefreshCcw />
+                    </button>
+                  </div>
+                  <input
+                    type="number"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    placeholder="Answer"
+                    style={{
+                      flex: 1,
+                      height: 44,
+                      padding: "0 16px",
+                      borderRadius: 12,
+                      border: "1px solid #D8CEC2",
+                      background: "#FFFFFF",
+                      fontFamily: "Manrope, sans-serif",
+                      fontSize: 15,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              )}
+
+              <div style={{ textAlign: "right" }}>
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    color: "#8A4B2A",
+                    fontSize: 14,
+                    textDecoration: "underline",
+                    fontFamily: "Manrope, sans-serif",
+                  }}
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  height: 52,
+                  border: 0,
+                  borderRadius: 12,
+                  color: "#3a342e",
+                  fontFamily: "Manrope, sans-serif",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  background: "#7DD3FC",
+                  opacity: loading ? 0.6 : 1,
+                }}
+              >
+                {loading ? "Signing..." : "Sign In"}
+              </button>
+            </div>
+          )}
+
           {/* Divider */}
-          <div className="flex items-center my-4">
-            <div className="flex-grow h-px bg-gradient-to-r from-blue-600 to-sky-400" />
-            <span className="mx-3 text-gray-600 text-sm font-medium">or</span>
-            <div className="flex-grow h-px bg-gradient-to-r from-sky-400 to-blue-600" />
+          <div style={{ display: "flex", alignItems: "center", gap: 16, color: "#8C8278", fontSize: 13 }}>
+            <div style={{ flexGrow: 1, height: 1, background: "#7dd3fc" }} />
+            <span>or</span>
+            <div style={{ flexGrow: 1, height: 1, background: "#7dd3fc" }} />
           </div>
 
-          {/* Google Login */}
-          <div className="flex justify-center">
+          {/* Social Buttons */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <button
+              type="button"
+              style={{
+                flexGrow: 1,
+                height: 52,
+                border: "1px solid #7dd3fc",
+                borderRadius: 12,
+                background: "#FFFFFF",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#1C1A17",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                // trigger GoogleLogin programmatically is not straightforward,
+                // so we render GoogleLogin below but this button can be a placeholder
+                toast.info("Use the Google button below to sign in.");
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-7.9z" />
+                <path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z" />
+                <path fill="#FBBC05" d="M5.9 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.3a11 11 0 0 0 0 9.8z" />
+                <path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.1l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z" />
+              </svg>
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMode(loginMode === "password" ? "otp" : "password")}
+              style={{
+                flexGrow: 1,
+                height: 52,
+                border: "1px solid #7dd3fc",
+                borderRadius: 12,
+                background: "#FFFFFF",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#1C1A17",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                cursor: "pointer",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 7l9 6 9-6" />
+              </svg>
+              <span>{loginMode === "password" ? "Phone OTP" : "Email & password"}</span>
+            </button>
+          </div>
+
+          {/* Terms */}
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "#6E645B", textAlign: "center" }}>
+            By continuing you agree to Raphaaa's <a href="#" style={{ color: "#1C1A17" }}>Terms of Use</a> and <a href="#" style={{ color: "#1C1A17" }}>Privacy Policy</a>.
+          </p>
+
+          {/* Hidden GoogleLogin to keep functionality */}
+          <div style={{ display: "none" }}>
             <GoogleLogin
               onSuccess={async (credentialResponse) => {
                 try {
@@ -469,15 +767,11 @@ const Login = () => {
                   const { name, email, picture } = decoded;
 
                   const { data } = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL
-                    }/api/users/google-login`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/users/google-login`,
                     { name, email, photo: picture }
                   );
 
-                  dispatch(
-                    googleLoginSuccess({ user: data.user, token: data.token })
-                  );
-                  // toast.success("Login successful!");
+                  dispatch(googleLoginSuccess({ user: data.user, token: data.token }));
                   navigate(redirect);
                 } catch (error) {
                   console.error(error);
@@ -487,16 +781,6 @@ const Login = () => {
               onError={() => toast.error("Login failed")}
             />
           </div>
-
-          {/* <p className="mt-6 text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to={`/register?redirect=${encodeURIComponent(redirect)}`}
-              className="text-sky-600 font-medium hover:underline"
-            >
-              Register
-            </Link>
-          </p> */}
         </form>
       </div>
     </div>

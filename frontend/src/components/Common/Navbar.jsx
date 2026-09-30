@@ -4,18 +4,19 @@ import { HiOutlineShoppingBag, HiOutlineUser, HiChevronDown } from "react-icons/
 import { HiMiniBars3BottomRight } from "react-icons/hi2";
 import SearchBar from "./SearchBar";
 import CartDrawer from "../Layout/CartDrawer";
+import WishlistDrawer from "../Layout/WishlistDrawer";
 import { IoIosClose } from "react-icons/io";
-import logo from "../../assets/logo1.png";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 import axios from "axios";
 import { GiTreasureMap } from "react-icons/gi"; // example icon
 import useSmartLoader from "../../hooks/useSmartLoader";
 import { toast } from "sonner";
-import { getActiveSocialLinks, getSocialIcon } from "../../utils/socialLinks";
 
 const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [wishlistDrawerOpen, setWishlistDrawerOpen] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const [isNavbarFixed, setIsNavbarFixed] = useState(false);
   const [hideOnMobileProfileSubmenu, setHideOnMobileProfileSubmenu] = useState(false);
@@ -51,12 +52,22 @@ const Navbar = () => {
       .catch(() => setCollabActive(false));
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (!user || !token) { setWishlistItems([]); return; }
+    const refreshWishlist = () => axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/wishlist`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => setWishlistItems(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    refreshWishlist();
+    window.addEventListener("wishlist-updated", refreshWishlist);
+    return () => window.removeEventListener("wishlist-updated", refreshWishlist);
+  }, [user, wishlistDrawerOpen]);
 
-  const { loading, data: contactInfo } = useSmartLoader(async () => {
+
+  const { data: contactInfo } = useSmartLoader(async () => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/settings/contact`);
     return res.data;
   });
-  const socialLinks = getActiveSocialLinks(contactInfo);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -70,6 +81,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setProfileOpen(false);
+    setNavDrawerOpen(false);
   }, [location]);
 
   useEffect(() => {
@@ -80,10 +92,12 @@ const Navbar = () => {
     return () => window.removeEventListener("profile-mobile-submenu", onProfileSubmenu);
   }, []);
 
+  const isCollection = location.pathname.startsWith("/collections/");
   const isActive = (path) => location.pathname === path;
 
   const cartItemCount =
     cart?.products?.reduce((total, product) => total + product.quantity, 0) || 0;
+  const wishlistCount = wishlistItems.length;
 
   const toggleNavDrawer = () => {
     setNavDrawerOpen(!navDrawerOpen);
@@ -93,84 +107,61 @@ const Navbar = () => {
     setDrawerOpen(!drawerOpen);
   };
 
-  if (loading) {
-    return (
-      <div className="w-full px-6 py-4">
-        <div className="container mx-auto flex items-center justify-between animate-pulse">
-          <div className="h-10 w-24 bg-gray-200 rounded" />
-          <div className="hidden md:flex space-x-6">
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-            <div className="h-4 w-24 bg-gray-200 rounded" />
-            <div className="h-4 w-28 bg-gray-200 rounded" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="h-6 w-6 bg-gray-200 rounded-full" />
-            <div className="h-6 w-6 bg-gray-200 rounded-full" />
-            <div className="h-6 w-6 bg-gray-200 rounded-full" />
-            <div className="h-6 w-6 bg-gray-200 rounded" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const toggleWishlistDrawer = () => {
+    if (!user) { navigate("/login"); return; }
+    setWishlistDrawerOpen((p) => !p);
+  };
 
   const hideNavbarClass = hideOnMobileProfileSubmenu ? "hidden md:block" : "";
 
   return (
     <>
-      {isNavbarFixed && !hideOnMobileProfileSubmenu && <div className="h-[104px] md:h-[88px]" />}
+      {isNavbarFixed && !hideOnMobileProfileSubmenu && <div className={`storefront-nav-spacer ${isCollection ? "is-collection" : ""}`} />}
       <div
-        className={`${hideNavbarClass} w-full ${
+        className={`storefront-header ${isCollection ? "is-collection" : ""} ${hideNavbarClass} w-full ${
           isNavbarFixed
-            ? "fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm border-b border-gray-100"
-            : "relative bg-transparent"
+            ? "fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+            : "relative bg-transparent lg:bg-[#F8FDFF] lg:border-b lg:border-[#7dd3fc]"
         }`}
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
       >
-      <nav className="container mx-auto flex items-center justify-between py-3 md:py-4 px-3 sm:px-4 md:px-6 lg:px-8 gap-2">
+      <nav className="storefront-nav" aria-label="Main navigation">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 group shrink-0" title="Raphaaa">
-          <img src={logo} alt="Logo" className="h-8 sm:h-9 md:h-10 w-auto transition-transform duration-300 group-hover:scale-105" />
+          <span className="storefront-wordmark">RAPHAAA</span>
         </Link>
 
-        {/* Center Navigation */}
-        <div className={`${searchOpen ? "hidden" : "hidden md:flex"} space-x-5 xl:space-x-6 items-center`}>
+        {/* Center Navigation — typography matches the reference's Men/Women/Kids
+            nav row exactly: 14px/600, normal case, 32px gap, no letter-spacing. */}
+        <div
+          className="storefront-primary"
+          style={{ gap: "32px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
           {/* ✅ Show Exclusive Drop only when collab is active */}
           {collabActive && (
             <Link
               to="/exclusive-drop"
-              className={`text-sm font-semibold tracking-wide transition-all duration-300 ease-in-out uppercase ${isActive("/exclusive-drop")
-                  ? "text-sky-600 border-b-2 border-sky-600 pb-1"
-                  : "text-gray-600 hover:text-black hover:border-b-2 hover:border-gray-300 pb-1"
-                }`}
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: isActive("/exclusive-drop") ? "#111111" : "#444748",
+              }}
+              className="transition-colors duration-200 hover:text-[#111111]"
             >
               Exclusive Drop
             </Link>
           )}
-          {["/collections/all", "/about", "/contact-us", "/privacy-policy"].map((path, index) => {
-            const labels = ["Collections", "About", "Contact Us", "Privacy & Policy"];
-            const routesToShow = path === "/collections/all" ? !collabActive : true;
-
-            return routesToShow ? (
-              <Link
-                key={path}
-                to={path}
-                className={`text-sm font-semibold tracking-wide transition-all duration-300 ease-in-out uppercase ${isActive(path)
-                    ? "text-sky-600 border-b-2 border-sky-600 pb-1"
-                    : "text-gray-600 hover:text-black hover:border-b-2 hover:border-gray-300 pb-1"
-                  }`}
-              >
-                {labels[index]}
-              </Link>
-            ) : null;
-          })}
+          {["Men", "Women", "Kids"].map(gender => (
+            <Link key={gender} to={`/collections/all?gender=${gender}`} aria-current={new URLSearchParams(location.search).get("gender") === gender ? "page" : undefined}>{gender}</Link>
+          ))}
 
 
 
         </div>
 
-        {/* Right Side */}
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0">
+        {/* Right Side — order matches Reference/Landing Page/Main.dc.html's
+            header right group exactly: Search → Wishlist → Bag → Account */}
+        <div className="storefront-actions">
           {user &&
             (user.role === "admin" ||
               user.role === "merchantise" ||
@@ -178,7 +169,7 @@ const Navbar = () => {
               user.role === "delivery_boy") && (
               <Link
                 to={user.role === "delivery_boy" ? "/admin/orders" : "/admin"}
-                className={`${searchOpen ? "hidden" : "hidden sm:inline-flex"} px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:shadow-md hover:from-sky-600 hover:to-blue-700 transition-all duration-300 whitespace-nowrap`}
+                className={`${searchOpen ? "hidden" : "hidden sm:inline-flex"} px-3 md:px-4 py-2 text-xs font-bold uppercase tracking-wide text-white bg-[#111111] rounded-full hover:bg-[#E11B22] transition-colors duration-300 whitespace-nowrap`}
               >
                 {user.role === "admin"
                   ? "Admin Panel"
@@ -190,112 +181,140 @@ const Navbar = () => {
               </Link>
             )}
 
-          {user ? (
-            user.role === "customer" && (
-              <div className={`relative ${searchOpen ? "hidden" : "hidden md:block"}`} ref={dropdownRef}>
-                <button
-                  onClick={() => setProfileOpen((prev) => !prev)}
-                  className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 transition-all"
-                >
-                  {user.photo ? (
-                    <img
-                      src={user.photo}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full object-cover border border-gray-300 shadow-sm"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-sky-600 text-white flex items-center justify-center rounded-full text-sm font-bold uppercase">
-                      {user.name?.charAt(0) || "U"}
-                    </div>
-                  )}
-
-                  <span className="text-sm font-medium text-gray-800 hidden md:inline">
-                    {user.name}
-                  </span>
-                  <HiChevronDown className="h-4 w-4 text-gray-500" />
-                </button>
-
-
-                {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      View Profile
-                    </Link>
-                    <Link
-                      to="/my-orders"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      My Orders
-                    </Link>
-                    <Link
-                      to="/prebookings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      My Prebookings
-                    </Link>
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem("userInfo");
-                        dispatch(logout());
-                        toast.success("Logged out successfully!");
-                        navigate("/login");
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          ) : (
-            <Link
-              to="/login"
-              className={`${searchOpen ? "hidden" : "hidden sm:inline-flex"} px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600 rounded-full shadow hover:from-sky-600 hover:to-blue-700 transition duration-300 whitespace-nowrap`}
-              title="Login"
-            >
-              Login
-            </Link>
-          )}
-
-          {/* <button ref={cartIconRef} onClick={toggleCartDrawer} className="relative hover:scale-105 transition-transform" title="Cart">
-            <HiOutlineShoppingBag className="h-6 w-6 text-gray-700" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-2 bg-sky-500 text-white text-xs rounded-full px-2 py-0.5 shadow">
-                {cartItemCount}
-              </span>
-            )}
-          </button> */}
-          <button
-  ref={cartIconRef}
-  onClick={toggleCartDrawer}
-  className="relative hover:scale-105 transition-transform"
-  title="Cart"
->
-  <HiOutlineShoppingBag className="h-6 w-6 text-gray-700" />
-  {cartItemCount > 0 && (
-    <span className="absolute -top-1 -right-2 bg-sky-500 text-white text-xs rounded-full px-2 py-0.5 shadow">
-      {cartItemCount}
-    </span>
-  )}
-</button>
-
-          <div className="block" title="Search">
-            <SearchBar onOpenChange={setSearchOpen} />
+          {/* 1. Search */}
+          <div className="storefront-search text-[#111111]" title="Search">
+            <SearchBar onOpenChange={setSearchOpen} variant="pillDesktop" />
           </div>
 
-          <button onClick={toggleNavDrawer} className="md:hidden transition-transform hover:scale-110">
-            <HiMiniBars3BottomRight className="h-6 w-6 text-gray-700" />
+          {/* 2. Wishlist */}
+          <button
+            onClick={toggleWishlistDrawer}
+            aria-label={`Wishlist, ${wishlistCount} items`}
+            className={`${searchOpen ? "hidden" : ""} relative w-11 h-11 flex items-center justify-center rounded`}
+            style={{ border: 0, background: "transparent" }}
+            title="Wishlist"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="1.8" strokeLinejoin="round">
+              <path d="M12 20.5s-7.5-4.6-9.4-9.1C1.2 7.9 3.4 4.5 6.9 4.5c2 0 3.5 1.1 5.1 3 1.6-1.9 3.1-3 5.1-3 3.5 0 5.7 3.4 4.3 6.9-1.9 4.5-9.4 9.1-9.4 9.1z" />
+            </svg>
+            {wishlistCount > 0 && (
+              <span
+                className="absolute flex items-center justify-center font-bold text-white"
+                style={{ top: "6px", right: "4px", minWidth: "18px", height: "18px", padding: "0 5px", borderRadius: "9999px", fontSize: "10px", fontWeight: 700, background: "#FF3D3D" }}
+              >
+                {wishlistCount}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Bag */}
+          <button
+            ref={cartIconRef}
+            onClick={toggleCartDrawer}
+            aria-label={`Bag, ${cartItemCount} items`}
+            className="storefront-bag relative flex items-center gap-2.5"
+            style={{ height: "44px", padding: "0 16px 0 12px", border: "1px solid #D4D5D9", borderRadius: "4px", marginLeft: "8px", background: "transparent" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7DD3FC" strokeWidth="1.8" strokeLinejoin="round">
+              <path d="M5 8h14l-1 12H6L5 8z" />
+              <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+            </svg>
+            <span className="text-[13px] font-bold text-[#111111]">
+              {isCollection ? (cartItemCount > 0 ? cartItemCount : null) : cartItemCount > 0 ? `${cartItemCount} item${cartItemCount > 1 ? "s" : ""}` : "Bag"}
+            </span>
+          </button>
+
+          {/* 4. Account (profile dropdown / login) */}
+          <div style={{ marginLeft: "8px" }} className="flex items-center">
+            {user ? (
+              user.role === "customer" && (
+                <div className={`relative ${searchOpen ? "hidden" : "block"}`} ref={dropdownRef}>
+                  <button
+                    aria-label="Account menu"
+                    aria-expanded={profileOpen}
+                    onClick={() => setProfileOpen((prev) => !prev)}
+                    className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-[#F5F5F6] transition-all"
+                  >
+                    {user.photo ? (
+                      <img
+                        src={user.photo}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover border border-[#EEEEEE] shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-[#7dd3fc] text-white flex items-center justify-center rounded-full text-sm font-bold uppercase">
+                        {user.name?.charAt(0) || "U"}
+                      </div>
+                    )}
+
+                    <span className="text-xs font-bold uppercase tracking-wide text-[#111111] hidden md:inline">
+                      {user.name}
+                    </span>
+                    <HiChevronDown className="h-4 w-4 text-[#94969F]" />
+                  </button>
+
+
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-[#EEEEEE] rounded shadow-lg z-50">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-[#444748] hover:bg-[#F5F5F6] hover:text-[#111111]"
+                      >
+                        View Profile
+                      </Link>
+                      <Link
+                        to="/my-orders"
+                        className="block px-4 py-2 text-sm text-[#444748] hover:bg-[#F5F5F6] hover:text-[#111111]"
+                      >
+                        My Orders
+                      </Link>
+                      <Link
+                        to="/prebookings"
+                        className="block px-4 py-2 text-sm text-[#444748] hover:bg-[#F5F5F6] hover:text-[#111111]"
+                      >
+                        My Prebookings
+                      </Link>
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("userInfo");
+                          dispatch(logout());
+                          toast.success("Logged out successfully!");
+                          navigate("/login");
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-[#E11B22] hover:bg-[#F5F5F6]"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            ) : (
+              <Link
+                to="/login"
+                className="storefront-account"
+                aria-label="Account" title="Login"
+              >
+                <HiOutlineUser size={20} />
+              </Link>
+            )}
+          </div>
+
+          <button onClick={toggleNavDrawer} aria-label="Open menu" className="md:hidden transition-transform hover:scale-110">
+            <HiMiniBars3BottomRight className="h-6 w-6 text-[#111111]" />
           </button>
         </div>
       </nav>
       </div>
 
       <CartDrawer drawerOpen={drawerOpen} toggleCartDrawer={toggleCartDrawer} />
+      <WishlistDrawer
+        drawerOpen={wishlistDrawerOpen}
+        toggleWishlistDrawer={toggleWishlistDrawer}
+        wishlistItems={wishlistItems}
+      />
 
+      {navDrawerOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={toggleNavDrawer} />}
       {/* Mobile Drawer */}
       <div
         className={`fixed top-0 left-0 w-[86%] sm:w-[70%] md:w-[48%] h-full bg-white shadow-xl transform transition-transform duration-300 z-50 ${navDrawerOpen ? "translate-x-0" : "-translate-x-full"
@@ -304,17 +323,18 @@ const Navbar = () => {
         <div className="flex justify-end p-4">
           <button
             onClick={toggleNavDrawer}
-            className="text-gray-600 hover:text-gray-800"
+            className="text-[#444748] hover:text-[#111111]"
           >
-            <IoIosClose className="h-6 w-6 text-gray-600" />
+            <IoIosClose className="h-6 w-6" />
           </button>
         </div>
-        <div className="p-4">
-          <h2 className="text-xl font-semibold mb-4">Menu</h2>
+        <div className="p-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h2 className="text-xs font-extrabold uppercase tracking-widest text-[#111111] mb-4">Menu</h2>
           <nav className="space-y-4">
             {[
               { path: "/", label: "Home" },
               { path: "/collections/all", label: "Collections" },
+              { path: "/wishlist", label: `Wishlist${wishlistCount ? ` (${wishlistCount})` : ""}` },
               { path: "/about", label: "About Us" },
               { path: "/contact-us", label: "Contact Us" },
               { path: "/privacy-policy", label: "Privacy & Policy" },
@@ -323,7 +343,7 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 onClick={toggleNavDrawer}
-                className="block text-gray-700 hover:text-sky-600 text-base font-semibold uppercase tracking-wide transition"
+                className="block text-[#444748] hover:text-[#E11B22] text-base font-bold uppercase tracking-wide transition"
               >
                 {link.label}
               </Link>
@@ -331,31 +351,12 @@ const Navbar = () => {
           </nav>
 
           <div className="mt-8 pt-4 absolute bottom-0 pb-8">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Follow Us</h3>
-            <div className="flex space-x-4 mb-4">
-              {socialLinks.map((link) => {
-                const Icon = getSocialIcon(link.platform);
-                return (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={link.label}
-                    title={link.label}
-                  >
-                    <Icon className="h-5 w-5 text-sky-600 inline" />
-                  </a>
-                );
-              })}
-            </div>
-
-            <h3 className="text-sm font-semibold text-gray-700 mb-1">Contact</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#94969F] mb-1">Contact</h3>
             {contactInfo?.showGmail && (
-              <a href={`mailto:${contactInfo.gmail}`} className="text-xs text-gray-600">{contactInfo.gmail}</a>
+              <a href={`mailto:${contactInfo.gmail}`} className="text-xs text-[#444748]">{contactInfo.gmail}</a>
             )} |{" "}
             {contactInfo?.showPhone && (
-              <a href={`tel:${contactInfo.phone}`} className="text-xs text-gray-600">{contactInfo.phone}</a>
+              <a href={`tel:${contactInfo.phone}`} className="text-xs text-[#444748]">{contactInfo.phone}</a>
             )}
           </div>
         </div>

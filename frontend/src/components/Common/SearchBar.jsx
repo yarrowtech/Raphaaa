@@ -29,7 +29,7 @@ const loadGuestHistory = () => {
 };
 const saveGuestHistory = (items) => localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 
-const SearchBar = ({ inline = false, className = "", inputClassName = "", placeholder = "Search for products...", onOpenChange }) => {
+const SearchBar = ({ inline = false, className = "", inputClassName = "", placeholder = "Search for products...", onOpenChange, variant = "" }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -217,7 +217,7 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
         return;
       }
       try {
-        const term = searchTerm.trim();
+        const term = encodeURIComponent(searchTerm.trim());
         const [sugRes, facetRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/suggestions?search=${term}`),
           axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products/facets?search=${term}`),
@@ -258,6 +258,177 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
     navigate(`/collections/all?${qp.toString()}`);
   };
 
+  /* Shared suggestions/history dropdown — reused by both the default
+     toggle-to-expand search and the persistent desktop pill variant. */
+  const renderSuggestions = () => (
+    <ul className="absolute left-0 right-0 bg-white shadow-md max-h-64 overflow-y-auto z-50 mt-1 rounded-md">
+      {searchTerm.trim() ? (
+        suggestions.length > 0 ? (
+          suggestions.map((product) => (
+            <li
+              key={product._id}
+              className="px-4 py-2 flex items-center justify-between cursor-pointer border-b border-gray-300 hover:bg-gray-100"
+              onClick={() => handleSuggestionClick(product)}
+            >
+              <div className="flex flex-wrap justify-center items-center gap-3">
+                <img
+                  src={product.colorVariants?.[0]?.images?.[0]?.url || product.images?.[0]?.url || "/no-image.png"}
+                  alt={product.name}
+                  className="w-10 h-10 object-cover rounded-md"
+                />
+                <span className="text-sm text-gray-800">
+                  {product.name}
+                </span>
+              </div>
+              <GoArrowUpRight />
+            </li>
+          ))
+        ) : (
+          <li className="px-4 py-6 text-sm text-gray-500 text-center">
+            No products found
+          </li>
+        )
+      ) : (
+        history.map((item, index) => (
+          <li
+            key={item._id || `${item.type}-${item.term || item.product?._id}-${index}`}
+            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center"
+          >
+            {item.type === "product" && item.product ? (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(item.product);
+                }}
+                className="flex-1 text-left flex items-center gap-3"
+              >
+                <img
+                  src={item.product.images?.[0]?.url || "/no-image.png"}
+                  alt={item.product.name}
+                  className="w-8 h-8 object-cover rounded-md shrink-0"
+                />
+                <span className="truncate">{item.product.name}</span>
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleHistoryTermClick(item.term);
+                }}
+                className="flex-1 text-left flex items-center gap-2"
+              >
+                <MdHistory className="inline" /> {item.term}
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteHistoryItem(item);
+              }}
+              className="text-gray-400 text-lg hover:text-gray-600"
+              title="Remove"
+            >
+              &times;
+            </button>
+          </li>
+        ))
+      )}
+
+      {searchTerm.trim() && (facets.brands.length > 0 || facets.categories.length > 0) && (
+        <li className="px-4 py-3 border-t border-gray-200">
+          <div className="text-xs text-gray-500 mb-2">Top matches</div>
+          <div className="flex flex-wrap gap-2">
+            {facets.categories.map((c) => (
+              <button
+                key={`cat-${c._id}`}
+                type="button"
+                onClick={() => handleFacetClick("category", c._id)}
+                className="text-xs px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+                title={`Category (${c.count})`}
+              >
+                {c._id} ({c.count})
+              </button>
+            ))}
+            {facets.brands.map((b) => (
+              <button
+                key={`brand-${b._id}`}
+                type="button"
+                onClick={() => handleFacetClick("brand", b._id)}
+                className="text-xs px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+                title={`Brand (${b.count})`}
+              >
+                {b._id} ({b.count})
+              </button>
+            ))}
+          </div>
+        </li>
+      )}
+
+      {searchTerm.trim() === "" && history.length > 0 && (
+        <li className="px-4 py-2 text-right">
+          <button
+            onClick={clearHistory}
+            className="text-xs text-red-500 hover:underline"
+          >
+            Clear all history
+          </button>
+        </li>
+      )}
+    </ul>
+  );
+
+  /* ── Persistent desktop pill variant — matches Reference/Landing Page/Main.dc.html
+     header search exactly: 340x44px pill, bg #f5f3f5, border 1px solid #e3e2e4,
+     18px sky-blue search icon, borderless 13px input, 34px circular sky-blue
+     submit button with a dark-teal arrow icon. ── */
+  if (variant === "pillDesktop") {
+    return (
+      <div ref={searchRef} className={`relative ${className}`}>
+        <form
+          role="search"
+          onSubmit={handleSearch}
+          className="flex items-center gap-2.5"
+          style={{
+            width: "340px",
+            height: "44px",
+            padding: "0 6px 0 18px",
+            marginRight: "8px",
+            borderRadius: "9999px",
+            background: "#f5f3f5",
+            border: "1px solid #e3e2e4",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7DD3FC" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" />
+          </svg>
+          <input
+            ref={searchInputRef}
+            type="search"
+            aria-label="Search styles, brands and fabrics"
+            placeholder={placeholder === "Search for products..." ? "Search T-Shirt, Polo, Kurti…" : placeholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            className="flex-grow min-w-0"
+            style={{ height: "100%", border: 0, background: "transparent", outline: "none", fontFamily: "inherit", fontSize: "13px", color: "#111111" }}
+          />
+          <button
+            type="submit"
+            aria-label="Submit search"
+            style={{ width: "34px", height: "34px", flexShrink: 0, border: 0, borderRadius: "9999px", background: "#7DD3FC", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f4a43" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="13 6 19 12 13 18" />
+            </svg>
+          </button>
+        </form>
+        {showSuggestions && renderSuggestions()}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={searchRef}
@@ -282,130 +453,15 @@ const SearchBar = ({ inline = false, className = "", inputClassName = "", placeh
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
             />
-            <buttonC
+            <button
               type="submit"
               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-700 px-3 py-1 rounded-full md:rounded-lg hover:bg-gray-600 hover:text-white transition-colors duration-300"
             >
               <HiMiniMagnifyingGlass className="h-6 w-6" />
-            </buttonC>
+            </button>
 
             {/* 🔻 Suggestions */}
-            {showSuggestions && (
-              <ul className="absolute left-0 right-0 bg-white shadow-md max-h-64 overflow-y-auto z-50 mt-1 rounded-md">
-                {searchTerm.trim() ? (
-                  suggestions.length > 0 ? (
-                    suggestions.map((product) => (
-                      <li
-                        key={product._id}
-                        className="px-4 py-2 flex items-center justify-between cursor-pointer border-b border-gray-300 hover:bg-gray-100"
-                        onClick={() => handleSuggestionClick(product)}
-                      >
-                        <div className="flex flex-wrap justify-center items-center gap-3">
-                          <img
-                            src={product.images[0]?.url || "/no-image.png"}
-                            alt={product.name}
-                            className="w-10 h-10 object-cover rounded-md"
-                          />
-                          <span className="text-sm text-gray-800">
-                            {product.name}
-                          </span>
-                        </div>
-                        <GoArrowUpRight />
-                      </li>
-                    ))
-                  ) : (
-                    <li className="px-4 py-6 text-sm text-gray-500 text-center">
-                      No products found
-                    </li>
-                  )
-                ) : (
-                  history.map((item, index) => (
-                    <li
-                      key={item._id || `${item.type}-${item.term || item.product?._id}-${index}`}
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center"
-                    >
-                      {item.type === "product" && item.product ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleSuggestionClick(item.product);
-                          }}
-                          className="flex-1 text-left flex items-center gap-3"
-                        >
-                          <img
-                            src={item.product.images?.[0]?.url || "/no-image.png"}
-                            alt={item.product.name}
-                            className="w-8 h-8 object-cover rounded-md shrink-0"
-                          />
-                          <span className="truncate">{item.product.name}</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleHistoryTermClick(item.term);
-                          }}
-                          className="flex-1 text-left flex items-center gap-2"
-                        >
-                          <MdHistory className="inline" /> {item.term}
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteHistoryItem(item);
-                        }}
-                        className="text-gray-400 text-lg hover:text-gray-600"
-                        title="Remove"
-                      >
-                        &times;
-                      </button>
-                    </li>
-                  ))
-                )}
-
-                {searchTerm.trim() && (facets.brands.length > 0 || facets.categories.length > 0) && (
-                  <li className="px-4 py-3 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 mb-2">Top matches</div>
-                    <div className="flex flex-wrap gap-2">
-                      {facets.categories.map((c) => (
-                        <button
-                          key={`cat-${c._id}`}
-                          type="button"
-                          onClick={() => handleFacetClick("category", c._id)}
-                          className="text-xs px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
-                          title={`Category (${c.count})`}
-                        >
-                          {c._id} ({c.count})
-                        </button>
-                      ))}
-                      {facets.brands.map((b) => (
-                        <button
-                          key={`brand-${b._id}`}
-                          type="button"
-                          onClick={() => handleFacetClick("brand", b._id)}
-                          className="text-xs px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
-                          title={`Brand (${b.count})`}
-                        >
-                          {b._id} ({b.count})
-                        </button>
-                      ))}
-                    </div>
-                  </li>
-                )}
-
-                {searchTerm.trim() === "" && history.length > 0 && (
-                  <li className="px-4 py-2 text-right">
-                    <button
-                      onClick={clearHistory}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Clear all history
-                    </button>
-                  </li>
-                )}
-              </ul>
-            )}
+            {showSuggestions && renderSuggestions()}
           </div>
 
           {/* close icon */}

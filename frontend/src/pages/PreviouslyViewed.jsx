@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ProductCard from "../components/Products/ProductCard";
 
-const PreviouslyViewed = () => {
+const PreviouslyViewed = ({ hideWhenEmpty = false }) => {
   const [viewedProducts, setViewedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,6 +31,8 @@ const PreviouslyViewed = () => {
 
     load();
   }, []);
+
+  if (hideWhenEmpty && (loading || viewedProducts.length === 0)) return null;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-10 md:py-12 pb-24 md:pb-12">

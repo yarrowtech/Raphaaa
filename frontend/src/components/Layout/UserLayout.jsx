@@ -17,7 +17,7 @@ const UserLayout = () => {
   const isOrderDetailsPage = /^\/order\/[^/]+$/.test(location.pathname)
   const isCheckoutPage = location.pathname === "/checkout"
   const isCartPage = location.pathname === "/cart"
-  const isCollectionsPage = location.pathname === "/collections/all"
+  const isCollectionsPage = location.pathname.startsWith("/collections/")
   const isWishlistPage = location.pathname === "/wishlist"
   const isRecentlyViewedPage = location.pathname === "/recently-viewed"
   const isMyActivityPage = location.pathname === "/my-activity"
@@ -25,7 +25,7 @@ const UserLayout = () => {
   const isUpdateProfilePage = location.pathname === "/update-profile"
   const isHomePage = location.pathname === "/"
   const hideMobileFooterMenu = isCheckoutPage || isCartPage
-  const hideNavbarOnMobile = isCartPage || location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage || isHomePage
+  const hideNavbarOnMobile = isCartPage || location.pathname === "/profile" || isRecentlyViewedPage || isMyActivityPage || isSettingsPage || isUpdateProfilePage
   const hideFooterOnMobileRoutes = [
     "/profile",
     "/login",
@@ -52,7 +52,7 @@ const UserLayout = () => {
     <>
       <div
         className={
-          isCollectionsPage || isCheckoutPage
+          isCheckoutPage
             ? "hidden lg:block"
             : isWishlistPage || isRecentlyViewedPage || isMyActivityPage
               ? "hidden"
@@ -75,7 +75,10 @@ const UserLayout = () => {
               ? "hidden"
               : hideFooterOnMobileOnly
                 ? "hidden lg:block"
-                : ""
+                : isHomePage
+                  // The home page renders its own reference footer.
+                  ? "hidden"
+                  : ""
         }
       >
         <Footer/>

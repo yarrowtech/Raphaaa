@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Raphaaa Login</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;font-family:Manrope,sans-serif;background:#F6F1EA;color:#1C1A17}
+a{color:#1C1A17}a:hover{color:#8A4B2A}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; background: #F6F1EA; box-sizing: border-box">
+
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; background-color: #D6F1FF">
+<form style="width: 420px; display: flex; flex-direction: column; gap: 24px; height: 456px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="box-sizing: border-box; display: flex; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px"><div style="box-sizing: border-box; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px"><h1 style="margin: 0; font-family: Fraunces, serif; font-size: 40px; font-weight: 600; color: #1c1a17; text-align: center; width: 411px; height: 52px">Welcome Back</h1></div></div>
+<p style="margin: 0; font-size: 15px; color: #5F574F; text-align: center">Log in or create an account with your phone number.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="phone" style="font-size: 13px; font-weight: 600; color: #3A342E">Phone number</label>
+<div style="display: flex; height: 52px; border: 1px solid #D8CEC2; border-radius: 12px; background: #FFFFFF; overflow: hidden; border-color: #7DD3FC">
+<div style="display: flex; align-items: center; padding: 0 16px; border-right: 1px solid #E6DDD2; font-size: 15px; font-weight: 600; color: #3A342E">+91</div>
+<input id="phone" type="tel" placeholder="10-digit mobile number" style="flex-grow: 1; border: 0; outline: none; padding: 0 16px; font-family: Manrope, sans-serif; font-size: 15px; background: transparent">
+</div>
+</div>
+<button type="button" style="height: 52px; border: 0; border-radius: 12px; color: #1c1a17; font-family: Manrope, sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; background-color: #7DD3FC">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z" style="stroke: #1c1a17; border-color: #1c1a17"></path><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.5-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z" style="stroke: #1c1a17; border-color: #1c1a17"></path></svg>
+<span style="color: #3a342e">Send OTP on WhatsApp</span>
+</button>
+<div style="display: flex; align-items: center; gap: 16px; color: #8C8278; font-size: 13px">
+<div style="flex-grow: 1; height: 1px; background-color: #7dd3fc"></div><span>or</span><div style="flex-grow: 1; height: 1px; background-color: #7dd3fc"></div>
+</div>
+<div style="display: flex; gap: 12px; position: relative">
+<button type="button" style="flex-grow: 1; height: 52px; border: 1px solid #D8CEC2; border-radius: 12px; background: #FFFFFF; font-family: Manrope, sans-serif; font-size: 14px; font-weight: 600; color: #1C1A17; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-color: #7dd3fc; width: 115px">
+<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-7.9z"></path><path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z"></path><path fill="#FBBC05" d="M5.9 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.3a11 11 0 0 0 0 9.8z"></path><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.1l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z"></path></svg>
+Google
+</button>
+<button type="button" style="flex-grow: 1; height: 52px; border: 1px solid #D8CEC2; border-radius: 12px; background: #FFFFFF; font-family: Manrope, sans-serif; font-size: 14px; font-weight: 600; color: #1C1A17; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-color: #7dd3fc; width: 115px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>
+<span>Email &amp; password</span>
+</button>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 1.6; color: #6E645B">By continuing you agree to Raphaaa's <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.</p>
+</form>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8A4B2A"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#8A4B2A' };
+}
+}
+</script>
+</body>
+</html>
