@@ -23,7 +23,7 @@ import { flyToCart } from "../../utils/flyToCart";
 import { FiShare2 } from "react-icons/fi";
 import { FiCopy } from "react-icons/fi";
 import { buildTrackedProductUrl } from "../../utils/attribution";
-import ProductQA from "./ProductQA";
+//import ProductQA from "./ProductQA";
 import { Helmet } from "react-helmet-async";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
 import { cachedGet } from "../../utils/httpCache";
@@ -2374,7 +2374,7 @@ const ProductDetails = ({ productId }) => {
           </div>
 
           {/* Product Q&A */}
-          {selectedProduct?._id && <ProductQA productId={selectedProduct._id} />}
+          
 
           {/* Frequently Bought Together */}
           {Array.isArray(fbtProducts) && fbtProducts.length > 0 && (
