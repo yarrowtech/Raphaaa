@@ -18,7 +18,7 @@ const FIT_FILTERS = [
  * gap 40px, the exact 8-stop gradient, and the exact type-scale/pill specs.
  */
 const LandingHero = ({ activeOffer }) => {
-  const kickerLabel = "DURGA PUJA EDIT";
+  const kickerLabel = "HAPPY DURGA PUJA";
 
   return (
     <section

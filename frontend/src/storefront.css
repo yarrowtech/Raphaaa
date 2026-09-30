@@ -8,15 +8,6 @@
 .storefront-actions { display: flex; align-items: center; gap: 8px; }
 .storefront-account { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: white; background: #7dd3fc; }
 .storefront-nav-spacer { height: 72px; }
-.storefront-header.is-collection { background: #f3fcff; border-bottom: 0; }
-.is-collection .storefront-nav { height: 76px; padding: 0 32px; gap: 32px; }
-.is-collection .storefront-wordmark { font-size: 32px; }
-.is-collection .storefront-primary { gap: 24px !important; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-.is-collection .storefront-search form { width: min(400px, 30vw) !important; height: 34px !important; background: white !important; border: 0 !important; }
-.is-collection .storefront-search form button { width: 28px !important; height: 28px !important; }
-.is-collection .storefront-bag { border: 0 !important; width: 44px; padding: 0 !important; justify-content: center; margin: 0 !important; }
-.is-collection .storefront-bag span { position: absolute; top: 1px; right: -3px; font-size: 9px; max-width: 35px; overflow: hidden; white-space: nowrap; }
-.is-collection.storefront-nav-spacer { height: 76px; }
 .reference-home, .reference-collection { color: #111; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
 .landing-hero-copy { width: 641px; }
 .landing-hero h1 { width: 621px; }
@@ -171,7 +162,6 @@
 .collection-footer .footer-brand { display: none; }
 .collection-footer .landing-footer-grid > :last-child { grid-column: span 2; }
 .collection-footer h3, .collection-footer label { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
-.is-collection .storefront-bag span:not(:empty) { background: #111; color: white; border-radius: 50%; min-width: 16px; height: 16px; display: grid; place-items: center; right: 2px; top: 4px; }
 @media (max-width: 1023px) {
   .collection-footer .landing-footer-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
   .collection-footer .landing-footer-grid > :last-child { grid-column: 1 / -1; }

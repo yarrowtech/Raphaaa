@@ -212,15 +212,22 @@ const Navbar = () => {
             ref={cartIconRef}
             onClick={toggleCartDrawer}
             aria-label={`Bag, ${cartItemCount} items`}
-            className="storefront-bag relative flex items-center gap-2.5"
-            style={{ height: "44px", padding: "0 16px 0 12px", border: "1px solid #D4D5D9", borderRadius: "4px", marginLeft: "8px", background: "transparent" }}
+            className="storefront-bag relative flex items-center justify-center w-11 h-11"
+            style={{ border: 0, marginLeft: "8px", background: "transparent" }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7DD3FC" strokeWidth="1.8" strokeLinejoin="round">
-              <path d="M5 8h14l-1 12H6L5 8z" />
-              <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-            </svg>
-            <span className="text-[13px] font-bold text-[#111111]">
-              {isCollection ? (cartItemCount > 0 ? cartItemCount : null) : cartItemCount > 0 ? `${cartItemCount} item${cartItemCount > 1 ? "s" : ""}` : "Bag"}
+            <span className="relative inline-flex">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7DD3FC" strokeWidth="1.8" strokeLinejoin="round">
+                <path d="M5 8h14l-1 12H6L5 8z" />
+                <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+              </svg>
+              {cartItemCount > 0 && (
+                <span
+                  className="absolute flex items-center justify-center font-bold text-white"
+                  style={{ top: "-8px", right: "-8px", minWidth: "16px", height: "16px", padding: "0 4px", borderRadius: "9999px", fontSize: "10px", background: "#FF0000" }}
+                >
+                  {cartItemCount}
+                </span>
+              )}
             </span>
           </button>
 
