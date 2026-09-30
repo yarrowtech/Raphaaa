@@ -132,7 +132,7 @@ const LandingHero = ({ activeOffer }) => {
               fontSize: "15px",
               fontWeight: 700,
               gap: "10px",
-              background: "#111111",
+              background: "#00adfd",
               color: "#ffffff",
             }}
           >

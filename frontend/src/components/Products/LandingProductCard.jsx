@@ -140,7 +140,7 @@ const LandingProductCard = ({ product, wishlistItems = [], onToggleWish }) => {
                 fontSize: "11px",
                 fontWeight: 700,
                 letterSpacing: "0.04em",
-                background: "#111111",
+                background: "#00adfd",
                 color: "#ffffff",
               }}
             >
@@ -172,7 +172,7 @@ const LandingProductCard = ({ product, wishlistItems = [], onToggleWish }) => {
                 gap: "4px",
                 fontSize: "12px",
                 fontWeight: 700,
-                color: "#111111",
+                color: "#7DD3FC",
               }}
             >
               {Number(product.rating).toFixed(1)} ★
@@ -226,9 +226,9 @@ const LandingProductCard = ({ product, wishlistItems = [], onToggleWish }) => {
                   borderRadius: "4px",
                   fontSize: "12px",
                   fontWeight: 700,
-                  border: selectedSize === sz ? "1px solid #111111" : "1px solid #D4D5D9",
-                  background: selectedSize === sz ? "#111111" : "#ffffff",
-                  color: selectedSize === sz ? "#ffffff" : "#111111",
+                  border: selectedSize === sz ? "1px solid #00adfd" : "1px solid #D4D5D9",
+                  background: selectedSize === sz ? "#00adfd" : "#ffffff",
+                  color: selectedSize === sz ? "#ffffff" : "#000000",
                 }}
               >
                 {sz}
@@ -242,7 +242,7 @@ const LandingProductCard = ({ product, wishlistItems = [], onToggleWish }) => {
           onClick={handleAddToBag}
           disabled={adding || unavailable}
           className="w-full text-white transition-colors disabled:opacity-60"
-          style={{ height: "46px", borderRadius: "4px", border: 0, fontSize: "14px", fontWeight: 700, background: "#111111" }}
+          style={{ height: "46px", borderRadius: "4px", border: 0, fontSize: "14px", fontWeight: 700, background: "#7DD3FC" }}
         >
           {adding ? "Adding..." : soldOut ? "Sold out" : unavailable ? "Size unavailable" : "Add to Bag"}
         </button>}

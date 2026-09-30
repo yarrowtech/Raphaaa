@@ -108,17 +108,7 @@ const ProductQA = ({ productId }) => {
 
   return (
     <div className="border-t border-sky-500 mt-8 pt-8 pb-4 max-w-7xl mx-auto px-4 md:px-6">
-      <div className="flex items-center gap-3 mb-6">
-        <h3 className="text-[11px] font-bold tracking-[0.15em] text-gray-500 uppercase">
-          Customer Questions & Answers
-        </h3>
-        {total > 0 && (
-          <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-            {total}
-          </span>
-        )}
-      </div>
-
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left — question list */}
         <div className="lg:col-span-2 space-y-3">
@@ -126,8 +116,8 @@ const ProductQA = ({ productId }) => {
             <div className="text-center py-8 text-gray-400 text-sm">Loading…</div>
           ) : items.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-3xl mb-2">❓</p>
-              <p className="text-sm text-gray-400">Be the first to ask a question!</p>
+              
+              
             </div>
           ) : (
             <>
@@ -233,39 +223,7 @@ const ProductQA = ({ productId }) => {
 
         {/* Right — ask question form */}
         <div>
-          <div className="bg-sky-50 border border-sky-100 rounded-2xl p-5">
-            <h4 className="text-xs font-bold text-sky-700 uppercase tracking-widest mb-3">
-              Ask a Question
-            </h4>
-            <form onSubmit={handleAsk} className="space-y-3">
-              {!user && (
-                <input
-                  type="text"
-                  placeholder="Your name (optional)"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-sky-200 bg-white rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-400"
-                />
-              )}
-              <textarea
-                rows={3}
-                placeholder="What would you like to know about this product?"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-sky-200 bg-white rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-400 resize-none"
-              />
-              <button
-                type="submit"
-                disabled={posting || !question.trim()}
-                className="w-full py-2.5 text-sm font-bold bg-sky-600 text-white rounded-xl hover:bg-sky-700 disabled:opacity-40 transition"
-              >
-                {posting ? "Submitting…" : "Submit Question"}
-              </button>
-            </form>
-            <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
-              Questions are answered by other customers and our team. Please keep it product-related.
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>
