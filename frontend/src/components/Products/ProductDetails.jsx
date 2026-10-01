@@ -19,7 +19,6 @@ import { FiShoppingCart, FiZap } from "react-icons/fi";
 import { FiBell } from "react-icons/fi";
 import { GoDotFill } from "react-icons/go";
 import { FaCartShopping, FaRuler, FaRulerHorizontal } from "react-icons/fa6";
-import { flyToCart } from "../../utils/flyToCart";
 import { FiShare2 } from "react-icons/fi";
 import { FiCopy } from "react-icons/fi";
 import { buildTrackedProductUrl } from "../../utils/attribution";
@@ -59,8 +58,6 @@ const UI = {
 const cx = (...c) => c.filter(Boolean).join(" ");
 
 const ProductDetails = ({ productId }) => {
-  const imgRef = useRef(null);
-  const cartIconRef = window.cartIconRef;
   const { slug, sku } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -1196,8 +1193,7 @@ const ProductDetails = ({ productId }) => {
       })
     )
       .then(() => {
-        toast.success("Product added to cart!!", { duration: 3000 });
-        flyToCart(effectiveMainImage, imgRef.current, cartIconRef);
+        toast.success("Product added to cart!!", { duration: 2000 });
       })
       .finally(() => {
         setIsButtonDisabled(false);
@@ -1465,7 +1461,6 @@ const ProductDetails = ({ productId }) => {
                         }
                       >
                         <img
-                          ref={imgRef}
                           src={effectiveMainImage || selectedProduct.images?.[0]?.url}
                           alt="Main Product"
                           className="w-full h-full object-contain select-none"

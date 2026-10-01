@@ -29,11 +29,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [collabActive, setCollabActive] = useState(false);
-  const cartIconRef = useRef(null); // 👈 Add ref
-
-  useEffect(() => {
-  window.cartIconRef = cartIconRef; // 👈 expose it globally
-}, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -209,7 +204,6 @@ const Navbar = () => {
 
           {/* 3. Bag */}
           <button
-            ref={cartIconRef}
             onClick={toggleCartDrawer}
             aria-label={`Bag, ${cartItemCount} items`}
             className="storefront-bag relative flex items-center justify-center w-11 h-11"
