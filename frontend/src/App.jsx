@@ -111,10 +111,7 @@ const App = () => {
   }, []);
 
   const handleNavigateProduct = (p) => {
-    // e.g., use your router to go to product details
-    // navigate(`/product/${p.slug || p._id}`);
-    // Or open your existing modal:
-    console.log("Open product:", p);
+    window.location.assign(`/product/${p.slug || p._id}`);
   };
 
   return (

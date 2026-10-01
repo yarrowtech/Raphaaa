@@ -256,7 +256,8 @@ const Login = () => {
                 fontFamily: "Fraunces, serif",
                 fontSize: 40,
                 fontWeight: 600,
-                color: "#1c1a17",
+                color: "#000000",
+                opacity: 1,
                 textAlign: "center",
               }}
             >
@@ -345,7 +346,7 @@ const Login = () => {
                       height: 52,
                       border: 0,
                       borderRadius: 12,
-                      color: "#3a342e",
+                      color: "#000000",
                       fontFamily: "Manrope, sans-serif",
                       fontSize: 15,
                       fontWeight: 700,
@@ -355,10 +356,10 @@ const Login = () => {
                       gap: 10,
                       cursor: "pointer",
                       background: "#7DD3FC",
-                      opacity: otpLoading || otpMobile.length !== 10 ? 0.6 : 1,
+                      opacity: 1,
                     }}
                   >
-                    {!otpLoading && <FaWhatsapp style={{ fontSize: 20 }} />}
+                    {!otpLoading && <FaWhatsapp style={{ fontSize: 20, color: "#000000" }} />}
                     {otpLoading ? "Sending..." : "Send OTP on WhatsApp"}
                   </button>
                   <button
@@ -693,94 +694,74 @@ const Login = () => {
 
           {/* Social Buttons */}
           <div style={{ display: "flex", gap: 12 }}>
-            <button
-              type="button"
-              style={{
-                flexGrow: 1,
-                height: 52,
-                border: "1px solid #7dd3fc",
-                borderRadius: 12,
-                background: "#FFFFFF",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#1C1A17",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                // trigger GoogleLogin programmatically is not straightforward,
-                // so we render GoogleLogin below but this button can be a placeholder
-                toast.info("Use the Google button below to sign in.");
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-7.9z" />
-                <path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z" />
-                <path fill="#FBBC05" d="M5.9 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.3a11 11 0 0 0 0 9.8z" />
-                <path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.1l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z" />
-              </svg>
-              Google
-            </button>
-            <button
-              type="button"
-              onClick={() => setLoginMode(loginMode === "password" ? "otp" : "password")}
-              style={{
-                flexGrow: 1,
-                height: 52,
-                border: "1px solid #7dd3fc",
-                borderRadius: 12,
-                background: "#FFFFFF",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#1C1A17",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                cursor: "pointer",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <path d="M3 7l9 6 9-6" />
-              </svg>
-              <span>{loginMode === "password" ? "Phone OTP" : "Email & password"}</span>
-            </button>
+            <div style={{ position: "relative", flexGrow: 1, height: 52 }}>
+              <button
+                type="button"
+                tabIndex={-1}
+                style={{
+                  width: "100%",
+                  height: 52,
+                  border: "1px solid #7dd3fc",
+                  borderRadius: 12,
+                  background: "#FFFFFF",
+                  fontFamily: "Manrope, sans-serif",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1C1A17",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-7.9z" />
+                  <path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6.1-4.5H2.3v2.8A11 11 0 0 0 12 23z" />
+                  <path fill="#FBBC05" d="M5.9 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.3a11 11 0 0 0 0 9.8z" />
+                  <path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.1l3.6 2.8C6.8 7.3 9.2 5.4 12 5.4z" />
+                </svg>
+                Google
+              </button>
+              {/* Real GoogleLogin rendered transparently on top so clicks on the
+                  styled button above actually trigger Google's OAuth flow */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  overflow: "hidden",
+                }}
+              >
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                    try {
+                      const decoded = jwtDecode(credentialResponse.credential);
+                      const { name, email, picture } = decoded;
+
+                      const { data } = await axios.post(
+                        `${import.meta.env.VITE_BACKEND_URL}/api/users/google-login`,
+                        { name, email, photo: picture }
+                      );
+
+                      dispatch(googleLoginSuccess({ user: data.user, token: data.token }));
+                      navigate(redirect);
+                    } catch (error) {
+                      console.error(error);
+                      toast.error(error.response?.data?.message || "Login failed");
+                    }
+                  }}
+                  onError={() => toast.error("Login failed")}
+                  width="300"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Terms */}
           <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "#6E645B", textAlign: "center" }}>
-            By continuing you agree to Raphaaa's <a href="#" style={{ color: "#1C1A17" }}>Terms of Use</a> and <a href="#" style={{ color: "#1C1A17" }}>Privacy Policy</a>.
+            By continuing you agree to Raphaaa's <a href="/terms" style={{ color: "#1C1A17" }}>Terms of Use</a> and <a href="/privacy-policy" style={{ color: "#1C1A17" }}>Privacy Policy</a>.
           </p>
-
-          {/* Hidden GoogleLogin to keep functionality */}
-          <div style={{ display: "none" }}>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                try {
-                  const decoded = jwtDecode(credentialResponse.credential);
-                  const { name, email, picture } = decoded;
-
-                  const { data } = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/users/google-login`,
-                    { name, email, photo: picture }
-                  );
-
-                  dispatch(googleLoginSuccess({ user: data.user, token: data.token }));
-                  navigate(redirect);
-                } catch (error) {
-                  console.error(error);
-                  toast.error(error.response?.data?.message || "Login failed");
-                }
-              }}
-              onError={() => toast.error("Login failed")}
-            />
-          </div>
         </form>
       </div>
     </div>

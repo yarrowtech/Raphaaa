@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProductGrid from "../components/Products/ProductGrid";
 import axios from "axios";
@@ -8,6 +8,7 @@ const DropDetail = () => {
   const { slug } = useParams();
   const [footballerData, setFootballerData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const collectionRef = useRef(null);
 
   useEffect(() => {
     const fetchDropData = async () => {
@@ -66,7 +67,10 @@ const DropDetail = () => {
             Discover the <span className="font-semibold text-gray-800">exclusive collection</span> worn by{" "}
             <span className="text-sky-600 font-bold">{footballer}</span>. Each piece combines performance and style, crafted for legends.
           </p>
-          <button className="mt-6 inline-block px-8 py-3 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
+          <button
+            onClick={() => collectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="mt-6 inline-block px-8 py-3 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+          >
             Explore Collection
           </button>
         </div>
@@ -95,7 +99,7 @@ const DropDetail = () => {
     </section>
 
     {/* Used Drop Section */}
-    <section className="container mx-auto px-4 py-14">
+    <section ref={collectionRef} className="container mx-auto px-4 py-14">
       <h2 className="text-3xl font-extrabold mb-8 text-center lg:text-left bg-gradient-to-r from-blue-600 to-sky-500 text-transparent bg-clip-text relative inline-block">
         Used Drop Collection
         <span className="absolute -bottom-2 left-1/2 lg:left-0 w-16 h-1 bg-gradient-to-r from-sky-400 to-blue-600 rounded-full transform -translate-x-1/2 lg:translate-x-0"></span>
