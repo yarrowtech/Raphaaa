@@ -117,7 +117,7 @@ const App = () => {
   return (
     <Provider store={store}>
       <ToastContainer position="top-right" autoClose={2000} />
-      <Toaster position="top-right" />
+      <Toaster position="top-right" duration={2000} />
       <BrowserRouter>
         <AutoLogout />
         <ScrollToTop />
