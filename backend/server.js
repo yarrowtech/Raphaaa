@@ -194,6 +194,7 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/size-charts", sizeChartRoutes);
 app.use("/api/returns", returnRequestRoutes);
 app.use("/api/admin/analytics", analyticsRoutes);
+app.use("/api/track", require("./routes/trackRoutes"));
 app.use("/api/qa", require("./routes/productQARoutes"));
 app.use("/api/shipping-config", require("./routes/shippingConfigRoutes"));
 app.use("/api/prebookings", require("./routes/prebookingRoutes"));

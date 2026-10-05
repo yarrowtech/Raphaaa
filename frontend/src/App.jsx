@@ -69,6 +69,8 @@ import AddMetaOption from "./components/Admin/AddMetaOption";
 import NotFound from "./pages/NotFound";
 import UserHierarchy from "./pages/UserHierarchy";
 import CampaignTracker from "./pages/CampaignTracker";
+import ButtonAnalytics from "./pages/ButtonAnalytics";
+import SiteTracker from "./components/Common/SiteTracker";
 import MarketingBroadcast from "./pages/MarketingBroadcast";
 import Chatbot from "./components/Chatbot/Chatbot";
 import ResetPassword from "./pages/ResetPassword";
@@ -121,6 +123,7 @@ const App = () => {
       <BrowserRouter>
         <AutoLogout />
         <ScrollToTop />
+        <SiteTracker />
         <div className="hidden lg:block">
           <Chatbot onNavigateProduct={handleNavigateProduct} />
         </div>
@@ -512,6 +515,14 @@ const App = () => {
               element={
                 <ProtectedRoute role={["admin", "marketing"]}>
                   <CampaignTracker/>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="button-analytics"
+              element={
+                <ProtectedRoute role={["admin", "marketing"]}>
+                  <ButtonAnalytics />
                 </ProtectedRoute>
               }
             />

@@ -280,4 +280,197 @@ router.get("/source-report", protect, async (req, res) => {
   }
 });
 
+// @route GET /api/admin/analytics/site?days=7&tz=-330
+// Storefront traffic: visitors, page views, clicks, logins, campaign links, etc.
+router.get("/site", protect, async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "admin" && role !== "marketing") {
+    return res.status(403).json({ success: false, message: "Not authorized" });
+  }
+
+  const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 7;
+  // tz = Date#getTimezoneOffset() of the viewer, so days/hours match their local time
+  const tz = Math.max(-840, Math.min(840, Number(req.query.tz) || 0));
+  const DAY = 24 * 60 * 60 * 1000;
+  const toLocal = (d) => new Date(new Date(d).getTime() - tz * 60000);
+
+  const now = new Date();
+  const localToday = toLocal(now);
+  localToday.setUTCHours(0, 0, 0, 0);
+  const from = new Date(localToday.getTime() - (days - 1) * DAY + tz * 60000);
+  const prevFrom = new Date(from.getTime() - days * DAY);
+  const localDayKey = (d) => toLocal(d).toISOString().slice(0, 10);
+  const dayKeys = Array.from({ length: days }, (_, i) =>
+    new Date(localToday.getTime() - (days - 1 - i) * DAY).toISOString().slice(0, 10)
+  );
+
+  try {
+    const SiteEvent = require("../models/SiteEvent");
+    const User = require("../models/User");
+    const Subscriber = require("../models/Subscriber");
+
+    const [events, prevEvents, signups, prevSignups, checkouts, prevCheckouts, subs, online] =
+      await Promise.all([
+        SiteEvent.find({ createdAt: { $gte: from }, type: { $ne: "ping" } })
+          .select("type visitorId sessionId user path label referrerHost campaign device isNewVisitor createdAt")
+          .lean(),
+        SiteEvent.find({ createdAt: { $gte: prevFrom, $lt: from }, type: { $ne: "ping" } })
+          .select("type visitorId path")
+          .lean(),
+        User.find({ createdAt: { $gte: from } }).select("createdAt").lean(),
+        User.countDocuments({ createdAt: { $gte: prevFrom, $lt: from } }),
+        Checkout.find({ createdAt: { $gte: from } }).select("createdAt isPaid").lean(),
+        Checkout.countDocuments({ createdAt: { $gte: prevFrom, $lt: from } }),
+        Subscriber.find({ subscribedAt: { $gte: from } }).select("subscribedAt").lean(),
+        SiteEvent.distinct("visitorId", { createdAt: { $gte: new Date(Date.now() - 5 * 60000) } }),
+      ]);
+
+    const isProduct = (p) => /^\/product\//i.test(p || "");
+
+    const summarize = (list) => {
+      const visitors = new Set();
+      const s = { pageViews: 0, linkVisits: 0, clicks: 0, logins: 0, productViews: 0 };
+      for (const e of list) {
+        if (e.type === "pageview") {
+          visitors.add(e.visitorId);
+          s.pageViews += 1;
+          if (isProduct(e.path)) s.productViews += 1;
+        } else if (e.type === "campaign") s.linkVisits += 1;
+        else if (e.type === "click") s.clicks += 1;
+        else if (e.type === "login") s.logins += 1;
+      }
+      return { uniqueVisitors: visitors.size, ...s };
+    };
+
+    const cur = {
+      ...summarize(events),
+      signups: signups.length,
+      checkoutAttempts: checkouts.length,
+    };
+    const prev = {
+      ...summarize(prevEvents),
+      signups: prevSignups,
+      checkoutAttempts: prevCheckouts,
+    };
+
+    // Daily series
+    const blank = () => ({
+      uniqueVisitors: new Set(), pageViews: 0, linkVisits: 0, clicks: 0,
+      logins: 0, signups: 0, productViews: 0, checkoutAttempts: 0, newsletter: 0,
+    });
+    const byDay = Object.fromEntries(dayKeys.map((k) => [k, blank()]));
+    for (const e of events) {
+      const b = byDay[localDayKey(e.createdAt)];
+      if (!b) continue;
+      if (e.type === "pageview") {
+        b.uniqueVisitors.add(e.visitorId);
+        b.pageViews += 1;
+        if (isProduct(e.path)) b.productViews += 1;
+      } else if (e.type === "campaign") b.linkVisits += 1;
+      else if (e.type === "click") b.clicks += 1;
+      else if (e.type === "login") b.logins += 1;
+    }
+    for (const u of signups) byDay[localDayKey(u.createdAt)] && (byDay[localDayKey(u.createdAt)].signups += 1);
+    for (const c of checkouts) byDay[localDayKey(c.createdAt)] && (byDay[localDayKey(c.createdAt)].checkoutAttempts += 1);
+    for (const s of subs) byDay[localDayKey(s.subscribedAt)] && (byDay[localDayKey(s.subscribedAt)].newsletter += 1);
+    const series = dayKeys.map((date) => ({
+      date,
+      ...byDay[date],
+      uniqueVisitors: byDay[date].uniqueVisitors.size,
+    }));
+
+    // Funnel + audience
+    const pageviews = events.filter((e) => e.type === "pageview");
+    const productVisitors = new Set(pageviews.filter((e) => isProduct(e.path)).map((e) => e.visitorId));
+    const authVisitors = new Set(
+      events.filter((e) => e.type === "login" || e.user).map((e) => e.visitorId)
+    );
+    const deviceByVisitor = new Map();
+    const newVisitors = new Set();
+    const sessions = new Set();
+    const signedIn = new Set();
+    for (const e of events) {
+      deviceByVisitor.set(e.visitorId, e.device);
+      if (e.isNewVisitor) newVisitors.add(e.visitorId);
+      if (e.sessionId) sessions.add(e.sessionId);
+      if (e.user) signedIn.add(String(e.user));
+    }
+    const deviceCounts = { desktop: 0, mobile: 0, tablet: 0 };
+    for (const d of deviceByVisitor.values()) deviceCounts[d] = (deviceCounts[d] || 0) + 1;
+    const totalVisitors = deviceByVisitor.size;
+
+    const topN = (map, n = 8) =>
+      [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([label, count]) => ({ label, count }));
+    const countBy = (list, keyFn) => {
+      const m = new Map();
+      for (const e of list) {
+        const k = keyFn(e);
+        if (k) m.set(k, (m.get(k) || 0) + 1);
+      }
+      return m;
+    };
+
+    // Traffic source = referrer of the first page view in each session
+    const seenSessions = new Set();
+    const sessionStarts = [];
+    for (const e of [...pageviews].sort((a, b) => a.createdAt - b.createdAt)) {
+      const key = e.sessionId || e.visitorId;
+      if (seenSessions.has(key)) continue;
+      seenSessions.add(key);
+      sessionStarts.push(e);
+    }
+
+    // Peak hours: [weekday Mon=0..Sun=6][hour]
+    const heat = Array.from({ length: 7 }, () => Array(24).fill(0));
+    for (const e of pageviews) {
+      const d = toLocal(e.createdAt);
+      heat[(d.getUTCDay() + 6) % 7][d.getUTCHours()] += 1;
+    }
+
+    const paidCheckouts = checkouts.filter((c) => c.isPaid).length;
+    const [ordersPlaced, delivered] = await Promise.all([
+      Order.countDocuments({ createdAt: { $gte: from }, isPaid: true }),
+      Order.countDocuments({ createdAt: { $gte: from }, status: "Delivered" }),
+    ]);
+
+    res.json({
+      success: true,
+      days,
+      onlineNow: online.length,
+      totals: cur,
+      previous: prev,
+      series,
+      funnel: [
+        { key: "visited", label: "Visited the site", count: cur.uniqueVisitors },
+        { key: "product", label: "Viewed a product", count: productVisitors.size },
+        { key: "auth", label: "Logged in or signed up", count: Math.max(authVisitors.size, 0) },
+        { key: "checkout", label: "Started a checkout", count: cur.checkoutAttempts },
+      ],
+      audience: {
+        visitors: totalVisitors,
+        devices: deviceCounts,
+        newVisitors: newVisitors.size,
+        returning: Math.max(totalVisitors - newVisitors.size, 0),
+        signedIn: signedIn.size,
+        sessions: sessions.size,
+      },
+      topPages: topN(countBy(pageviews, (e) => (e.path === "/" ? "Home" : e.path))),
+      sources: topN(countBy(sessionStarts, (e) => e.referrerHost || "Direct")),
+      campaigns: topN(countBy(events.filter((e) => e.type === "campaign"), (e) => e.campaign)),
+      topClicks: topN(countBy(events.filter((e) => e.type === "click"), (e) => e.label)),
+      heatmap: heat,
+      newsletter: { total: subs.length },
+      orderFunnel: [
+        { label: "Checkouts started", count: checkouts.length },
+        { label: "Payment completed", count: paidCheckouts },
+        { label: "Orders placed", count: ordersPlaced },
+        { label: "Delivered", count: delivered },
+      ],
+    });
+  } catch (e) {
+    console.error("analytics site error:", e);
+    res.status(500).json({ success: false, message: "Failed to load site analytics" });
+  }
+});
+
 module.exports = router;

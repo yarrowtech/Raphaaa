@@ -11,7 +11,7 @@ import { clearCart } from "../../redux/slices/cartSlice";
 import icon from "../../assets/man.png";
 import { HiPlusCircle, HiChevronDown } from "react-icons/hi";
 import { CgProfile } from "react-icons/cg";
-import { MdOutlineAddTask, MdVerified, MdCampaign } from "react-icons/md";
+import { MdOutlineAddTask, MdVerified, MdCampaign, MdTouchApp } from "react-icons/md";
 import { BsGraphUpArrow } from "react-icons/bs";
 import { LuMessageSquareText } from "react-icons/lu";
 import axios from "axios";
@@ -300,6 +300,7 @@ const AdminSidebar = () => {
                 <NavItem to="/admin/subscribed-users"  icon={GiLetterBomb}    label="Subscribers" />
                 <NavItem to="/admin/email-scheduler"   icon={SiMinutemailer}  label="Email Scheduler" />
                 <NavItem to="/admin/campaigns"         icon={MdCampaign}      label="Campaign Tracker" />
+                <NavItem to="/admin/button-analytics"  icon={MdTouchApp}      label="Button Analytics" />
               </>
             )}
             {isAdmin && (
