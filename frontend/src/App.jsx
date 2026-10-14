@@ -105,7 +105,7 @@ const App = () => {
         <AutoLogout />
         <ScrollToTop />
         <SiteTracker />
-        <Suspense fallback={<div role="status" className="p-8 text-center">Loading page…</div>}>
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<UserLayout />}>
             <Route path="/404" element={<NotFound />} />
