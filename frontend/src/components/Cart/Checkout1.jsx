@@ -1202,7 +1202,7 @@ const Checkout = () => {
   const dispatch = useDispatch();
   const { cart, loading: cartLoading, error: cartError } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
-  const { checkout, order, loading: checkoutLoading, error: checkoutError } = useSelector((state) => state.checkout);
+  const {  loading: checkoutLoading, error: checkoutError } = useSelector((state) => state.checkout);
 
   const [checkoutId, setCheckoutId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
@@ -1424,27 +1424,7 @@ const Checkout = () => {
     }
   };
 
-  const handleFinalizeCheckout = async (checkoutId) => {
-    try {
-      setOrderProcessing(true);
-      const result = await dispatch(finalizeCheckout(checkoutId));
-      if (result.type === "checkout/finalizeCheckout/fulfilled") {
-        dispatch(clearCart());
-        navigate("/order-confirmation", {
-          state: {
-            order: result.payload,
-            paymentMethod,
-          },
-        });
-      } else {
-        setOrderProcessing(false);
-      }
-    } catch (error) {
-      console.error("Finalize error:", error);
-      setOrderProcessing(false);
-      alert("Order finalization failed. Please contact support.");
-    }
-  };
+  
 
   const loading = cartLoading || checkoutLoading;
   const error = cartError || checkoutError;

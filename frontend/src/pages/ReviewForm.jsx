@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
+
 import { FaStar } from "react-icons/fa";
 
 const ReviewForm = () => {
   const { productId } = useParams();
-  const { user } = useSelector((state) => state.auth);
+  
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(null);
   const [comment, setComment] = useState("");

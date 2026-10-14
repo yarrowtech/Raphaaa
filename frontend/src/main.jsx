@@ -8,16 +8,19 @@ import "slick-carousel/slick/slick-theme.css";
 // ✅ Add this
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { HelmetProvider } from "react-helmet-async";
+import ErrorBoundary from "./components/Common/ErrorBoundary.jsx";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <HelmetProvider>
-      <GoogleOAuthProvider clientId={clientId}>
-        <App />
-      </GoogleOAuthProvider>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <GoogleOAuthProvider clientId={clientId}>
+          <App />
+        </GoogleOAuthProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
 
@@ -26,7 +29,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js")
-      .then((registration) => {
+      .then(() => {
         // console.log("✅ Service Worker registered:", registration.scope);
       })
       .catch((error) => {

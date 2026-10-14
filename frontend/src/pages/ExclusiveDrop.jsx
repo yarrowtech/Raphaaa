@@ -88,7 +88,7 @@ const ExclusiveDrop = () => {
 
       {/* Grid of flip cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-10 perspective">
-        {exclusiveDrops.flatMap((collab, index) =>
+        {exclusiveDrops.flatMap((collab) =>
           collab.collaborators.map((person, i) => {
             const isFlipped = flippedCard === person.name;
             return (

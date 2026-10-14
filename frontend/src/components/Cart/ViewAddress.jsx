@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaLocationCrosshairs } from "react-icons/fa6";
 import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaTrash, FaMapMarkerAlt } from "react-icons/fa";
 
@@ -17,15 +17,15 @@ const ViewAddress = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
   const [addresses, setAddresses] = useState([]);
-  const [newAddress, setNewAddress] = useState({
+  const [] = useState({
     address: "",
     city: "",
     postalCode: "",
     country: "",
     phone: "",
   });
-  const [countryList, setCountryList] = useState([]);
-  const [locating, setLocating] = useState(false);
+  const [, setCountryList] = useState([]);
+  
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -119,30 +119,7 @@ const ViewAddress = () => {
   //     if (activeTab === "wishlist") fetchWishlist();
   //   }, [activeTab]);
 
-  const handleRemoveFromWishlist = async (productId) => {
-    try {
-      const token = localStorage.getItem("userToken");
-      await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/wishlist/remove/${productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setWishlistItems((prev) => prev.filter((item) => item._id !== productId));
-    } catch (err) {
-      console.error("Failed to remove from wishlist:", err);
-    }
-  };
-
-  const handleLogout = () => {
-    dispatch(logout());
-    dispatch(clearCart());
-    navigate("/login");
-  };
-
-  const handleIconClick = () => alert("Open profile settings or image upload!");
+  
 
   //   useEffect(() => {
   //     const handleOnline = () => {
@@ -180,30 +157,7 @@ const ViewAddress = () => {
     if (user && localStorage.getItem("userToken")) fetchAddresses();
   }, [user]);
 
-  const handleAddressSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/addresses`,
-        newAddress,
-        { headers: authHeaders() }
-      );
-      //   if(addresses === ""){
-      //     toast.warning("Number is required");
-      //   }
-      setAddresses(data.addresses);
-      toast.success("Address saved!");
-      setNewAddress({
-        address: "",
-        city: "",
-        postalCode: "",
-        country: "",
-        phone: "",
-      });
-    } catch (err) {
-      toast.error("Failed to save address");
-    }
-  };
+  
 
   const handleDeleteAddress = async (index) => {
     if (!window.confirm("Delete this address?")) return;
@@ -242,73 +196,7 @@ const ViewAddress = () => {
     }
   };
 
-  const handleUseCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      return alert("Geolocation is not supported by your browser.");
-    }
-
-    setLocating(true); // ⬅️ start spinner
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-          const data = await response.json();
-          const { address } = data;
-
-          if (!address) {
-            toast.error("Unable to extract address.");
-            return;
-          }
-
-          setNewAddress((prev) => ({
-            ...prev,
-            address:
-              address.road ||
-              address.neighbourhood ||
-              address.suburb ||
-              address.display_name ||
-              "",
-            city: address.city || address.town || address.village || "",
-            postalCode: address.postcode || "",
-            country: address.country || "",
-          }));
-
-          toast.success("Address auto-filled from current location!");
-        } catch (err) {
-          console.error("Geolocation fetch error:", err);
-          toast.error("Failed to fetch address from coordinates.");
-        } finally {
-          setLocating(false); // ⬅️ stop spinner
-        }
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-        switch (err.code) {
-          case 1:
-            toast.error("Permission denied. Please allow location access.");
-            break;
-          case 2:
-            toast.error("Location unavailable.");
-            break;
-          case 3:
-            toast.error("Request timed out.");
-            break;
-          default:
-            toast.error("Unknown geolocation error.");
-        }
-        setLocating(false); // ⬅️ stop spinner on error too
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
+  
 
   return (
     <div>

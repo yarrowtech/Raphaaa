@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+const { createHash } = require("node:crypto");
+const { validateOrderItems } = require("../utils/validateOrderItems");
 const express = require("express");
 const Checkout = require("../models/Checkout");
 const Cart = require("../models/Cart");
@@ -16,7 +19,7 @@ const router = express.Router();
 // @access Private
 router.post("/quote", protect, async (req, res) => {
   try {
-    const { checkoutItems, paymentMethod, couponCodes, walletRedeem } = req.body;
+    const { checkoutItems, paymentMethod, couponCodes, walletRedeem, shippingAddress } = req.body;
     if (!Array.isArray(checkoutItems) || checkoutItems.length === 0) {
       return res.status(400).json({ message: "no items in checkout" });
     }
@@ -26,6 +29,7 @@ router.post("/quote", protect, async (req, res) => {
       userId: req.user._id,
       paymentMethod,
       couponCodes,
+      shippingAddress,
     });
 
     const walletBalance = await getAvailableCredits(req.user._id);
@@ -47,7 +51,7 @@ router.post("/quote", protect, async (req, res) => {
     });
   } catch (error) {
     console.error("checkout quote error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(error.status || 500).json({ message: error.status ? error.message : "Internal server error" });
   }
 });
 
@@ -99,7 +103,7 @@ router.post("/", protect, async (req, res) => {
             res.status(201).json(newCheckout);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "Internal server error" });
+            res.status(error.status || 500).json({ message: error.status ? error.message : "Internal server error" });
         }
 });
 
@@ -129,7 +133,7 @@ router.put("/:id/pay", protect, async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(error.status || 500).json({ message: error.status ? error.message : "Internal server error" });
     }
 });
 
@@ -191,7 +195,7 @@ router.post("/:id/finalize", protect, async(req, res) => {
         }
     } catch (error) {
         console.error("Error finalizing checkout session:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(error.status || 500).json({ message: error.status ? error.message : "Internal server error" });
     }
 });
 
@@ -200,15 +204,15 @@ router.post("/:id/finalize", protect, async(req, res) => {
 // @access Public
 router.post("/guest-quote", async (req, res) => {
   try {
-    const { checkoutItems, paymentMethod } = req.body;
+    const { checkoutItems, paymentMethod, shippingAddress } = req.body;
     if (!Array.isArray(checkoutItems) || checkoutItems.length === 0) {
       return res.status(400).json({ message: "no items in checkout" });
     }
-    const quote = await priceQuote({ items: checkoutItems, paymentMethod });
+    const quote = await priceQuote({ items: checkoutItems, paymentMethod, shippingAddress });
     res.json({ success: true, quote: { ...quote, totalAfterWallet: quote.total } });
   } catch (error) {
     console.error("guest quote error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(error.status || 500).json({ message: error.status ? error.message : "Internal server error" });
   }
 });
 
@@ -217,7 +221,7 @@ router.post("/guest-quote", async (req, res) => {
 // @access Public
 router.post("/guest-order", async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod, totalPrice, guestEmail, guestName, trackingInfo } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, guestEmail, guestName, trackingInfo, guestId, idempotencyKey } = req.body;
 
     if (!Array.isArray(orderItems) || orderItems.length === 0)
       return res.status(400).json({ message: "no items in order" });
@@ -226,22 +230,49 @@ router.post("/guest-order", async (req, res) => {
     if (!shippingAddress?.address)
       return res.status(400).json({ message: "shipping address is required" });
 
-    const order = await Order.create({
-      user: null,
-      guestEmail,
-      guestName: guestName || guestEmail,
-      attribution: buildAttribution(trackingInfo, {
-        customerName: guestName || guestEmail || "",
-        customerEmail: guestEmail || "",
-        customerPhone: shippingAddress?.phone || "",
-      }),
-      orderItems,
-      shippingAddress,
-      paymentMethod,
-      totalPrice,
-      isPaid: paymentMethod === "cash_on_delivery" ? false : false,
-      paymentStatus: "Pending",
-    });
+    if (paymentMethod !== "cash_on_delivery") return res.status(400).json({ message: "Guest checkout supports cash on delivery only" });
+    if (!/^[a-zA-Z0-9_-]{16,100}$/.test(guestId || "") || !/^[a-zA-Z0-9_-]{16,100}$/.test(idempotencyKey || ""))
+      return res.status(400).json({ message: "A valid guest cart and submission key are required" });
+    if (!shippingAddress.city || !/^\d{6}$/.test(shippingAddress.postalCode || "") || !/^(91)?\d{10}$/.test(String(shippingAddress.phone || "")))
+      return res.status(400).json({ message: "A valid delivery address and phone are required" });
+    const guestCheckoutKey = createHash("sha256").update(`${guestId}:${idempotencyKey}`).digest("hex");
+    const existing = await Order.findOne({ guestCheckoutKey });
+    if (existing) return res.json({ success: true, order: existing });
+    const session = await mongoose.startSession();
+    let order;
+    try {
+      await session.withTransaction(async () => {
+        const guestCart = await Cart.findOne({ guestId, user: null }).session(session);
+        if (!guestCart?.products?.length) throw Object.assign(new Error("Guest cart is empty"), { status: 400 });
+        const signature = (items) => JSON.stringify(items.map((it) => [String(it.productId), it.size || "", it.color || "", Number(it.quantity)]).sort());
+        if (signature(orderItems) !== signature(guestCart.products)) throw Object.assign(new Error("Cart changed. Refresh checkout."), { status: 409 });
+        const products = await Product.find({ _id: { $in: orderItems.map((it) => it.productId) } }).session(session);
+        const validated = validateOrderItems(orderItems, products);
+        const quote = await priceQuote({ items: validated, paymentMethod, shippingAddress });
+        if (Math.abs(Number(req.body.totalPrice) - quote.total) > 0.01 || !Number.isFinite(Number(req.body.totalPrice)))
+          throw Object.assign(new Error("Price changed. Refresh the quote before placing your order."), { status: 409 });
+        for (const item of validated) {
+          const product = products.find((p) => String(p._id) === String(item.productId));
+          const variant = product.colorVariants?.flatMap((v) => v.sizes).find((v) => v.sku === item.sku)
+            || product.variants?.find((v) => v.sku === item.sku);
+          if (variant) {
+            variant.countInStock -= item.quantity;
+            product.countInStock = product.colorVariants?.length
+              ? product.colorVariants.flatMap((v) => v.sizes).reduce((n, v) => n + v.countInStock, 0)
+              : product.variants.reduce((n, v) => n + v.countInStock, 0);
+          } else product.countInStock -= item.quantity;
+        }
+        for (const product of products) await product.save({ session });
+        [order] = await Order.create([{
+          user: null, guestEmail, guestName: guestName || guestEmail, guestCheckoutKey,
+          attribution: buildAttribution(trackingInfo, { customerName: guestName || guestEmail, customerEmail: guestEmail, customerPhone: shippingAddress.phone }),
+          orderItems: validated.map((it, index) => ({ ...it, price: quote.items[index].unitPrice })),
+          shippingAddress, paymentMethod, totalPrice: quote.total, pricing: quote,
+          isPaid: false, paymentStatus: "Pending",
+        }], { session });
+        await Cart.deleteOne({ _id: guestCart._id }, { session });
+      });
+    } finally { await session.endSession(); }
     if (order?.attribution?.campaignClickId) {
       await registerCampaignConversion({
         campaignClickId: order.attribution.campaignClickId,
@@ -252,7 +283,12 @@ router.post("/guest-order", async (req, res) => {
     res.status(201).json({ success: true, order });
   } catch (error) {
     console.error("guest order error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    if (error.code === 11000 && req.body.guestId && req.body.idempotencyKey) {
+      const key = createHash("sha256").update(`${req.body.guestId}:${req.body.idempotencyKey}`).digest("hex");
+      const order = await Order.findOne({ guestCheckoutKey: key });
+      if (order) return res.json({ success: true, order });
+    }
+    res.status(error.status || 500).json({ message: error.status ? error.message : "Unable to place order" });
   }
 });
 

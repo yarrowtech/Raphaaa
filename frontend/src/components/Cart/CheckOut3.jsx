@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RazorpayButton from "./RazorpayButton";
-import { toast } from "sonner";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   createRazorpayOrder,
@@ -13,10 +13,7 @@ import {
 import { clearCart } from "../../redux/slices/cartSlice";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import {
-  fetchProductDetails,
-  fetchSimilarProducts,
-} from "../../redux/slices/productsSlice";
+
 import AddressForm from "./AddressForm";
 import { FaPlus } from "react-icons/fa";
 import { FaChevronDown, FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
@@ -130,12 +127,12 @@ const Checkout = () => {
     loading: cartLoading,
     error: cartError,
   } = useSelector((state) => state.cart);
-  const { selectedProduct, similarProducts } = useSelector(
+  const {  similarProducts } = useSelector(
     (state) => state.products
   );
   const { user } = useSelector((state) => state.auth);
   const {
-    order,
+    
     loading: checkoutLoading,
     error: checkoutError,
     razorpayOrderId,
@@ -147,13 +144,13 @@ const Checkout = () => {
 
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [orderProcessing, setOrderProcessing] = useState(false);
-  const [addressLoading, setAddressLoading] = useState(false);
+  
   const [phoneError, setPhoneError] = useState("");
   const [submitDisabled, setSubmitDisabled] = useState(false);
   const [orderInitiated, setOrderInitiated] = useState(false);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
   const [fullUser, setFullUser] = useState(null);
-  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [] = useState(false);
   // const [similarProducts, setSimilarProducts] = useState([]);
   const [displayCount, setDisplayCount] = useState(4);
   const [addressesOpen, setAddressesOpen] = useState(false); // collapsible toggle
@@ -236,46 +233,7 @@ const Checkout = () => {
     phone: "+91",
   });
 
-  const countries = [
-    "India",
-    "United States",
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Germany",
-    "France",
-    "Japan",
-    "China",
-    "Brazil",
-    "Russia",
-    "Italy",
-    "Spain",
-    "Netherlands",
-    "Sweden",
-    "Switzerland",
-    "Norway",
-    "Denmark",
-    "Finland",
-    "Belgium",
-    "Austria",
-    "Portugal",
-    "Greece",
-    "Ireland",
-    "Poland",
-    "Czech Republic",
-    "Hungary",
-    "Romania",
-    "Bulgaria",
-    "Croatia",
-    "Slovenia",
-    "Slovakia",
-    "Estonia",
-    "Latvia",
-    "Lithuania",
-    "Luxembourg",
-    "Malta",
-    "Cyprus",
-  ];
+  
 
   useEffect(() => {
     dispatch(clearCheckout());
@@ -339,48 +297,9 @@ const Checkout = () => {
     return true;
   };
 
-  const handlePhoneChange = (e) => {
-    let value = e.target.value;
-    if (!value.startsWith("+91")) {
-      value = "+91" + value.replace(/^\+91/, "");
-    }
-    value = "+91" + value.slice(3).replace(/\D/g, "");
-    if (value.length > 13) {
-      value = value.slice(0, 13);
-    }
-    setShippingAddress({ ...shippingAddress, phone: value });
-    validatePhone(value);
-  };
+  
 
-  const handlePinCodeChange = async (e) => {
-    const pinCode = e.target.value;
-    setShippingAddress({ ...shippingAddress, postalCode: pinCode });
-
-    if (pinCode.length === 6 && /^\d{6}$/.test(pinCode)) {
-      setAddressLoading(true);
-      try {
-        const response = await axios.get(
-          `https://api.postalpincode.in/pincode/${pinCode}`
-        );
-        if (
-          response.data &&
-          response.data[0] &&
-          response.data[0].Status === "Success"
-        ) {
-          const postOffice = response.data[0].PostOffice[0];
-          setShippingAddress((prev) => ({
-            ...prev,
-            city: postOffice.District,
-            country: "India",
-          }));
-        }
-      } catch (error) {
-        console.error("[ERROR] Error fetching pin code data:", error);
-      } finally {
-        setAddressLoading(false);
-      }
-    }
-  };
+  
 
   const handleAddressSelect = (address, index) => {
     setSelectedAddressIndex(index);

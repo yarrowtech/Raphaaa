@@ -165,6 +165,7 @@ const orderSchema = new mongoose.Schema(
       expectedDate: { type: Date },
       note: { type: String, default: "" },
     },
+    guestCheckoutKey: { type: String, unique: true, sparse: true },
     idempotencyKey: {
       type: String,
       index: true,

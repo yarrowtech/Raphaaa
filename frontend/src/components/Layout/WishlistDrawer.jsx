@@ -1,18 +1,17 @@
 import { IoIosClose } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+
+
+import useModalFocus from "../../hooks/useModalFocus";
 
 const WishlistDrawer = ({ drawerOpen, toggleWishlistDrawer, wishlistItems }) => {
+  const modalRef = useModalFocus(drawerOpen, toggleWishlistDrawer);
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+
 
   const handleBuyNow = (productId) => {
     toggleWishlistDrawer();
-    if (!user) {
-      navigate(`/login?redirect=checkout`);
-    } else {
-      navigate(`/checkout?productId=${productId}`);
-    }
+    navigate(`/product/${productId}`);
   };
 
   return (
@@ -27,6 +26,12 @@ const WishlistDrawer = ({ drawerOpen, toggleWishlistDrawer, wishlistItems }) => 
 
       {/* Drawer */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal={drawerOpen ? true : undefined}
+        aria-label="Wishlist"
+        hidden={!drawerOpen}
+        tabIndex={-1}
         className={`fixed top-0 right-0 w-3/4 sm:w-1/2 md:w-[30rem] h-full bg-white shadow-lg transform transition-transform duration-300 flex flex-col z-50 ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
@@ -35,6 +40,7 @@ const WishlistDrawer = ({ drawerOpen, toggleWishlistDrawer, wishlistItems }) => 
         {/* Close Button */}
         <div className="flex justify-end p-4">
           <button
+            aria-label="Close wishlist"
             onClick={toggleWishlistDrawer}
             className="text-gray-600 hover:text-gray-800"
           >

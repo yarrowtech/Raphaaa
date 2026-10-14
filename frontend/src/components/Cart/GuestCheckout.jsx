@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { FaLock, FaTruck, FaUndo } from "react-icons/fa";
 import { buildOrderAttribution } from "../../utils/attribution";
 
+import { clearCart } from "../../redux/slices/cartSlice";
+import { generateNewGuestId } from "../../redux/slices/authSlice";
+import { safeStorage } from "../../utils/safeStorage";
+
 const BACKEND = import.meta.env.VITE_BACKEND_URL;
 
 const GuestCheckout = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { guestId } = useSelector((state) => state.auth);
+  const submissionKey = useRef(safeStorage.getItem(`guest-checkout-${guestId}`) || crypto.randomUUID());
+  const submittingRef = useRef(false);
+  const [quoteLoading, setQuoteLoading] = useState(true);
   const { cart } = useSelector((state) => state.cart);
 
   const [form, setForm] = useState({
@@ -36,6 +45,9 @@ const GuestCheckout = () => {
   // Fetch guest quote from backend
   useEffect(() => {
     if (cartItems.length === 0) return;
+    let active = true;
+    setQuote(null);
+    setQuoteLoading(true);
     const t = setTimeout(async () => {
       try {
         const { data } = await axios.post(`${BACKEND}/api/checkout/guest-quote`, {
@@ -50,19 +62,20 @@ const GuestCheckout = () => {
             sku: p.sku,
           })),
           paymentMethod,
+          shippingAddress: { postalCode: form.postalCode },
         });
-        setQuote(data.quote || null);
-      } catch (_) {
-        setQuote(null);
-      }
+        if (active) setQuote(data.quote || null);
+      } catch {
+        if (active) setQuote(null);
+      } finally { if (active) setQuoteLoading(false); }
     }, 300);
-    return () => clearTimeout(t);
-  }, [cartItems, paymentMethod]);
+    return () => { active = false; clearTimeout(t); };
+  }, [cartItems, paymentMethod, form.postalCode]);
 
   const freeThreshold  = Number(quote?.freeShippingThreshold ?? 999);
   const quoteShipping  = Number(quote?.shipping ?? (subtotal >= freeThreshold ? 0 : 99));
   const netShipping    = Math.max(0, quoteShipping - Number(quote?.shippingDiscount ?? 0));
-  const total          = Number(quote?.totalAfterWallet ?? (subtotal + netShipping));
+  const total          = Number(quote?.totalAfterWallet ?? quote?.total ?? (subtotal + netShipping));
 
   const validate = () => {
     const e = {};
@@ -85,14 +98,19 @@ const GuestCheckout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current || quoteLoading || !quote) return;
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
+    safeStorage.setItem(`guest-checkout-${guestId}`, submissionKey.current);
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const { data } = await axios.post(`${BACKEND}/api/checkout/guest-order`, {
+        guestId,
+        idempotencyKey: submissionKey.current,
         orderItems: cartItems.map((p) => ({
           productId: p.productId,
           name: p.name,
@@ -121,12 +139,16 @@ const GuestCheckout = () => {
         }),
       });
 
+      dispatch(clearCart());
+      dispatch(generateNewGuestId());
+      safeStorage.removeItem(`guest-checkout-${guestId}`);
       navigate("/order-confirmation", {
         state: { order: data.order, paymentMethod, isGuest: true },
       });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to place order. Please try again.");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -148,10 +170,14 @@ const GuestCheckout = () => {
 
   const field = (name, label, type = "text", placeholder = "") => (
     <div>
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
+      <label htmlFor={`guest-${name}`} className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
         {label}
       </label>
       <input
+        id={`guest-${name}`}
+        aria-invalid={!!errors[name]}
+        aria-describedby={errors[name] ? `guest-${name}-error` : undefined}
+        autoComplete={({ guestName: "name", guestEmail: "email", address: "street-address", city: "address-level2", postalCode: "postal-code", phone: "tel" })[name]}
         type={type}
         name={name}
         value={form[name]}
@@ -161,7 +187,7 @@ const GuestCheckout = () => {
           errors[name] ? "border-red-400 bg-red-50" : "border-gray-200 bg-gray-50 focus:bg-white focus:border-sky-400"
         }`}
       />
-      {errors[name] && <p className="text-xs text-red-500 mt-1">{errors[name]}</p>}
+      {errors[name] && <p id={`guest-${name}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors[name]}</p>}
     </div>
   );
 
@@ -250,10 +276,11 @@ const GuestCheckout = () => {
               </div>
             </div>
 
+            {!quoteLoading && !quote && <p role="alert">Unable to load prices. <button type="button" onClick={() => window.location.reload()}>Retry</button></p>}
             {/* Submit */}
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || quoteLoading || !quote}
               className={`w-full py-4 rounded-2xl font-bold text-base tracking-wide transition-all shadow-md flex items-center justify-center gap-2 ${
                 submitting
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"

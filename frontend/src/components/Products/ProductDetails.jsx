@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { trackView } from "../../utils/recentlyViewed";
+import { prettyColorLabel } from "../../utils/colorCatalog";
 import ProductGrid from "./ProductGrid";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { useParams, useNavigate } from "react-router-dom";
@@ -57,7 +58,7 @@ const UI = {
 
 const cx = (...c) => c.filter(Boolean).join(" ");
 
-const ProductDetails = ({ productId }) => {
+const ProductDetails = () => {
   const { slug, sku } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,13 +82,13 @@ const ProductDetails = ({ productId }) => {
   const [pincode, setPincode] = useState("");
   const [deliveryInfo, setDeliveryInfo] = useState(null);
   const [isCheckingDelivery, setIsCheckingDelivery] = useState(false);
-  const [showDeliveryCheck, setShowDeliveryCheck] = useState(false);
+  const [] = useState(false);
 
   const productFetchId = selectedProduct?._id;
   const [sortOption, setSortOption] = useState("newest");
   const [ratingFilter, setRatingFilter] = useState(null);
   const [withPhotosFilter, setWithPhotosFilter] = useState(false);
-  const [expandedReviews, setExpandedReviews] = useState({});
+  const [] = useState({});
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
@@ -101,14 +102,14 @@ const ProductDetails = ({ productId }) => {
   const [modalZoom, setModalZoom] = useState(1);
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
+  const [couponCode] = useState("");
   const [finalPrice, setFinalPrice] = useState(null);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [isBuyNowDisabled, setIsBuyNowDisabled] = useState(false);
   const [displayCount, setDisplayCount] = useState(8);
 
-  const [featuredCollab, setFeaturedCollab] = useState(null);
+  const [, setFeaturedCollab] = useState(null);
   const [zoom, setZoom] = useState({ active: false, x: 50, y: 50 });
   const [zoomPanel, setZoomPanel] = useState({ top: 0, left: 0, size: 0 });
 
@@ -144,7 +145,7 @@ const ProductDetails = ({ productId }) => {
     return () => {
       try {
         document.head.removeChild(styleTag);
-      } catch (_) {}
+      } catch { /* Already removed on cleanup. */ }
     };
   }, []);
 
@@ -479,7 +480,7 @@ const ProductDetails = ({ productId }) => {
     return 0;
   };
 
-  const [viewersNow, setViewersNow] = React.useState(() => Math.floor(Math.random() * 18) + 4);
+  const [, setViewersNow] = React.useState(() => Math.floor(Math.random() * 18) + 4);
   React.useEffect(() => {
     const id = setInterval(() => setViewersNow(Math.floor(Math.random() * 18) + 4), 30000);
     return () => clearInterval(id);
@@ -702,19 +703,7 @@ const ProductDetails = ({ productId }) => {
       .slice(0, 12);
   }, [similarProducts, selectedProduct, catalogProducts]);
 
-  const buildMarketplaceUrl = (provider, productName) => {
-    const q = encodeURIComponent(String(productName || "").trim());
-    switch (provider) {
-      case "Amazon":
-        return `https://www.amazon.in/s?k=${q}`;
-      case "Flipkart":
-        return `https://www.flipkart.com/search?q=${q}`;
-      case "Meesho":
-        return `https://www.meesho.com/search?q=${q}`;
-      default:
-        return "";
-    }
-  };
+  
 
   useEffect(() => {
     const p = selectedProduct;
@@ -1142,7 +1131,7 @@ const ProductDetails = ({ productId }) => {
     return () => clearTimeout(timer);
   }, [pincode]);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = () => {
     if (isOutOfStock) {
       toast.error("This product is out of stock.", { duration: 1500 });
       return;
@@ -1155,15 +1144,7 @@ const ProductDetails = ({ productId }) => {
       return;
     }
 
-    const currentCartItems = JSON.parse(
-      localStorage.getItem("persist:root")
-    )?.cart;
-    const totalProductsInCart = currentCartItems
-      ? JSON.parse(currentCartItems)?.cartItems?.reduce(
-        (acc, item) => acc + item.quantity,
-        0
-      )
-      : 0;
+    const totalProductsInCart = (cart.cart?.products || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
     if (totalProductsInCart + quantity > 10) {
       toast.error("You can buy up to 10 items", { duration: 2000 });
@@ -1267,10 +1248,7 @@ const ProductDetails = ({ productId }) => {
   if (error && !selectedProduct) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!selectedProduct) return <ProductDetailsSkeleton />;
 
-  const formatReviewDate = (isoDate) => {
-    const options = { day: "2-digit", month: "long", year: "numeric" };
-    return new Date(isoDate).toLocaleDateString("en-IN", options);
-  };
+  
   const totalReviews = reviews.length || 1;
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => {
     const count = reviews.filter((r) => r.rating === star).length;
@@ -1284,24 +1262,7 @@ const ProductDetails = ({ productId }) => {
     cart?.products?.reduce((acc, item) => acc + item.quantity, 0) || 0;
   const maxLimitReached = totalQuantity >= 10;
 
-  const handleShare = async () => {
-    try {
-      const productUrl = buildTrackedProductUrl("share");
-
-      if (navigator.share) {
-        await navigator.share({
-          title: selectedProduct?.name,
-          text: "Check out this product!",
-          url: productUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(productUrl);
-        toast.success("Link copied to clipboard!");
-      }
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
-  };
+  
 
   const productSchema = selectedProduct
     ? {
@@ -1645,8 +1606,8 @@ const ProductDetails = ({ productId }) => {
                             {hasColorVariants
                               ? (selectedProduct.colorVariants.find(
                                   (cv) => cv.color.toLowerCase() === selectedColor.toLowerCase()
-                                )?.colorName || selectedColor)
-                              : selectedColor}
+                                )?.colorName || prettyColorLabel(selectedColor))
+                              : prettyColorLabel(selectedColor)}
                           </span>
                         )}
                       </p>
@@ -1676,7 +1637,7 @@ const ProductDetails = ({ productId }) => {
                                   if (posImg) setMainImage(posImg);
                                 }
                               }}
-                              title={cvEntry?.colorName || color}
+                              title={cvEntry?.colorName || prettyColorLabel(color)}
                               className={cx(
                                 "relative transition-all duration-200",
                                 thumb
@@ -1696,7 +1657,7 @@ const ProductDetails = ({ productId }) => {
                               {thumb ? (
                                 <img
                                   src={thumb}
-                                  alt={cvEntry?.colorName || color}
+                                  alt={cvEntry?.colorName || prettyColorLabel(color)}
                                   className="w-full h-full object-cover"
                                 />
                               ) : null}

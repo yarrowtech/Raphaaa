@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RazorpayButton from "./RazorpayButton";
 import GuestCheckout from "./GuestCheckout";
@@ -14,10 +14,7 @@ import {
 import { clearCart, removeFromCart, updateCartItemQuantity } from "../../redux/slices/cartSlice";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import {
-  fetchProductDetails,
-  fetchSimilarProducts,
-} from "../../redux/slices/productsSlice";
+
 import { buildOrderAttribution } from "../../utils/attribution";
 import AddressForm from "./AddressForm";
 import {
@@ -133,7 +130,7 @@ const Checkout = () => {
     return /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(c) ? "Selected Color" : c;
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [guestMode, setGuestMode] = useState(false);
+  const [guestMode] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
@@ -141,12 +138,12 @@ const Checkout = () => {
     loading: cartLoading,
     error: cartError,
   } = useSelector((state) => state.cart);
-  const { selectedProduct, similarProducts } = useSelector(
+  const {  similarProducts } = useSelector(
     (state) => state.products
   );
   const { user } = useSelector((state) => state.auth);
   const {
-    order,
+    
     loading: checkoutLoading,
     error: checkoutError,
     razorpayOrderId,
@@ -203,8 +200,21 @@ const Checkout = () => {
   const [couponChecking, setCouponChecking] = useState(false);
   const [walletRedeem, setWalletRedeem] = useState(0);
   const [orderNote, setOrderNote] = useState("");
+  const [shippingAddress, setShippingAddress] = useState({
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "India",
+    phone: "+91",
+  });
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const quoteRequestIdRef = useRef(0);
+  const [quotedInputs, setQuotedInputs] = useState("");
+  const quoteInputs = JSON.stringify([cart?.products, paymentMethod, couponCodes, walletRedeem, shippingAddress]);
+  const quoteIsCurrent = !!quote && quotedInputs === quoteInputs;
 
   const displaySubtotal  = Number(quote?.subtotal    ?? computedSubtotal);
   const freeThreshold    = Number(quote?.freeShippingThreshold ?? 999);
@@ -212,14 +222,14 @@ const Checkout = () => {
   const shippingDiscount = Number(quote?.shippingDiscount ?? 0);
   const netShipping      = Math.max(0, displayShipping - shippingDiscount);
 
-  const displayTotal     = Number(quote?.totalAfterWallet ?? (computedSubtotal + netShipping + gstSummary.gstAmount));
+  const displayTotal     = Number(quote?.totalAfterWallet ?? (computedSubtotal + netShipping));
   const isFirstOrder     = quote?.isNewUser === true;
   const zoneCharge       = Number(quote?.zoneCharge ?? 0);
   const zoneName         = quote?.zoneName || null;
 
   // Mobile price breakdown helpers
-  const feesTotal      = netShipping + zoneCharge;
-  const discountsTotal = Math.max(0, displaySubtotal + feesTotal - (displayTotal - gstSummary.gstAmount));
+  const feesTotal      = netShipping;
+  const discountsTotal = Number(quote?.itemDiscountTotal || 0) + Number(quote?.cartDiscount || 0);
   const savingsTotal   = discountsTotal;
 
   useEffect(() => {
@@ -234,12 +244,6 @@ const Checkout = () => {
     fetchCollab();
   }, []);
 
-  useEffect(() => {
-    if (razorpayOrderId && paymentMethod === "razorpay") {
-      const payBtn = document.getElementById("autoPayButton");
-      if (payBtn) payBtn.click();
-    }
-  }, [razorpayOrderId, paymentMethod]);
 
   useEffect(() => {
     // If user switches from online payment to COD after creating/canceling Razorpay flow,
@@ -256,6 +260,10 @@ const Checkout = () => {
     const token = localStorage.getItem("userToken");
     if (!token) return;
     if (!cart?.products || cart.products.length === 0) return;
+
+    const requestId = ++quoteRequestIdRef.current;
+    setQuote(null);
+    setQuoteLoading(true);
 
     const run = async () => {
       setQuoteLoading(true);
@@ -281,28 +289,31 @@ const Checkout = () => {
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        // Discard this response if a newer quote request has since been fired.
+        if (requestId !== quoteRequestIdRef.current) return;
         setQuote(data?.quote || null);
+        setQuotedInputs(quoteInputs);
       } catch (err) {
+        if (requestId !== quoteRequestIdRef.current) return;
         console.error("Quote failed:", err);
         setQuote(null);
       } finally {
-        setQuoteLoading(false);
+        if (requestId === quoteRequestIdRef.current) setQuoteLoading(false);
       }
     };
 
     const t = setTimeout(run, 250);
-    return () => clearTimeout(t);
-  }, [cart?.products, paymentMethod, couponCodes, walletRedeem]);
+    return () => { clearTimeout(t); ++quoteRequestIdRef.current; };
+  }, [
+    cart?.products,
+    paymentMethod,
+    couponCodes,
+    walletRedeem,
+    quoteInputs,
+    user?.token,
+  ]);
 
-  const [shippingAddress, setShippingAddress] = useState({
-    firstName: "",
-    lastName: "",
-    address: "",
-    city: "",
-    postalCode: "",
-    country: "India",
-    phone: "+91",
-  });
+
 
   function itemKey(p) {
     return `${p?.productId || ""}::${p?.size || ""}::${p?.color || ""}::${p?.sku || ""}`;
@@ -365,13 +376,7 @@ const Checkout = () => {
     return Number(product?.countInStock || 0);
   };
 
-  const countries = [
-    "India","United States","United Kingdom","Canada","Australia","Germany","France","Japan",
-    "China","Brazil","Russia","Italy","Spain","Netherlands","Sweden","Switzerland","Norway",
-    "Denmark","Finland","Belgium","Austria","Portugal","Greece","Ireland","Poland",
-    "Czech Republic","Hungary","Romania","Bulgaria","Croatia","Slovenia","Slovakia",
-    "Estonia","Latvia","Lithuania","Luxembourg","Malta","Cyprus",
-  ];
+  
 
   useEffect(() => {
     dispatch(clearCheckout());
@@ -562,6 +567,7 @@ const Checkout = () => {
 
   const handleCreateOrder = async (e) => {
     if (e?.preventDefault) e.preventDefault();
+    if (!quoteIsCurrent || quoteLoading || orderProcessing || submitDisabled || orderInitiated) return;
     if (!shippingAddress.address) {
       toast.error("Please select an address first.");
       return;
@@ -630,8 +636,9 @@ const Checkout = () => {
             });
           } else {
             console.error("[ERROR] COD Order Creation Failed:", result.error);
-            alert(result.error?.message || "Failed to create COD order. Please try again.");
+            alert(result.payload || result.error?.message || "Failed to create COD order. Please try again.");
             setOrderInitiated(false);
+            setOrderProcessing(false);
           }
         } else {
           const result = await dispatch(createRazorpayOrder(orderData));
@@ -646,14 +653,16 @@ const Checkout = () => {
             }
           } else {
             console.error("[ERROR] Razorpay Order Creation Failed:", result.error);
-            alert(result.error?.message || "Failed to create Razorpay order. Please try again.");
+            alert(result.payload || result.error?.message || "Failed to create Razorpay order. Please try again.");
             setOrderInitiated(false);
+            setOrderProcessing(false);
           }
         }
       } catch (error) {
         console.error("[ERROR] Order creation error:", error);
         alert("Failed to create order. Please try again.");
         setOrderInitiated(false);
+        setOrderProcessing(false);
       } finally {
         setSubmitDisabled(false);
       }
@@ -681,7 +690,7 @@ const Checkout = () => {
         });
       } else {
         console.error("[ERROR] Payment verification failed:", result.error);
-        alert(result.error?.message || "Payment verification failed. Please contact support.");
+        alert(result.payload || result.error?.message || "Payment verification failed. Please contact support.");
         setOrderInitiated(false);
       }
     } catch (error) {
@@ -799,7 +808,8 @@ const Checkout = () => {
   deliveryDate.setDate(deliveryDate.getDate() + (paymentMethod === "cash_on_delivery" ? 5 : 4));
   const deliveryStr = deliveryDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 
-  const isContinueDisabled = loading || orderProcessing || !!phoneError || submitDisabled || orderInitiated;
+  const isContinueDisabled =
+    loading || orderProcessing || !!phoneError || submitDisabled || orderInitiated || quoteLoading || !quoteIsCurrent;
 
   return (
     <>
@@ -1149,14 +1159,14 @@ const Checkout = () => {
                   </div>
                   {zoneCharge > 0 && (
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{zoneName ? `${zoneName} delivery surcharge` : "Delivery surcharge"}</span>
+                      <span>{zoneName ? `${zoneName} delivery surcharge (included)` : "Delivery surcharge"}</span>
                       <span>₹{zoneCharge.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                   {paymentMethod === "cash_on_delivery" && (
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>COD charges</span>
-                      <span>₹0</span>
+                      <span>COD charges (included)</span>
+                      <span>₹{Number(quote?.codCharge || 0)}</span>
                     </div>
                   )}
                 </div>
@@ -1689,7 +1699,7 @@ const Checkout = () => {
                   {zoneCharge > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500 flex items-center gap-1.5">
-                        {zoneName} delivery surcharge
+                        {zoneName} delivery surcharge (included)
                         <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{zoneName}</span>
                       </span>
                       <span className="text-gray-600">₹{zoneCharge.toLocaleString("en-IN")}</span>
@@ -1697,8 +1707,8 @@ const Checkout = () => {
                   )}
                   {paymentMethod === "cash_on_delivery" && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">COD Charges</span>
-                      <span className="text-gray-500">₹0</span>
+                      <span className="text-gray-500">COD Charges (included)</span>
+                      <span className="text-gray-500">₹{Number(quote?.codCharge || 0)}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm">

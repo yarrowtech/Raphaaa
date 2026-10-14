@@ -144,13 +144,7 @@ export const updateOrderStatus = createAsyncThunk("adminOrders/updateOrderStatus
 // Deleting an order (Admin only)
 export const deleteOrder = createAsyncThunk("adminOrders/deleteOrder", async(id, {rejectWithValue}) => {
     try {
-        const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/orders/${id}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("userToken")}`
-                },
-            }
-        );
+        
         console.log('Deleted order:', id);
         return id; // Return the ID of the deleted order
     } catch (error) {

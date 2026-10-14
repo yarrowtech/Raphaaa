@@ -7,8 +7,8 @@ import useSmartLoader from "../../hooks/useSmartLoader";
 
 const NewArrivals = () => {
   const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [, setCanScrollLeft] = useState(false);
+  const [, setCanScrollRight] = useState(false);
 
 
 
@@ -49,13 +49,7 @@ const NewArrivals = () => {
   });
 
 
-  const scroll = (direction) => {
-    const container = scrollRef.current;
-    const scrollAmount = direction === "left" ? -300 : 300;
-    if (container) {
-      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
+  
 
   const updateScrollButtons = () => {
     const container = scrollRef.current;

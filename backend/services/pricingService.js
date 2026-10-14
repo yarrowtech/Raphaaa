@@ -105,25 +105,26 @@ async function userIsNew(userId) {
 // timed-sale price). Falls back to the client value only if the product is
 // missing (that line will fail validation elsewhere).
 function resolveServerUnitPrice(doc, clientPrice) {
-  const fallback = Number(clientPrice) || 0;
-  if (!doc) return fallback;
+  if (!doc || doc.isPublished === false) throw Object.assign(new Error("Product unavailable"), { status: 400 });
   const candidates = [doc.price, doc.discountPrice, doc.activeSalePrice]
     .map((v) => Number(v))
     .filter((v) => Number.isFinite(v) && v > 0);
-  return candidates.length ? Math.min(...candidates) : fallback;
+  if (!candidates.length) throw Object.assign(new Error("Product price unavailable"), { status: 400 });
+  return Math.min(...candidates);
 }
 
 function buildLineTotals(items, priceDocMap = {}) {
   const normalized = (items || []).map((it) => {
     const pid = String(it.productId || it._id || "");
     const doc = priceDocMap[pid];
-    const quantity = Number(it.quantity || 0);
+    const quantity = Number(it.quantity);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) throw Object.assign(new Error("Invalid quantity"), { status: 400 });
     const unitPrice = resolveServerUnitPrice(doc, it.price);
     const lineSubtotal = clampMoney(unitPrice * quantity);
     return {
       productId: it.productId || it._id,
       sku: it.sku,
-      name: it.name,
+      name: doc.name,
       // Prefer DB category/brand so offer targeting can't be gamed client-side.
       category: doc?.category ?? it.category,
       brand: doc?.brand ?? it.brand,
@@ -222,6 +223,7 @@ async function priceQuote({
   couponCodes = [],
   shippingAddress,
 }) {
+  if (!Array.isArray(items) || !items.length || items.reduce((n, it) => n + Number(it.quantity), 0) > 10) throw Object.assign(new Error("Order must contain between 1 and 10 items"), { status: 400 });
   const now = new Date();
   const pm = normalizePaymentMethod(paymentMethod);
 
@@ -232,7 +234,7 @@ async function priceQuote({
   ];
   const productDocs = requestedIds.length
     ? await Product.find({ _id: { $in: requestedIds } })
-        .select("price mrp discountPrice offerPercentage activeSaleOfferId activeSalePrice freeShipping extraShippingCharge category brand")
+        .select("name isPublished price mrp discountPrice offerPercentage activeSaleOfferId activeSalePrice freeShipping extraShippingCharge category brand")
         .lean()
     : [];
   const productMap = Object.fromEntries(productDocs.map((p) => [String(p._id), p]));

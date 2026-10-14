@@ -3,8 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import { cancelOrder, createReturnRequest, fetchOrderDetails } from "../redux/slices/orderSlice";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 import { getGstRate, getOrderGstSummary } from "../utils/gst";
 
@@ -43,26 +41,11 @@ const OrderDetailsPage = () => {
 
 
   // ✅ Converts numeric total to words
-  const convertNumberToWords = (amount) => {
-    const a = [
-      "",
-      "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-      "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen",
-    ];
-    const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-    if ((amount = amount.toString()).length > 9) return "Overflow";
-    let n = ("000000000" + amount).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{3})$/);
-    if (!n) return;
-    let str = "";
-    str += n[1] != 0 ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + " Crore " : "";
-    str += n[2] != 0 ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + " Lakh " : "";
-    str += n[3] != 0 ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + " Thousand " : "";
-    str += n[4] != 0 ? (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) + " " : "";
-    return str.trim();
-  };
+  
 
   // ✅ Generate modern styled invoice (no logic changed)
   const generatePDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
     const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -244,7 +227,7 @@ const OrderDetailsPage = () => {
 
 
   /* ── helpers ── */
-  const statusConfig = (status, isPaid) => {
+  const statusConfig = (status) => {
     if (status === "Delivered")
       return { pill: "bg-emerald-100 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" };
     if (["Shipped","In Transit","Out For Delivery","Picked Up","Pickup Scheduled"].includes(status))

@@ -6,7 +6,7 @@ import { clearCart } from "../../redux/slices/cartSlice";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { FiChevronDown } from "react-icons/fi";
-import icon from "../../assets/man.png";
+import "../../assets/man.png";
 import { RiDashboardHorizontalFill } from "react-icons/ri";
 import { MdVerified } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";

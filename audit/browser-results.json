@@ -1,0 +1,455 @@
+[
+  {
+    "url": "/",
+    "title": "Raphaaa | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Pandal-hop inStyle that fit."
+    ],
+    "text": "yweight cottons, waffle knits and knitted polos from Raphaaa Studio and the labels you trust. Discover your Pujo look.\n\nDrop shoulder\nRelaxed\nBoxy\nPolo\nShop Now\nThis season's most-wanted\nAll\nUnable to load this collection. Please try again later.\nView all \u2192\nShop all styles\nLaunch fit finder\nRAPHAAA\nLuxury & casual engineered garments.\nTrack order status\nAbout Us\nContact Us\nShipping Policy\nReturns & Refunds\nPrivacy Policy\nTerms & Conditions\nCancellation Policy\nGet early drops & private sale invites\nSubscribe\n\u00a9 2026 RAPHAAA Commerce Ltd. All editorial apparel rights reserved.\nShipping & delivery",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/"
+  },
+  {
+    "url": "/collections/all",
+    "title": "All Products Collection | Raphaaa",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "All Products"
+    ],
+    "text": "E RANGE\n\u20b90 \u2013 \u20b910,000\n\u20b90\n\u20b910,000+\nUnder \u20b9799\n\u20b9800 \u2013 \u20b91,499\n\u20b91,500 \u2013 \u20b92,999\nLuxury (\u20b93,000+)\nGARMENT SIZE\nXS\nS\nM\nL\nXL\nXXL\n3XL\nFailed to load products.\nSHOP\nMen's fashion\nWomen's fashion\nKids's fashion\nAll collections\nOffers\nCUSTOMER CARE\nTrack order status\nAbout Us\nContact Us\nShipping Policy\nReturns & Refunds\nABOUT RAPHAAA\nPrivacy Policy\nTerms & Conditions\nCancellation Policy\nSTAY AHEAD OF THE CURVE\n\nSubscribe to receive early drops, archival releases, and member-exclusive private sale invitations.\n\nSubscribe\n\u00a9 2026 RAPHAAA Commerce Ltd. All editorial apparel rights reserved.\nShipping & delivery",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/collections/all"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nMen\nWomen\nKids\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/login"
+  },
+  {
+    "url": "/register",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [],
+    "text": "RAPHAAA\nMen\nWomen\nKids\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nRegister\nRegister\nor\nSign in with Google\n\nAlready have an account? Login",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your name"
+      },
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email address"
+      },
+      {
+        "tag": "INPUT",
+        "type": "password",
+        "name": "",
+        "placeholder": "Enter your password"
+      },
+      {
+        "tag": "INPUT",
+        "type": "password",
+        "name": "",
+        "placeholder": "Confirm your password"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/register"
+  },
+  {
+    "url": "/checkout",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [],
+    "text": "RAPHAAA\nMen\nWomen\nKids\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\n\nSomething went wrong: Failed to fetch cart\n\nGo Home",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/checkout"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nMen\nWomen\nKids\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/wishlist"
+  },
+  {
+    "url": "/settings",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Settings"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/settings"
+  },
+  {
+    "url": "/about",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "About RAPHAAA"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/about"
+  },
+  {
+    "url": "/privacy-policy",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Privacy Policy"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/privacy-policy"
+  },
+  {
+    "url": "/terms",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Terms & Conditions"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/terms"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nMen\nWomen\nKids\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 3,
+    "requestedRoute": "/admin"
+  },
+  {
+    "url": "/product/audit-missing-product",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/product/audit-missing-product"
+  },
+  {
+    "url": "/audit-missing-route",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 1366,
+    "scrollWidth": 1366,
+    "h1": [
+      "Oops!"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 4,
+    "requestedRoute": "/audit-missing-route"
+  },
+  {
+    "url": "/",
+    "title": "Raphaaa | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Pandal-hop inStyle that fit."
+    ],
+    "text": "yweight cottons, waffle knits and knitted polos from Raphaaa Studio and the labels you trust. Discover your Pujo look.\n\nDrop shoulder\nRelaxed\nBoxy\nPolo\nShop Now\nThis season's most-wanted\nAll\nUnable to load this collection. Please try again later.\nView all \u2192\nShop all styles\nLaunch fit finder\nRAPHAAA\nLuxury & casual engineered garments.\nTrack order status\nAbout Us\nContact Us\nShipping Policy\nReturns & Refunds\nPrivacy Policy\nTerms & Conditions\nCancellation Policy\nGet early drops & private sale invites\nSubscribe\n\u00a9 2026 RAPHAAA Commerce Ltd. All editorial apparel rights reserved.\nShipping & delivery",
+    "unlabelledInputs": [],
+    "unnamedButtons": 4,
+    "requestedRoute": "/"
+  },
+  {
+    "url": "/collections/all",
+    "title": "All Products Collection | Raphaaa",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "All Products"
+    ],
+    "text": "\u20b910,000\n\u20b90\n\u20b910,000+\nUnder \u20b9799\n\u20b9800 \u2013 \u20b91,499\n\u20b91,500 \u2013 \u20b92,999\nLuxury (\u20b93,000+)\nGARMENT SIZE\nXS\nS\nM\nL\nXL\nXXL\n3XL\nFailed to load products.\nSort\nFilters\nSHOP\nMen's fashion\nWomen's fashion\nKids's fashion\nAll collections\nOffers\nCUSTOMER CARE\nTrack order status\nAbout Us\nContact Us\nShipping Policy\nReturns & Refunds\nABOUT RAPHAAA\nPrivacy Policy\nTerms & Conditions\nCancellation Policy\nSTAY AHEAD OF THE CURVE\n\nSubscribe to receive early drops, archival releases, and member-exclusive private sale invitations.\n\nSubscribe\n\u00a9 2026 RAPHAAA Commerce Ltd. All editorial apparel rights reserved.\nShipping & delivery",
+    "unlabelledInputs": [],
+    "unnamedButtons": 4,
+    "requestedRoute": "/collections/all"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 4,
+    "requestedRoute": "/login"
+  },
+  {
+    "url": "/register",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [],
+    "text": "RAPHAAA\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nRegister\nRegister\nor\nSign in with Google\n\nAlready have an account? Login",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your name"
+      },
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email address"
+      },
+      {
+        "tag": "INPUT",
+        "type": "password",
+        "name": "",
+        "placeholder": "Enter your password"
+      },
+      {
+        "tag": "INPUT",
+        "type": "password",
+        "name": "",
+        "placeholder": "Confirm your password"
+      }
+    ],
+    "unnamedButtons": 6,
+    "requestedRoute": "/register"
+  },
+  {
+    "url": "/checkout",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [],
+    "text": "Something went wrong: Failed to fetch cart\n\nGo Home",
+    "unlabelledInputs": [],
+    "unnamedButtons": 0,
+    "requestedRoute": "/checkout"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 4,
+    "requestedRoute": "/wishlist"
+  },
+  {
+    "url": "/settings",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Settings"
+    ],
+    "text": "Settings\n\nPERSONAL\n\nProfile\n\nACCOUNT\n\nLanguage\nEnglish\nAbout Raphaaa\nDelete My Account\n\nVersion 1.0 \u00b7 Updated October 2026",
+    "unlabelledInputs": [],
+    "unnamedButtons": 1,
+    "requestedRoute": "/settings"
+  },
+  {
+    "url": "/about",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "About RAPHAAA"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/about"
+  },
+  {
+    "url": "/privacy-policy",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Privacy Policy"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/privacy-policy"
+  },
+  {
+    "url": "/terms",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Terms & Conditions"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/terms"
+  },
+  {
+    "url": "/login",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Welcome Back"
+    ],
+    "text": "RAPHAAA\nCart Summary\nYour cart is empty\n\nLooks like you haven't added anything yet.\n\nContinue Shopping\nYour Wishlist\n\nYour wishlist is empty.\n\nMENU\nHOME\nCOLLECTIONS\nWISHLIST\nABOUT US\nCONTACT US\nPRIVACY & POLICY\nCONTACT\n|\nWelcome Back\n\nLog in or create an account with your phone number.\n\nPhone number\n+91\nLogin with Email & Password instead\nSend OTP on WhatsApp\nLogin with Email & Password instead\nor\nGoogle\nSign in with Google\n\nBy continuing you agree to Raphaaa's Terms of Use and Privacy Policy.",
+    "unlabelledInputs": [],
+    "unnamedButtons": 4,
+    "requestedRoute": "/admin"
+  },
+  {
+    "url": "/product/audit-missing-product",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/product/audit-missing-product"
+  },
+  {
+    "url": "/audit-missing-route",
+    "title": "Raphaaa by Citimart Group | Premium Streetwear & Lifestyle",
+    "width": 500,
+    "scrollWidth": 500,
+    "h1": [
+      "Oops!"
+    ],
+    "text": "urns\n\nHassle-free returns\n\nSecure Payments\n\n100% safe & encrypted\n\n24/7 Support\n\nWe're always here\n\nDiscover premium fashion crafted for every occasion. Style that speaks for itself.\n\nNEWSLETTER\n\nGet 10% off your first order\n\nSHOP\nMen's Collections\nWomen's Collections\nAll Collections\nNew Arrivals\nBest Sellers\nHELP & POLICIES\nAbout Us\nContact Us\nPrivacy Policy\nTerms & Conditions\nShipping Policy\nReturn & Refund Policy\nCancellation Policy\nCONTACT US\nWE ACCEPT\nCOD\nEMI\n\n\ud83d\udd12 256-bit SSL Encrypted \u00b7 100% Authentic Products\n\n\u00a9 2025\u20132026 Raphaaa. All rights reserved.\n\nPrivacy\n\u00b7\nTerms\n\u00b7\nReturns\n\u00b7\nSitemap",
+    "unlabelledInputs": [
+      {
+        "tag": "INPUT",
+        "type": "email",
+        "name": "",
+        "placeholder": "Enter your email"
+      }
+    ],
+    "unnamedButtons": 5,
+    "requestedRoute": "/audit-missing-route"
+  }
+]

@@ -2,7 +2,7 @@
 import { RiCustomerServiceFill } from "react-icons/ri";
 import axios from "axios";
 import useSmartLoader from "../../hooks/useSmartLoader";
-import { getActiveSocialLinks, getSocialIcon, getSocialIconClassName } from "../../utils/socialLinks";
+import { getActiveSocialLinks } from "../../utils/socialLinks";
 
 const Topbar = () => {
   // const [loading, setLoading] = useState(true);

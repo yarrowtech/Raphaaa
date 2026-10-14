@@ -146,7 +146,10 @@ const Register = () => {
             </div>
 
             <div className="mb-5">
+              <label htmlFor="register-name" className="block text-sm mb-1">Name</label>
               <input
+                id="register-name"
+                autoComplete="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -156,7 +159,10 @@ const Register = () => {
             </div>
 
             <div className="mb-5">
+              <label htmlFor="register-email" className="block text-sm mb-1">Email</label>
               <input
+                id="register-email"
+                autoComplete="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -166,7 +172,10 @@ const Register = () => {
             </div>
 
             <div className="mb-5 relative">
+              <label htmlFor="register-password" className="block text-sm mb-1">Password</label>
               <input
+                id="register-password"
+                autoComplete="new-password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -175,8 +184,9 @@ const Register = () => {
               />
               <button
                 type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -203,7 +213,10 @@ const Register = () => {
             )}
 
             <div className="mb-6 relative">
+              <label htmlFor="register-confirmPassword" className="block text-sm mb-1">Confirm password</label>
               <input
+                id="register-confirmPassword"
+                autoComplete="new-password"
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -212,8 +225,9 @@ const Register = () => {
               />
               <button
                 type="button"
+                aria-label={showConfirm ? "Hide confirmation password" : "Show confirmation password"}
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
               >
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
               </button>

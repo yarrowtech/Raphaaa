@@ -17,6 +17,7 @@ import {
   FaTrashAlt,
 } from "react-icons/fa";
 import { MdOutlineContentPaste } from "react-icons/md";
+import cleanHtml from "../utils/sanitizeHtml";
 
 import JoditEditor from "jodit-react";
 
@@ -450,7 +451,7 @@ const MarketingBroadcast = () => {
               </div>
               <div
                 className="prose max-w-none text-sm text-gray-800 border-t border-gray-100 pt-4"
-                dangerouslySetInnerHTML={{ __html: selected.message }}
+                dangerouslySetInnerHTML={{ __html: cleanHtml(selected.message) }}
               />
             </div>
           )}

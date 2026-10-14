@@ -38,7 +38,7 @@ const SalesTrendsPage = () => {
     sku: "",
   });
 
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  
 
   const fetchSales = async () => {
     try {

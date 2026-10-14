@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { protect, admin } = require("../middleware/authMiddleware");
+const cleanHtml = require("../utils/sanitizeHtml");
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get("/:type", async (req, res) => {
     return res.status(400).json({ message: "Invalid page type" });
   try {
     const page = await LegalPage.findOne({ type: req.params.type });
-    res.json(page || { type: req.params.type, content: "" });
+    res.json(page ? { ...page.toObject(), content: cleanHtml(page.content) } : { type: req.params.type, content: "" });
   } catch (_) {
     res.status(500).json({ message: "Failed to fetch page" });
   }
@@ -32,7 +33,7 @@ router.put("/:type", protect, admin, async (req, res) => {
   try {
     const page = await LegalPage.findOneAndUpdate(
       { type: req.params.type },
-      { content: req.body.content || "" },
+      { content: cleanHtml(req.body.content) },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     res.json({ success: true, page });

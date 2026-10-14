@@ -1,23 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const Policy = require("../models/policyModel");
+const { protect, admin } = require("../middleware/authMiddleware");
+const cleanHtml = require("../utils/sanitizeHtml");
 
 // @desc   Get Privacy Policy
 // @route  GET /api/settings/policy
 router.get("/", async (req, res) => {
   try {
     const policy = await Policy.findOne().sort({ updatedAt: -1 });
-    res.json(policy || { content: "" });
+    res.json(policy ? { ...policy.toObject(), content: cleanHtml(policy.content) } : { content: "" });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch policy" });
   }
 });
 
 // @desc   Create or Update Privacy Policy
-// @route  POST /api/settings/policy
-router.put("/", async (req, res) => {
+// @route  PUT /api/settings/policy
+// @access Private (admin only)
+router.put("/", protect, admin, async (req, res) => {
   try {
-    const { content } = req.body;
+    const content = cleanHtml(req.body.content);
 
     let policy = await Policy.findOne();
     if (policy) {

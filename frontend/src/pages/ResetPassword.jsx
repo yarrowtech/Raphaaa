@@ -8,7 +8,7 @@ const ResetPassword = () => {
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
 
-    const [greeting, setGreeting] = useState("");
+    const [, setGreeting] = useState("");
     const [email, setEmail] = useState("");
     const [passwordMode, setPasswordMode] = useState("auto"); // 'auto' | 'custom'
     const [customPassword, setCustomPassword] = useState("");

@@ -34,17 +34,26 @@ const OrderConfirmationPage = () => {
   // }, [checkout, dispatch, navigate]);
 
   useEffect(() => {
-    if (orderId) {
+    if (!orderId) navigate("/my-orders");
+  }, [orderId, navigate]);
+
+  // Only clear the cart once we know the order is actually confirmed — COD orders
+  // are confirmed on creation, but an online order isn't confirmed until paid.
+  // Clearing the cart for an unpaid online order would make it unrecoverable.
+  const isCOD = order?.paymentMethod === "cash_on_delivery" || state?.paymentMethod === "cash_on_delivery";
+  const isPaidOnline = order?.paymentMethod && order.paymentMethod !== "cash_on_delivery" && order.isPaid;
+  const isConfirmed = Boolean(order) && (isCOD || isPaidOnline);
+
+  useEffect(() => {
+    if (isConfirmed) {
       dispatch(clearCart());
       localStorage.removeItem("cart");
-    } else {
-      navigate("/my-orders");
     }
-  }, [orderId, dispatch, navigate]);
+  }, [isConfirmed, dispatch]);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!orderId) return;
+      if (!orderId || state?.isGuest) return;
       try {
         setLoadingOrder(true);
         const token = localStorage.getItem("userToken");
@@ -67,7 +76,7 @@ const OrderConfirmationPage = () => {
       }
     };
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, state?.isGuest]);
 
   const calculateEstimatedDelivery = (createdAt) => {
     const orderDate = new Date(createdAt);
@@ -76,7 +85,7 @@ const OrderConfirmationPage = () => {
   };
 
   const handleDownloadInvoice = async () => {
-    if (!orderId) return;
+    if (!orderId || state?.isGuest) return;
     try {
       const token = localStorage.getItem("userToken");
       const response = await axios.get(
@@ -105,30 +114,47 @@ const OrderConfirmationPage = () => {
     <div className="min-h-screen py-10 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* ── Success header ── */}
-        <div className="text-center space-y-1">
-          <img
-            src="https://i.gifer.com/IDDV.gif"
-            alt="Order placed!"
-            className="mx-auto w-40 h-40 object-contain"
-          />
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2">
-            Order Placed Successfully! 🎉
-          </h1>
-          <p className="text-sm text-gray-500">
-            {state?.isGuest
-              ? `A confirmation will be sent to ${state?.order?.guestEmail || "your email"}.`
-              : "A confirmation email has been sent to your registered email address."}
-          </p>
-          {state?.isGuest && (
-            <p className="text-xs text-sky-600 mt-1">
-              <button onClick={() => navigate("/register")} className="underline hover:text-sky-800">
-                Create an account
-              </button>{" "}
-              to track your orders and enjoy a faster checkout next time.
+        {/* ── Header: success only once the order is actually confirmed/paid ── */}
+        {!loadingOrder && order && !isConfirmed ? (
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-amber-600 mt-2">
+              Payment Not Completed
+            </h1>
+            <p className="text-sm text-gray-500">
+              We couldn't confirm payment for this order yet. Your cart has been kept. Check your payment status before trying again.
             </p>
-          )}
-        </div>
+            <button
+              onClick={() => navigate("/checkout")}
+              className="mt-3 px-5 py-2.5 rounded-xl bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition"
+            >
+              Return to Checkout
+            </button>
+          </div>
+        ) : isConfirmed ? (
+          <div className="text-center space-y-1">
+            <img
+              src="https://i.gifer.com/IDDV.gif"
+              alt="Order placed!"
+              className="mx-auto w-40 h-40 object-contain"
+            />
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-2">
+              Order Placed Successfully! 🎉
+            </h1>
+            <p className="text-sm text-gray-500">
+              {state?.isGuest
+                ? `A confirmation will be sent to ${state?.order?.guestEmail || "your email"}.`
+                : "A confirmation email has been sent to your registered email address."}
+            </p>
+            {state?.isGuest && (
+              <p className="text-xs text-sky-600 mt-1">
+                <button onClick={() => navigate("/register")} className="underline hover:text-sky-800">
+                  Create an account
+                </button>{" "}
+                for a faster checkout next time. Keep your order reference for support.
+              </p>
+            )}
+          </div>
+        ) : null}
 
         {/* ── Loading ── */}
         {loadingOrder && (
@@ -138,7 +164,7 @@ const OrderConfirmationPage = () => {
           </div>
         )}
 
-        {!loadingOrder && order && (
+        {!loadingOrder && order && isConfirmed && (
           <>
             {/* ── Order ref card ── */}
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -288,7 +314,7 @@ const OrderConfirmationPage = () => {
 
             {/* ── Actions ── */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              {!state?.isGuest && <><button
                 onClick={handleDownloadInvoice}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-sky-400 hover:text-sky-700 hover:bg-sky-50 transition"
               >
@@ -299,7 +325,7 @@ const OrderConfirmationPage = () => {
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-sky-200 bg-sky-50 text-sm font-semibold text-sky-700 hover:bg-sky-100 transition"
               >
                 📦 Track My Order
-              </button>
+              </button></>}
               <button
                 onClick={() => navigate("/collections/all")}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-sky-600 to-blue-700 text-white text-sm font-bold hover:opacity-90 transition shadow-sm"

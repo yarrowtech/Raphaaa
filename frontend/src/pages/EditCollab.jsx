@@ -9,7 +9,7 @@ const EditCollab = () => {
   const [collab, setCollab] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const token = localStorage.getItem("userToken");
 

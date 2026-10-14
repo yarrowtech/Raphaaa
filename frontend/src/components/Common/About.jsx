@@ -1,21 +1,10 @@
-import React, { useEffect, useState } from "react";
+import useContent from "../../hooks/useContent";
 import aboutImg from "../../assets/product3.jpg";
-import axios from "axios";
+import cleanHtml from "../../utils/sanitizeHtml";
 
 const About = () => {
-  const [aboutContent, setAboutContent] = useState("");
-
-  useEffect(() => {
-    const fetchAbout = async () => {
-      try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/settings/about`);
-        setAboutContent(data.content);
-      } catch (error) {
-        console.error("Failed to fetch About Us content");
-      }
-    };
-    fetchAbout();
-  }, []);
+  const { data, loading, error, retry } = useContent("/api/settings/about");
+  const aboutContent = data?.content || "";
 
   return (
     <div className="min-h-screen p-6 md:p-12">
@@ -36,13 +25,13 @@ const About = () => {
               About <span className="text-blue-600">RAPHAAA</span>
             </h1>
 
-            {aboutContent ? (
+            {error ? (<p role="alert">Unable to load content. <button onClick={retry}>Retry</button></p>) : aboutContent ? (
               <div
                 className="text-lg leading-relaxed space-y-4"
-                dangerouslySetInnerHTML={{ __html: aboutContent }}
+                dangerouslySetInnerHTML={{ __html: cleanHtml(aboutContent) }}
               />
             ) : (
-              <p className="text-gray-500">Loading content...</p>
+              <p className="text-gray-500">{loading ? "Loading content…" : "Content coming soon."}</p>
             )}
           </div>
         </div>

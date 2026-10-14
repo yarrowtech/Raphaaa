@@ -45,7 +45,7 @@ const DropDetail = () => {
     );
   }
 
-  const { footballer, footballerImage, products, collabTitle, collabBanner } =
+  const { footballer, footballerImage, products, collabTitle } =
     footballerData;
 
   return (

@@ -374,6 +374,7 @@ const normalizeCartProducts = async (cart, offers = []) => {
 // @access Public
 router.post("/", async(req, res) => {
     const { productId, quantity, size, color, sku, guestId, userId } = req.body;
+    if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10) return res.status(400).json({ message: "Quantity must be between 1 and 10" });
     try {
         const authUser = await resolveAuthUser(req);
         const effectiveUserId = authUser?._id?.toString();
@@ -393,6 +394,7 @@ router.post("/", async(req, res) => {
 
         // Determine if the user is logged in or guest
         let cart = await getCart(effectiveUserId, effectiveGuestId);
+        if ((cart?.products || []).reduce((n, p) => n + p.quantity, 0) + quantity > 10) return res.status(400).json({ message: "You can buy up to 10 items" });
 
         // If the cart exists, update it
         if(cart) {
@@ -465,6 +467,7 @@ router.post("/", async(req, res) => {
 router.put("/", async(req, res) => {
     const { productId, quantity, size, color, guestId, userId } = req.body;
 
+    if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > 10) return res.status(400).json({ message: "Invalid quantity" });
     try {
         const authUser = await resolveAuthUser(req);
         const effectiveUserId = authUser?._id?.toString();
@@ -485,6 +488,7 @@ router.put("/", async(req, res) => {
         );
 
         if(productIndex > -1) {
+            if (cart.products.reduce((n, p) => n + p.quantity, 0) - cart.products[productIndex].quantity + quantity > 10) return res.status(400).json({ message: "You can buy up to 10 items" });
             // Update quantity
             if(quantity > 0) {
                 cart.products[productIndex].quantity = quantity;
@@ -590,6 +594,7 @@ router.post("/merge", protect, async(req, res) => {
         const userCart = await Cart.findOne({ user: req.user._id });
 
         if(guestCart && guestCart.products.length > 0){
+            if ([...(guestCart.products || []), ...(userCart?.products || [])].reduce((n, p) => n + p.quantity, 0) > 10) return res.status(400).json({ message: "Combined carts exceed 10 items. Please reduce quantities before merging." });
             if(userCart){
                 // Merge guest cart into user cart
                 guestCart.products.forEach((guestItem) => {

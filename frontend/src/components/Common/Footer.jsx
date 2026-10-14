@@ -115,8 +115,11 @@ const Footer = () => {
             {/* Newsletter */}
             <p className="text-xs font-bold text-sky-700 uppercase tracking-widest mb-1.5">Newsletter</p>
             <p className="text-xs text-gray-500 mb-3">Get 10% off your first order</p>
+            <label htmlFor="newsletter-email" className="block text-xs mb-1">Email address</label>
             <form onSubmit={handleSubscribe} className="flex">
               <input
+                id="newsletter-email"
+                autoComplete="email"
                 type="email"
                 placeholder="Enter your email"
                 value={subscribe}
@@ -125,6 +128,7 @@ const Footer = () => {
                 className="flex-1 px-3 py-2.5 text-sm bg-white border border-sky-200 rounded-l-xl focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 text-gray-700 placeholder:text-gray-400"
               />
               <button
+                aria-label="Subscribe to newsletter"
                 type="submit"
                 disabled={loading}
                 className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold rounded-r-xl transition-colors"

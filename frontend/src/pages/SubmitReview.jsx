@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
 
 const SubmitReview = () => {
   const { productId } = useParams(); // Now correctly getting productId
-  const dispatch = useDispatch();
+  
   const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth);
@@ -113,20 +113,7 @@ const SubmitReview = () => {
     try {
       setSubmitting(true);
       
-      const response = await axios.post(
-        `/api/products/${productId}/reviews`,
-        { 
-          rating: Number(rating), 
-          comment: comment.trim(), 
-          image: image || undefined 
-        },
-        { 
-          headers: { 
-            Authorization: `Bearer ${user.token}`,
-            'Content-Type': 'application/json',
-          }
-        }
-      );
+      
 
       toast.success("Review submitted successfully!");
       navigate("/my-orders");

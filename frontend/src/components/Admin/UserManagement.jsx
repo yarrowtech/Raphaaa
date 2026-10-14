@@ -7,7 +7,6 @@ import {
   fetchUsers,
   updateUser,
 } from "../../redux/slices/adminSlice";
-import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { RiFileExcel2Line } from "react-icons/ri";
@@ -152,25 +151,7 @@ const UserManagement = () => {
     setConfirmModal({ visible: false, message: '', onConfirm: null });
   };
 
-  const handleRoleChange = (userId, newRole) => {
-    const userToUpdate = users.find((u) => u._id === userId);
-    if (userToUpdate && userToUpdate.role !== newRole) {
-      openConfirm(`Change ${userToUpdate.name}'s role to ${newRole}?`, () => {
-        dispatch(
-          updateUser({
-            id: userId,
-            name: userToUpdate.name,
-            email: userToUpdate.email,
-            role: newRole,
-          })
-        );
-        toast.success(`${userToUpdate.name}'s role updated to ${newRole}`, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        });
-      });
-    }
-  };
+  
 
   const openEdit = (u) => {
     setEditForm({
@@ -286,7 +267,7 @@ const UserManagement = () => {
   //   }
   // };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     const data = filteredUsers.map((u) => ({
       Name: u.name,
       Email: displayEmail(u),
@@ -294,10 +275,12 @@ const UserManagement = () => {
       Role: u.role,
       CreatedAt: new Date(u.createdAt).toLocaleString(),
     }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
-    XLSX.writeFile(workbook, "Users.xlsx");
+    try {
+      const { default: writeExcelFile } = await import("write-excel-file/browser");
+      const headers = ["Name", "Email", "Phone", "Role", "CreatedAt"];
+      const rows = [headers.map((value) => ({ value, fontWeight: "bold" })), ...data.map((row) => headers.map((key) => ({ type: String, value: String(row[key] || "") })))];
+      await writeExcelFile(rows, { sheet: "Users" }).toFile("Users.xlsx");
+    } catch { alert("Unable to export users. Please try again."); }
   };
 
   const filteredUsers = users

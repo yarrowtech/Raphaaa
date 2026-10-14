@@ -5,7 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCart } from "../../redux/slices/cartSlice";
 import { useEffect } from "react";
 
+import useModalFocus from "../../hooks/useModalFocus";
+
 const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
+  const modalRef = useModalFocus(drawerOpen, toggleCartDrawer);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, guestId } = useSelector((state) => state.auth);
@@ -42,6 +45,12 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
 
       {/* Drawer */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal={drawerOpen ? true : undefined}
+        aria-label="Cart"
+        hidden={!drawerOpen}
+        tabIndex={-1}
         className={`fixed top-0 right-0 w-3/4 sm:w-1/2 md:w-[30rem] h-full bg-white backdrop-blur-md shadow-lg transform transition-transform duration-300 flex flex-col z-50 ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
@@ -50,6 +59,7 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
         {/* Close Button */}
         <div className="flex justify-end p-4">
           <button
+            aria-label="Close cart"
             onClick={toggleCartDrawer}
             className="text-gray-600 hover:text-gray-800"
           >

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { HiChevronDown, HiChevronUp, HiX, HiSearch } from "react-icons/hi";
 import { MdFilterList } from "react-icons/md";
+import { prettyColorLabel } from "../../utils/colorCatalog";
 
 const MIN_BOUND = 0;
 const MAX_BOUND = 10000;
@@ -209,7 +210,7 @@ const FilterSidebar = ({ onClose, collectionSlug, categories = [], genders = [],
     ...(filters.category ? [{ key: "category", label: filters.category }] : []),
     ...filters.brand.map((b) => ({ key: "brand", label: b })),
     ...(filters.gender   ? [{ key: "gender",   label: filters.gender   }] : []),
-    ...(filters.color    ? [{ key: "color",    label: filters.color    }] : []),
+    ...(filters.color    ? [{ key: "color",    label: prettyColorLabel(filters.color) }] : []),
     ...filters.size.map((s) => ({ key: "size",     label: s })),
     ...filters.material.map((m) => ({ key: "material", label: m })),
     ...(filters.minPrice !== MIN_BOUND || filters.maxPrice !== MAX_BOUND
@@ -480,7 +481,7 @@ const FilterSidebar = ({ onClose, collectionSlug, categories = [], genders = [],
                       style={{ backgroundColor: color }}
                     />
                     <span className={`text-[12px] truncate ${active ? "text-[#111111] font-bold" : "text-[#444748]"}`}>
-                      {color}
+                      {prettyColorLabel(color)}
                     </span>
                     <span className="text-[11px] text-[#94969F] shrink-0">({count})</span>
                   </button>

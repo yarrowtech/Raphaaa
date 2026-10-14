@@ -1,22 +1,9 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import useContent from "../../hooks/useContent";
+import cleanHtml from "../../utils/sanitizeHtml";
 
 const PrivacyPolicy = () => {
-  const [policy, setPolicy] = useState({ content: "", updatedAt: "" });
-
-  useEffect(() => {
-    const fetchPolicy = async () => {
-      try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/settings/policy`);
-        if (data) {
-          setPolicy(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch privacy policy", error);
-      }
-    };
-    fetchPolicy();
-  }, []);
+  const { data, loading, error, retry } = useContent("/api/settings/policy");
+  const policy = data || { content: "", updatedAt: "" };
 
   return (
     <div className="min-h-screen p-6 md:p-12">
@@ -25,13 +12,13 @@ const PrivacyPolicy = () => {
           Privacy <span className="text-blue-600">Policy</span>
         </h1>
 
-        {policy.content ? (
+        {error ? (<p role="alert">Unable to load content. <button onClick={retry}>Retry</button></p>) : policy.content ? (
           <div
             className="prose prose-gray max-w-none space-y-6 text-gray-700 text-lg leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: policy.content }}
+            dangerouslySetInnerHTML={{ __html: cleanHtml(policy.content) }}
           />
         ) : (
-          <p className="text-center text-gray-500">Loading privacy policy...</p>
+          <p className="text-center text-gray-500">{loading ? "Loading privacy policy…" : "Content coming soon."}</p>
         )}
 
         {policy.updatedAt && (

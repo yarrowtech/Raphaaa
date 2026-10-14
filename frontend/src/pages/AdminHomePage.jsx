@@ -282,7 +282,7 @@ const AdminHomePage = () => {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {statCards.map(({ icon: Icon, label, value, prefix, color, trend, link, linkLabel }, idx) => (
+        {statCards.map(({ icon: Icon, label, value, prefix, color, trend, link, linkLabel }) => (
           <Link
             key={label}
             to={link}

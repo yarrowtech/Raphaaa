@@ -149,10 +149,63 @@ const NAMED_COLORS = [
   "YellowGreen",
 ];
 
+const hexToRgb = (hex) => {
+  let value = hex.replace("#", "");
+  if (value.length === 3 || value.length === 4) {
+    value = value
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const int = parseInt(value.slice(0, 6), 16);
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+};
+
+let namedColorRgbCache = null;
+
+const getNamedColorRgbMap = () => {
+  if (namedColorRgbCache) return namedColorRgbCache;
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  namedColorRgbCache = NAMED_COLORS.map((name) => {
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = name;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    return { name, rgb: [r, g, b] };
+  });
+  return namedColorRgbCache;
+};
+
+export const nearestColorName = (hex) => {
+  const map = getNamedColorRgbMap();
+  if (!map) return null;
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(hex)) return null;
+  const [r, g, b] = hexToRgb(hex);
+  let closest = null;
+  let closestDistance = Infinity;
+  for (const entry of map) {
+    const [er, eg, eb] = entry.rgb;
+    const distance = (r - er) ** 2 + (g - eg) ** 2 + (b - eb) ** 2;
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closest = entry.name;
+    }
+  }
+  return closest;
+};
+
 export const prettyColorLabel = (value) => {
   const text = String(value || "").trim();
   if (!text) return "";
-  if (text.startsWith("#")) return text.toUpperCase();
+  if (text.startsWith("#")) {
+    const nearest = nearestColorName(text);
+    return nearest ? prettyColorLabel(nearest) : text.toUpperCase();
+  }
   return text
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")

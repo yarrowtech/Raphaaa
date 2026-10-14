@@ -24,6 +24,7 @@
 
 //     // Create order in DB first
 //     // const order = new Order({
+//         orderNote: String(orderNote || "").slice(0, 2000),
 //     //   user: req.user._id,
 //     //   orderItems: orderItems,
 //     //   shippingAddress: shippingAddress,
@@ -34,6 +35,7 @@
 //     // });
 
 //     const order = new Order({
+//         orderNote: String(orderNote || "").slice(0, 2000),
 //       user: req.user._id,
 //       orderItems: orderItems.map((item) => ({
 //         productId: item.productId,
@@ -447,7 +449,7 @@ router.post("/create-order", protect, async (req, res) => {
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
-      const { amount, currency = "INR", receipt, orderItems, shippingAddress, idempotencyKey, couponCodes, walletRedeem, trackingInfo } = req.body;
+      const { amount, currency = "INR", receipt, orderItems, shippingAddress, idempotencyKey, couponCodes, walletRedeem, trackingInfo, orderNote } = req.body;
 
       console.log("Creating order for user:", req.user._id);
       console.log("Order amount:", amount);
@@ -570,6 +572,7 @@ router.post("/create-order", protect, async (req, res) => {
 
       // Create MongoDB Order
       const order = new Order({
+        orderNote: String(orderNote || "").slice(0, 2000),
         user: req.user._id,
         attribution: buildAttribution(trackingInfo, {
           customerName: req.user?.name || "",

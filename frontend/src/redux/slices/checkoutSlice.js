@@ -249,6 +249,7 @@ export const createRazorpayOrder = createAsyncThunk(
           couponCodes: orderData.couponCodes,
           walletRedeem: orderData.walletRedeem,
           trackingInfo: orderData.trackingInfo,
+          orderNote: orderData.orderNote,
         },
         config
       );
@@ -432,7 +433,7 @@ const checkoutSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(handlePaymentFailure.fulfilled, (state, action) => {
+      .addCase(handlePaymentFailure.fulfilled, (state) => {
         state.loading = false;
         state.paymentStatus = "payment_failed";
       })

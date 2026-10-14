@@ -1,115 +1,99 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UserLayout from "./components/Layout/UserLayout";
-import Home from "./pages/Home";
+const Home = lazy(() => import("./pages/Home"));
 import { Toaster } from "sonner";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import Wishlist from "./pages/Wishlist";
-import RecentlyViewed from "./pages/RecentlyViewed";
-import Settings from "./pages/Settings";
-import MyActivity from "./pages/MyActivity";
-import ExclusiveDrop from "./pages/ExclusiveDrop";
-import DropDetail from "./pages/DropDetail";
-import CollectionPage from "./pages/CollectionPage";
-import ProductDetails from "./components/Products/ProductDetails";
-import Checkout from "./components/Cart/Checkout";
-import OrderConfirmationPage from "./pages/OrderConfirmationPage";
-import OrderDetailsPage from "./pages/OrderDetailsPage";
-import MyOrders from "./pages/MyOrdersPage";
-import MyPrebookings from "./pages/MyPrebookings";
-import AdminPrebookings from "./pages/AdminPrebookings";
-import AdminLayout from "./components/Admin/AdminLayout";
-import AdminHomePage from "./pages/AdminHomePage";
-import UserManagement from "./components/Admin/UserManagement";
-import MobileLogins from "./components/Admin/MobileLogins";
-import ProductManagement from "./components/Admin/ProductManagement";
-import EditProductPage from "./components/Admin/EditProductPage";
-import OrderManagement from "./components/Admin/OrderManagement";
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const RecentlyViewed = lazy(() => import("./pages/RecentlyViewed"));
+const Settings = lazy(() => import("./pages/Settings"));
+const MyActivity = lazy(() => import("./pages/MyActivity"));
+const ExclusiveDrop = lazy(() => import("./pages/ExclusiveDrop"));
+const DropDetail = lazy(() => import("./pages/DropDetail"));
+const CollectionPage = lazy(() => import("./pages/CollectionPage"));
+const ProductDetails = lazy(() => import("./components/Products/ProductDetails"));
+const Checkout = lazy(() => import("./components/Cart/Checkout"));
+const OrderConfirmationPage = lazy(() => import("./pages/OrderConfirmationPage"));
+const OrderDetailsPage = lazy(() => import("./pages/OrderDetailsPage"));
+const MyOrders = lazy(() => import("./pages/MyOrdersPage"));
+const MyPrebookings = lazy(() => import("./pages/MyPrebookings"));
+const AdminPrebookings = lazy(() => import("./pages/AdminPrebookings"));
+const AdminLayout = lazy(() => import("./components/Admin/AdminLayout"));
+const AdminHomePage = lazy(() => import("./pages/AdminHomePage"));
+const UserManagement = lazy(() => import("./components/Admin/UserManagement"));
+const MobileLogins = lazy(() => import("./components/Admin/MobileLogins"));
+const ProductManagement = lazy(() => import("./components/Admin/ProductManagement"));
+const EditProductPage = lazy(() => import("./components/Admin/EditProductPage"));
+const OrderManagement = lazy(() => import("./components/Admin/OrderManagement"));
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
-import AddProduct from "./components/Admin/AddProduct";
-import About from "./components/Common/About";
-import Contact from "./components/Common/Contact";
-import PrivacyPolicy from "./components/Common/PrivacyPolicy";
-import LegalPage from "./components/Common/LegalPage";
+const AddProduct = lazy(() => import("./components/Admin/AddProduct"));
+const About = lazy(() => import("./components/Common/About"));
+const Contact = lazy(() => import("./components/Common/Contact"));
+const PrivacyPolicy = lazy(() => import("./components/Common/PrivacyPolicy"));
+const LegalPage = lazy(() => import("./components/Common/LegalPage"));
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SubmitReview from "./pages/SubmitReview";
-import SubmitReviewFromOrder from "./pages/SubmitReviewFromOrder";
-import UpdateProfile from "./pages/UpdateProfile";
-import ReviewForm from "./pages/ReviewForm";
-import CreateTask from "./pages/CreateTask";
-import ViewTasks from "./pages/ViewTasks";
-import InventoryPage from "./pages/InventoryPage";
-import SalesTrendsPage from "./pages/SalesTrendsPage";
-import RevenueReport from "./pages/RevenueReport";
-import RegisterDeliveryBoy from "./pages/RegisterDeliveryBoy";
-import ViewContacts from "./pages/ViewContacts";
-import HeroSettings from "./pages/HeroSettings";
-import AdminContactSettings from "./pages/AdminContactSettings";
+const SubmitReview = lazy(() => import("./pages/SubmitReview"));
+const SubmitReviewFromOrder = lazy(() => import("./pages/SubmitReviewFromOrder"));
+const UpdateProfile = lazy(() => import("./pages/UpdateProfile"));
+const ReviewForm = lazy(() => import("./pages/ReviewForm"));
+const CreateTask = lazy(() => import("./pages/CreateTask"));
+const ViewTasks = lazy(() => import("./pages/ViewTasks"));
+const InventoryPage = lazy(() => import("./pages/InventoryPage"));
+const SalesTrendsPage = lazy(() => import("./pages/SalesTrendsPage"));
+const RevenueReport = lazy(() => import("./pages/RevenueReport"));
+const RegisterDeliveryBoy = lazy(() => import("./pages/RegisterDeliveryBoy"));
+const ViewContacts = lazy(() => import("./pages/ViewContacts"));
+const HeroSettings = lazy(() => import("./pages/HeroSettings"));
+const AdminContactSettings = lazy(() => import("./pages/AdminContactSettings"));
 import ScrollToTop from "./components/Common/ScrollToTop";
-import ForgotPassword from "./pages/ForgotPassword";
-import AdminCollabSettings from "./pages/AdminCollabSettings";
-import AdminCollabPreview from "./pages/AdminCollabPreview";
-import EditCollab from "./pages/EditCollab";
-import AdminAboutSettings from "./pages/AdminAboutSettings";
-import PrivacyPolicySettings from "./pages/PrivacyPolicySettings";
-import AddEditOffer from "./pages/AddEditOffer";
-import AdminOffersList from "./pages/AdminOffersList";
-import AddEditCoupon from "./pages/AddEditCoupon";
-import AdminCouponsList from "./pages/AdminCouponsList";
-import OffersShowcase from "./pages/OffersShowcase";
-import VerifyMobile from "./pages/VerifyMobile";
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const AdminCollabSettings = lazy(() => import("./pages/AdminCollabSettings"));
+const AdminCollabPreview = lazy(() => import("./pages/AdminCollabPreview"));
+const EditCollab = lazy(() => import("./pages/EditCollab"));
+const AdminAboutSettings = lazy(() => import("./pages/AdminAboutSettings"));
+const PrivacyPolicySettings = lazy(() => import("./pages/PrivacyPolicySettings"));
+const AddEditOffer = lazy(() => import("./pages/AddEditOffer"));
+const AdminOffersList = lazy(() => import("./pages/AdminOffersList"));
+const AddEditCoupon = lazy(() => import("./pages/AddEditCoupon"));
+const AdminCouponsList = lazy(() => import("./pages/AdminCouponsList"));
+const OffersShowcase = lazy(() => import("./pages/OffersShowcase"));
+const VerifyMobile = lazy(() => import("./pages/VerifyMobile"));
 import AutoLogout from "./components/Common/AutoLogout";
-import ViewSubscribers from "./pages/ViewSubscribers";
-import AddMetaOption from "./components/Admin/AddMetaOption";
-import NotFound from "./pages/NotFound";
-import UserHierarchy from "./pages/UserHierarchy";
-import CampaignTracker from "./pages/CampaignTracker";
-import ButtonAnalytics from "./pages/ButtonAnalytics";
-import SiteTracker from "./components/Common/SiteTracker";
-import MarketingBroadcast from "./pages/MarketingBroadcast";
+const ViewSubscribers = lazy(() => import("./pages/ViewSubscribers"));
+const AddMetaOption = lazy(() => import("./components/Admin/AddMetaOption"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const UserHierarchy = lazy(() => import("./pages/UserHierarchy"));
+const CampaignTracker = lazy(() => import("./pages/CampaignTracker"));
+const MarketingBroadcast = lazy(() => import("./pages/MarketingBroadcast"));
 import Chatbot from "./components/Chatbot/Chatbot";
-import ResetPassword from "./pages/ResetPassword";
-import ResetPasswordUser from "./pages/ResetPasswordUser";
-import AdminSizeCharts from "./pages/AdminSizeCharts";
-import AdminShippingSettings from "./pages/AdminShippingSettings";
-import AdminLegalSettings from "./pages/AdminLegalSettings";
-import ReferAndEarn from "./pages/ReferAndEarn";
-import AdminReturnsManagement from "./pages/AdminReturnsManagement";
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ResetPasswordUser = lazy(() => import("./pages/ResetPasswordUser"));
+const AdminSizeCharts = lazy(() => import("./pages/AdminSizeCharts"));
+const AdminShippingSettings = lazy(() => import("./pages/AdminShippingSettings"));
+const AdminLegalSettings = lazy(() => import("./pages/AdminLegalSettings"));
+const ReferAndEarn = lazy(() => import("./pages/ReferAndEarn"));
+const AdminReturnsManagement = lazy(() => import("./pages/AdminReturnsManagement"));
 import {
   captureAttribution,
   rememberCampaignClick,
   trackCampaignLanding,
   trackCampaignImpression,
 } from "./utils/attribution";
-// import AdminAboutSettings from "./pages/AdminAboutSettings";
+// const AdminAboutSettings = lazy(() => import("./pages/AdminAboutSettings"));
 
 const App = () => {
   useEffect(() => {
-    const originalTitle = document.title;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        document.title = "Come back, we are waiting ❤️";
-      } else {
-        document.title = originalTitle;
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     captureAttribution();
     rememberCampaignClick();
     trackCampaignLanding().catch(() => {});
     trackCampaignImpression();
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+
   }, []);
 
   const handleNavigateProduct = (p) => {
@@ -127,6 +111,7 @@ const App = () => {
         <div className="hidden lg:block">
           <Chatbot onNavigateProduct={handleNavigateProduct} />
         </div>
+        <Suspense fallback={<div role="status" className="p-8 text-center">Loading page…</div>}>
         <Routes>
           <Route path="/" element={<UserLayout />}>
             <Route path="/404" element={<NotFound />} />
@@ -552,6 +537,7 @@ const App = () => {
             />
           </Route>
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </Provider>
   );

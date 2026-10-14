@@ -21,19 +21,7 @@ const EMPTY = {
   textAlign: "left", contentPosition: "bottom", overlayDirection: "left", isVisible: true,
 };
 
-const directionToOverlayClass = (direction) => {
-  switch (direction) {
-    case "right":
-      return "bg-linear-to-l from-sky-950/80 via-sky-900/40 to-transparent";
-    case "top":
-      return "bg-linear-to-b from-sky-950/80 via-sky-900/40 to-transparent";
-    case "bottom":
-      return "bg-linear-to-t from-sky-950/80 via-sky-900/40 to-transparent";
-    case "left":
-    default:
-      return "bg-linear-to-r from-sky-950/80 via-sky-900/40 to-transparent";
-  }
-};
+
 
 const inferOverlayDirection = (value) => {
   const overlay = String(value || "");

@@ -24,10 +24,7 @@ const MobileFooterNav = () => {
       active ? "scale-110" : "scale-100"
     }`;
 
-  const labelCls = (active) =>
-    `text-[10px] leading-none font-medium transition-all duration-200 ${
-      active ? "text-[11px] font-semibold" : "text-[10px] font-medium"
-    }`;
+  
 
   const dotCls = (active) =>
     `h-1 w-2 rounded-full bg-sky-500 transition-all duration-200 mt-0.5 ${
