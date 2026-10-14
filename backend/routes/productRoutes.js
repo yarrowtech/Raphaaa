@@ -179,9 +179,17 @@ const deriveFromVariants = (variants = []) => {
 const normalizeColorVariants = (colorVariants = []) => {
   if (!Array.isArray(colorVariants)) return [];
   return colorVariants
-    .map((cv) => ({
+    .map((cv) => {
+      const rawColorName = String(cv?.colorName || "").trim();
+      const fallbackColor = String(cv?.color || "").trim();
+      const colorName = rawColorName
+        ? rawColorName
+        : fallbackColor.startsWith("#")
+        ? ""
+        : fallbackColor;
+      return {
       color: String(cv?.color || "").trim(),
-      colorName: String(cv?.colorName || cv?.color || "").trim(),
+      colorName,
       images: Array.isArray(cv?.images)
         ? cv.images.filter((img) => img?.url?.trim()).map((img) => ({ url: img.url.trim(), altText: img.altText || "" }))
         : [],
@@ -194,7 +202,8 @@ const normalizeColorVariants = (colorVariants = []) => {
             }))
             .filter((s) => s.size && s.sku)
         : [],
-    }))
+      };
+    })
     .filter((cv) => cv.color && cv.sizes.length > 0);
 };
 

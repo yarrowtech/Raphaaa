@@ -214,6 +214,13 @@ export const prettyColorLabel = (value) => {
     .trim();
 };
 
+export const displayColorName = (colorName, color) => {
+  const name = String(colorName || "").trim();
+  if (name && !name.startsWith("#")) return name;
+  if (name.startsWith("#")) return prettyColorLabel(name);
+  return prettyColorLabel(color);
+};
+
 export const createColorOption = (value) => {
   const normalized = String(value || "").trim();
   return {

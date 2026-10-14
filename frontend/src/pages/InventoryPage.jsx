@@ -10,6 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
+import { displayColorName } from "../utils/colorCatalog";
 
 ChartJS.register(
   ArcElement,
@@ -299,7 +300,7 @@ const InventoryPage = () => {
                         {prod.colorVariants.slice(0, 3).map((cv, i) => (
                           <span key={i} className="inline-flex items-center gap-1 bg-gray-100 px-1.5 py-0.5 rounded">
                             <span className="w-2.5 h-2.5 rounded-full border border-gray-300 inline-block" style={{ backgroundColor: cv.color }} />
-                            {cv.colorName || cv.color}
+                            {displayColorName(cv.colorName, cv.color)}
                           </span>
                         ))}
                         {prod.colorVariants.length > 3 && <span className="text-gray-400">+{prod.colorVariants.length - 3}</span>}

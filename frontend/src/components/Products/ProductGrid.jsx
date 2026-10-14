@@ -17,6 +17,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { formatCountdown, isSaleLive, isSaleUpcoming } from "../../utils/offerCountdown";
 import { cachedGet } from "../../utils/httpCache";
+import { displayColorName } from "../../utils/colorCatalog";
 
 /* ── Skeleton ── */
 const Skeleton = () => (
@@ -146,7 +147,7 @@ const ProductGrid = ({ products = [], loading, error, variant = "default", wide 
         ...new Map(
           product.colorVariants
             .filter((cv) => cv?.color)
-            .map((cv) => [String(cv.color).toLowerCase(), { raw: cv.color, name: cv.colorName || cv.color }])
+            .map((cv) => [String(cv.color).toLowerCase(), { raw: cv.color, name: displayColorName(cv.colorName, cv.color) }])
         ).values(),
       ];
     }

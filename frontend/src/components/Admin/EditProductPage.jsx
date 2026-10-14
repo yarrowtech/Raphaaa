@@ -16,6 +16,7 @@ import {
   findColorOption,
   isValidCssColor,
   prettyColorLabel,
+  displayColorName,
 } from "../../utils/colorCatalog";
 import { moveArrayItem } from "../../utils/reorderArray";
 
@@ -759,7 +760,7 @@ const EditProductPage = () => {
                       : <span className="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 shrink-0" />
                     }
                     <span className="text-sm font-bold text-gray-700">
-                      Color {cvIdx + 1}{cv.colorName ? ` — ${cv.colorName}` : ""}
+                      Color {cvIdx + 1}{cv.colorName || cv.color ? ` — ${displayColorName(cv.colorName, cv.color)}` : ""}
                     </span>
                   </div>
                   {colorVariants.length > 1 && (
