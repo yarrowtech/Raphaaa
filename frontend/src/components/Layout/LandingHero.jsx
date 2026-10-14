@@ -5,10 +5,9 @@ import FestiveGarland from "./FestiveGarland";
 import heroImg from "../../assets/landing-hero-festive.jpg";
 
 const FIT_FILTERS = [
-  { label: "Drop shoulder", to: "/collections/all?search=drop+shoulder" },
   { label: "Relaxed", to: "/collections/all?search=relaxed" },
-  { label: "Boxy", to: "/collections/all?search=boxy" },
-  { label: "Polo", to: "/collections/all?search=polo" },
+  { label: "T-Shirt", to: "/collections/all?search=t-shirt" },
+  { label: "Casual Shirt", to: "/collections/all?search=casual+shirt" },
 ];
 
 /**

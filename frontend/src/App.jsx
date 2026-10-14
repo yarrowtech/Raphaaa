@@ -30,6 +30,8 @@ const OrderManagement = lazy(() => import("./components/Admin/OrderManagement"))
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
+import SiteTracker from "./components/Common/SiteTracker";
+const ButtonAnalytics = lazy(() => import("./pages/ButtonAnalytics"));
 const AddProduct = lazy(() => import("./components/Admin/AddProduct"));
 const About = lazy(() => import("./components/Common/About"));
 const Contact = lazy(() => import("./components/Common/Contact"));
