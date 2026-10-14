@@ -72,7 +72,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const UserHierarchy = lazy(() => import("./pages/UserHierarchy"));
 const CampaignTracker = lazy(() => import("./pages/CampaignTracker"));
 const MarketingBroadcast = lazy(() => import("./pages/MarketingBroadcast"));
-import Chatbot from "./components/Chatbot/Chatbot";
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ResetPasswordUser = lazy(() => import("./pages/ResetPasswordUser"));
 const AdminSizeCharts = lazy(() => import("./pages/AdminSizeCharts"));
@@ -98,10 +97,6 @@ const App = () => {
 
   }, []);
 
-  const handleNavigateProduct = (p) => {
-    window.location.assign(`/product/${p.slug || p._id}`);
-  };
-
   return (
     <Provider store={store}>
       <ToastContainer position="top-right" autoClose={2000} />
@@ -110,9 +105,6 @@ const App = () => {
         <AutoLogout />
         <ScrollToTop />
         <SiteTracker />
-        <div className="hidden lg:block">
-          <Chatbot onNavigateProduct={handleNavigateProduct} />
-        </div>
         <Suspense fallback={<div role="status" className="p-8 text-center">Loading page…</div>}>
         <Routes>
           <Route path="/" element={<UserLayout />}>
