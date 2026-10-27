@@ -9,6 +9,7 @@ import ExitIntentPopup from '../Common/ExitIntentPopup'
 import MobileFooterNav from './MobileFooterNav'
 import { fetchCart } from '../../redux/slices/cartSlice'
 import PushNotificationRegistrar from '../Common/PushNotificationRegistrar'
+import DiwaliGreeting from './DiwaliGreeting'
 
 const UserLayout = () => {
   const dispatch = useDispatch()
@@ -50,6 +51,7 @@ const UserLayout = () => {
 
   return (
     <>
+      <DiwaliGreeting />
       <div
         className={
           isCheckoutPage

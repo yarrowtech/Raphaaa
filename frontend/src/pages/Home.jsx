@@ -7,6 +7,7 @@ import FitFinder from "../components/Products/FitFinder";
 import DiwaliHero from "../components/Layout/DiwaliHero";
 import LandingProductSection from "../components/Products/LandingProductSection";
 import LandingFooter from "../components/Layout/LandingFooter";
+import DiwaliDiyaStrip from "../components/Layout/DiwaliDiyaStrip";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -256,6 +257,7 @@ const Home = () => {
         </React.Suspense>
 
         <LandingFooter />
+        <DiwaliDiyaStrip />
         <FitFinder open={fitOpen} onClose={() => setFitOpen(false)} />
       </div>
     </>

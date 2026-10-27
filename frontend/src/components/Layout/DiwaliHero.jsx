@@ -4,7 +4,6 @@ import { FiArrowRight } from "react-icons/fi";
 import sparklesSvg from "../../assets/diwali-hero-sparkles.svg?raw";
 import lightStringSvg from "../../assets/diwali-hero-lightstring.svg?raw";
 import lanternSvg from "../../assets/diwali-hero-lantern.svg?raw";
-import diyaRowSvg from "../../assets/diwali-hero-diyarow.svg?raw";
 
 const FIT_FILTERS = [
   { label: "Relaxed", to: "/collections/all?search=relaxed" },
@@ -150,11 +149,16 @@ const DiwaliHero = ({ activeOffer }) => {
       {/* Lantern / rangoli artwork */}
       <div className="relative z-10" style={{ height: "600px" }} dangerouslySetInnerHTML={{ __html: lanternSvg }} />
 
-      {/* Diya row fading into the next section */}
+      {/* Blend the purple hero into the cream product section below */}
       <div
+        aria-hidden="true"
         className="absolute left-0 right-0 bottom-0 pointer-events-none"
-        style={{ zIndex: 1 }}
-        dangerouslySetInnerHTML={{ __html: diyaRowSvg }}
+        style={{
+          height: "260px",
+          zIndex: 1,
+          background:
+            "linear-gradient(to bottom, rgba(255,247,234,0) 0%, rgba(255,247,234,.55) 55%, rgba(255,247,234,.9) 80%, #fff7ea 100%)",
+        }}
       />
     </section>
   );
