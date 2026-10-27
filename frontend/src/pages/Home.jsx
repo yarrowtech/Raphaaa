@@ -4,7 +4,7 @@ import { fetchProductsByFilters } from "../redux/slices/productsSlice";
 import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import FitFinder from "../components/Products/FitFinder";
-import LandingHero from "../components/Layout/LandingHero";
+import DiwaliHero from "../components/Layout/DiwaliHero";
 import LandingProductSection from "../components/Products/LandingProductSection";
 import LandingFooter from "../components/Layout/LandingFooter";
 import { toast } from "sonner";
@@ -183,7 +183,7 @@ const Home = () => {
 
       {/* ── Desktop / tablet layout (≥ 1024px) ── */}
       <div className="reference-home" style={{ background: "#faf9fb" }}>
-        <LandingHero
+        <DiwaliHero
           activeOffer={activeOffer}
         />
 
